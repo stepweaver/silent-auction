@@ -1,0 +1,66 @@
+import { headers } from 'next/headers';
+import { checkBasicAuth } from '@/lib/auth';
+import { supabaseServer } from '@/lib/serverSupabase';
+
+export async function POST(req) {
+  const headersList = await headers();
+  if (!checkBasicAuth(headersList)) {
+    return new Response('Unauthorized', {
+      status: 401,
+      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
+    });
+  }
+
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file');
+
+    if (!file) {
+      return new Response('No file provided', { status: 400 });
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return new Response('Invalid file type. Only JPEG, PNG, and WebP are allowed.', { status: 400 });
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      return new Response('File too large. Maximum size is 10MB.', { status: 400 });
+    }
+
+    const s = supabaseServer();
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `item-photos/${fileName}`;
+
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Upload to Supabase Storage
+    const { data, error } = await s.storage
+      .from('item-photos')
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Storage upload error:', error);
+      return new Response('Failed to upload file', { status: 500 });
+    }
+
+    // Get public URL
+    const { data: urlData } = s.storage.from('item-photos').getPublicUrl(filePath);
+
+    return Response.json({ url: urlData.publicUrl, path: filePath });
+  } catch (error) {
+    console.error('Upload error:', error);
+    return new Response('Internal server error', { status: 500 });
+  }
+}
