@@ -28,12 +28,30 @@ export default function CatalogPage() {
 
   async function load() {
     try {
+      // Get settings to check deadline
+      const { data: settings } = await s
+        .from('settings')
+        .select('auction_deadline')
+        .eq('id', 1)
+        .maybeSingle();
+      
+      const deadline = settings?.auction_deadline ? new Date(settings.auction_deadline) : null;
+      const now = new Date();
+      const deadlinePassed = deadline && now >= deadline;
+
       const { data, error } = await s
         .from('item_leaders')
         .select('*')
         .order('title', { ascending: true });
       if (error) throw error;
-      setItems(data || []);
+      
+      // Mark items as closed if deadline passed
+      const itemsWithDeadline = (data || []).map(item => ({
+        ...item,
+        is_closed: item.is_closed || deadlinePassed,
+      }));
+      
+      setItems(itemsWithDeadline);
     } catch (err) {
       console.error('Error loading items:', err);
     } finally {

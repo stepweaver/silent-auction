@@ -14,6 +14,17 @@ export async function POST(req) {
 
     const s = supabaseServer();
 
+    // Get settings to check deadline
+    const { data: settings } = await s
+      .from('settings')
+      .select('auction_deadline')
+      .eq('id', 1)
+      .maybeSingle();
+    
+    const deadline = settings?.auction_deadline ? new Date(settings.auction_deadline) : null;
+    const now = new Date();
+    const deadlinePassed = deadline && now >= deadline;
+
     // Get user's bids with item information
     const { data: bids, error: bidsError } = await s
       .from('bids')
@@ -59,6 +70,10 @@ export async function POST(req) {
 
         const currentHigh = topBid ? Number(topBid.amount) : Number(bid.items?.start_price || 0);
         const isOutbid = Number(bid.amount) < currentHigh;
+        
+        // Check if item is closed (either manually or by deadline)
+        const itemClosed = bid.items?.is_closed || false;
+        const actuallyClosed = itemClosed || deadlinePassed;
 
         return {
           ...bid,
@@ -67,6 +82,7 @@ export async function POST(req) {
           items: bid.items ? {
             ...bid.items,
             current_high_bid: currentHigh,
+            is_closed: actuallyClosed, // Include deadline status
           } : null,
         };
       })

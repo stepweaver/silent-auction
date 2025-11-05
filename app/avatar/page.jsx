@@ -295,7 +295,27 @@ export default function DashboardPage() {
                       return acc;
                     }, {});
 
-                    return Object.values(bidsByItem).map((bid) => {
+                    // Add test won item for testing
+                    const testWonBid = {
+                      id: 'test-won-bid',
+                      amount: 50,
+                      current_high_bid: 50,
+                      is_outbid: false,
+                      created_at: new Date().toISOString(),
+                      items: {
+                        id: 'test-item',
+                        slug: 'test-item',
+                        title: 'Test Won Item',
+                        photo_url: null,
+                        start_price: 25,
+                        min_increment: 5,
+                        is_closed: true,
+                      },
+                    };
+
+                    const allBids = [...Object.values(bidsByItem), testWonBid];
+
+                    return allBids.map((bid) => {
                     const item = bid.items;
                     if (!item) return null;
 
@@ -307,9 +327,13 @@ export default function DashboardPage() {
                     // Calculate status: outbid if bid is less than current high, winning if equal or greater
                     // Use API's is_outbid if available, otherwise calculate it
                     const apiIsOutbid = bid.is_outbid !== undefined ? bid.is_outbid : (bidAmount < currentHigh);
-                    const isOutbid = !isClosed && apiIsOutbid;
-                    const isWinning = !isClosed && !apiIsOutbid && bidAmount >= currentHigh;
+                    
+                    // Winner: closed AND not outbid AND bid matches current high (user has winning bid)
                     const isWinner = isClosed && !apiIsOutbid && bidAmount >= currentHigh;
+                    // Outbid: not closed AND outbid
+                    const isOutbid = !isClosed && apiIsOutbid;
+                    // Leading: not closed AND not outbid AND bid matches/beats current high
+                    const isWinning = !isClosed && !apiIsOutbid && bidAmount >= currentHigh;
 
                     return (
                       <div
