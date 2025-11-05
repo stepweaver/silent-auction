@@ -55,12 +55,23 @@ create table items (
   updated_at timestamptz default now()
 );
 
+-- User aliases table (for anonymous bidding)
+create table user_aliases (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  alias text unique not null,
+  color text not null,
+  animal text not null,
+  created_at timestamptz default now()
+);
+
 -- Bids table
 create table bids (
   id bigint generated always as identity primary key,
   item_id uuid not null references items(id) on delete cascade,
   bidder_name text not null,
   email text not null,
+  alias_id uuid references user_aliases(id) on delete set null,
   amount numeric not null,
   created_at timestamptz default now()
 );
@@ -91,11 +102,24 @@ from items i;
 alter table items enable row level security;
 alter table bids enable row level security;
 alter table settings enable row level security;
+alter table user_aliases enable row level security;
 
 -- Public read policies
 create policy "read_items" on items for select using (true);
 create policy "read_bids" on bids for select using (true);
 create policy "read_settings" on settings for select using (true);
+-- Public read policy for user_aliases
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' 
+    AND tablename = 'user_aliases' 
+    AND policyname = 'read_user_aliases'
+  ) THEN
+    CREATE POLICY "read_user_aliases" ON user_aliases FOR SELECT USING (true);
+  END IF;
+END $$;
 
 -- Insert bids publicly but only when open
 -- (Min increment & deadline enforced in server route)
@@ -106,6 +130,19 @@ with check (
     select 1 from items i where i.id = bids.item_id and i.is_closed = false
   )
 );
+
+-- Insert user aliases publicly
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' 
+    AND tablename = 'user_aliases' 
+    AND policyname = 'insert_user_aliases'
+  ) THEN
+    CREATE POLICY "insert_user_aliases" ON user_aliases FOR INSERT WITH CHECK (true);
+  END IF;
+END $$;
 
 -- Enable Realtime for bids table (for live updates)
 alter publication supabase_realtime add table bids;

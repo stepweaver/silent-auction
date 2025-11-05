@@ -85,11 +85,27 @@ export async function POST(req) {
       return new Response(`Minimum allowed bid: ${needed.toFixed(2)}`, { status: 400 });
     }
 
+    // Get or create user alias
+    let aliasId = null;
+    const { data: existingAlias, error: aliasError } = await s
+      .from('user_aliases')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (aliasError) {
+      console.error('Error checking alias:', aliasError);
+      // Continue without alias if check fails
+    } else if (existingAlias) {
+      aliasId = existingAlias.id;
+    }
+
     // Insert bid
     const { error: insertError } = await s.from('bids').insert({
       item_id: item.id,
       bidder_name,
       email,
+      alias_id: aliasId,
       amount: Number(amount),
     });
 
