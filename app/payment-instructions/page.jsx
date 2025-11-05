@@ -55,13 +55,6 @@ export default function PaymentInstructionsPage() {
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <div className="mb-6">
-        <div className="text-sm breadcrumbs mb-4">
-          <ul>
-            <li><Link href="/">Catalog</Link></li>
-            <li><Link href="/avatar">Dashboard</Link></li>
-            <li>Payment Instructions</li>
-          </ul>
-        </div>
         <h1 className="text-4xl font-bold text-primary mb-2">Payment Instructions</h1>
         <p className="text-base-content/70 text-lg">
           Congratulations on your winning bids! Here's how to complete your payment.

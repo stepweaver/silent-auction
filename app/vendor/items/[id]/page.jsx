@@ -8,10 +8,11 @@ import Field from '@/components/Field';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
 
-export default function EditItemPage({ params }) {
+export default function VendorEditItemPage({ params }) {
   const router = useRouter();
   const s = supabaseBrowser();
   const { id } = use(params);
+  const [vendorAdminId, setVendorAdminId] = useState(null);
   const [item, setItem] = useState(null);
   const [form, setForm] = useState({
     title: '',
@@ -30,13 +31,34 @@ export default function EditItemPage({ params }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [topBid, setTopBid] = useState(null);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const id = localStorage.getItem('vendor_admin_id');
+      if (!id) {
+        router.push('/vendor-enroll');
+        return;
+      }
+      setVendorAdminId(id);
+    }
+  }, [router]);
+
   async function loadItem() {
     try {
-      const { data, error } = await s.from('items').select('*').eq('id', id).single();
+      const { data, error } = await s
+        .from('items')
+        .select('*')
+        .eq('id', id)
+        .single();
 
       if (error) throw error;
       if (!data) {
         setMsg('Item not found');
+        return;
+      }
+
+      // Check ownership
+      if (String(data.created_by) !== String(vendorAdminId)) {
+        setMsg('Unauthorized: You can only edit your own items');
         return;
       }
 
@@ -89,10 +111,10 @@ export default function EditItemPage({ params }) {
   }
 
   useEffect(() => {
-    if (id) {
+    if (id && vendorAdminId) {
       loadItem();
     }
-  }, [id]);
+  }, [id, vendorAdminId]);
 
   function handleSlugChange(e) {
     const slug = e.target.value
@@ -113,6 +135,9 @@ export default function EditItemPage({ params }) {
 
       const res = await fetch('/api/admin/upload', {
         method: 'POST',
+        headers: {
+          'x-vendor-admin-id': vendorAdminId || '',
+        },
         body: formData,
       });
 
@@ -137,7 +162,6 @@ export default function EditItemPage({ params }) {
 
     setPhotoFile(file);
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPhotoPreview(reader.result);
@@ -151,7 +175,6 @@ export default function EditItemPage({ params }) {
     setIsSubmitting(true);
 
     try {
-      // Upload photo first if provided
       let photoUrl = form.photo_url;
       if (photoFile) {
         const uploadedUrl = await handlePhotoUpload(photoFile);
@@ -162,9 +185,12 @@ export default function EditItemPage({ params }) {
         photoUrl = uploadedUrl;
       }
 
-      const res = await fetch(`/api/admin/item/${id}`, {
+      const res = await fetch(`/api/vendor/item/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-vendor-admin-id': vendorAdminId || '',
+        },
         body: JSON.stringify({ ...form, photo_url: photoUrl }),
       });
 
@@ -213,31 +239,34 @@ export default function EditItemPage({ params }) {
     }
   }
 
-  if (loading) {
-    return <p>Loading...</p>;
+  if (loading || !vendorAdminId) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
   }
 
   if (!item) {
     return (
       <div>
-        <p>Item not found.</p>
-        <Link href="/admin" className="underline">
+        <p>{msg || 'Item not found.'}</p>
+        <Link href="/vendor" className="underline">
           ← Dashboard
         </Link>
       </div>
     );
   }
 
+  const currentBid = topBid ? Number(topBid.amount) : Number(item.start_price || 0);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
     typeof window !== 'undefined' ? window.location.origin + `/i/${item.slug}` : `/i/${item.slug}`
   )}`;
 
-  const currentBid = topBid ? Number(topBid.amount) : Number(item.start_price || 0);
-
   return (
     <div>
       <div className="mb-4 flex items-center gap-4">
-        <Link href="/admin" className="underline">
+        <Link href="/vendor" className="underline">
           ← Dashboard
         </Link>
         <h1 className="text-2xl font-semibold">Edit Item</h1>
@@ -359,7 +388,9 @@ export default function EditItemPage({ params }) {
           {msg && (
             <div
               className={`p-2 rounded ${
-                msg.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                msg.includes('Error') || msg.includes('Unauthorized')
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-green-100 text-green-700'
               }`}
             >
               {msg}
@@ -374,7 +405,7 @@ export default function EditItemPage({ params }) {
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
-            <Link href="/admin" className="px-4 py-2 border rounded hover:bg-gray-50">
+            <Link href="/vendor" className="px-4 py-2 border rounded hover:bg-gray-50">
               Cancel
             </Link>
           </div>
@@ -435,3 +466,4 @@ export default function EditItemPage({ params }) {
     </div>
   );
 }
+

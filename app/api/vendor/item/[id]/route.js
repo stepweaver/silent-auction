@@ -1,33 +1,25 @@
 import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
-import { checkBasicAuth } from '@/lib/auth';
 import { ItemSchema } from '@/lib/validation';
-
 import { vendorAdminOwnsItem } from '@/lib/vendorAuth';
 
 export async function PATCH(req, { params }) {
-  const headersList = await headers();
+  const headersList = headers();
   const vendorAdminId = headersList.get('x-vendor-admin-id');
-  const isSuperAdmin = checkBasicAuth(headersList);
 
-  // Either super admin or vendor admin must be authenticated
-  if (!isSuperAdmin && !vendorAdminId) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+  if (!vendorAdminId) {
+    return new Response('Unauthorized', { status: 401 });
   }
 
   try {
     const { id } = await params;
     const body = await req.json();
 
-    // Partial validation - only validate fields that are present
+    // Partial validation
     const updateData = {};
 
     if (body.title !== undefined) updateData.title = body.title;
     if (body.slug !== undefined) {
-      // Normalize slug
       updateData.slug = body.slug
         .toLowerCase()
         .trim()
@@ -50,12 +42,10 @@ export async function PATCH(req, { params }) {
 
     const s = supabaseServer();
 
-    // If vendor admin, check ownership
-    if (vendorAdminId && !isSuperAdmin) {
-      const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
-      if (!ownsItem) {
-        return new Response('Unauthorized: You can only edit your own items', { status: 403 });
-      }
+    // Check ownership
+    const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
+    if (!ownsItem) {
+      return new Response('Unauthorized: You can only edit your own items', { status: 403 });
     }
 
     // Check if slug change conflicts with existing
@@ -94,3 +84,4 @@ export async function PATCH(req, { params }) {
     return new Response('Internal server error', { status: 500 });
   }
 }
+

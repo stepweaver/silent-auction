@@ -15,7 +15,7 @@ export default function ItemCard({ item }) {
   )}`;
 
   return (
-    <div className={`card shadow-md card-hover ${isClosed ? 'bg-base-200 opacity-75' : 'bg-base-100'}`}>
+    <Link href={url} className={`card shadow-md card-hover ${isClosed ? 'bg-base-200 opacity-75' : 'bg-base-100'} block`}>
       {isClosed && (
         <div className="absolute top-2 right-2 z-10">
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-lg bg-amber-500 border border-amber-400/50">
@@ -50,9 +50,9 @@ export default function ItemCard({ item }) {
       </figure>
       <div className="card-body p-4">
         <h2 className="card-title text-lg">
-          <Link href={url} className={`link link-hover ${isClosed ? 'opacity-70' : ''}`}>
+          <span className={isClosed ? 'opacity-70' : ''}>
             {item.title}
-          </Link>
+          </span>
         </h2>
         {item.description && (
           <p className="text-sm text-base-content/70 line-clamp-2">
@@ -84,19 +84,19 @@ export default function ItemCard({ item }) {
         </div>
         <div className="card-actions justify-between items-center mt-3">
           {isClosed ? (
-            <Link href={url} className="btn btn-ghost btn-sm">
+            <span className="btn btn-ghost btn-sm pointer-events-none">
               View Details
-            </Link>
+            </span>
           ) : (
-            <Link href={url} className="btn btn-primary btn-sm">
+            <span className="btn btn-primary btn-sm pointer-events-none">
               Place Bid
-            </Link>
+            </span>
           )}
           <div className="tooltip tooltip-top" data-tip="Scan to view item">
             <img alt="QR Code" src={qrUrl} className="w-12 h-12 rounded border-2 border-base-300" />
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

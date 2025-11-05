@@ -91,20 +91,8 @@ export default function CatalogPage() {
       <section className="mb-6 sm:mb-8">
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-primary">Silent Auction</h1>
-                <p className="text-base-content/70 mt-2">Browse items and place your bids.</p>
-              </div>
-              <div className="flex gap-2">
-                <a href="/avatar" className="btn btn-outline btn-primary">
-                  My Avatar
-                </a>
-                <a href="/how-to-bid" className="btn btn-primary">
-                  How to Bid
-                </a>
-              </div>
-            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-primary">Silent Auction</h1>
+            <p className="text-base-content/70 mt-2">Browse items and place your bids.</p>
           </div>
         </div>
       </section>

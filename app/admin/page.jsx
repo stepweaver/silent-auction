@@ -5,6 +5,95 @@ import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 
+function SetInitialDeadline({ onSet }) {
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  async function handleSetDeadline(e) {
+    e.preventDefault();
+    if (!date || !time) {
+      setMsg('Please enter both date and time');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMsg('');
+
+    try {
+      const deadline = new Date(`${date}T${time}`);
+      if (isNaN(deadline.getTime())) {
+        setMsg('Invalid date/time');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auction_deadline: deadline.toISOString(),
+        }),
+      });
+
+      if (res.ok) {
+        setMsg('Deadline set successfully!');
+        setTimeout(() => {
+          onSet();
+        }, 500);
+      } else {
+        setMsg('Error setting deadline');
+      }
+    } catch (err) {
+      setMsg('Error setting deadline');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSetDeadline} className="space-y-2">
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <label className="block text-xs font-semibold text-yellow-900 mb-1">Date</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="border rounded px-2 py-1 text-sm w-full"
+            required
+            disabled={isSubmitting}
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block text-xs font-semibold text-yellow-900 mb-1">Time</label>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="border rounded px-2 py-1 text-sm w-full"
+            required
+            disabled={isSubmitting}
+          />
+        </div>
+        <button
+          type="submit"
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
+          disabled={isSubmitting}
+        >
+          Set
+        </button>
+      </div>
+      {msg && (
+        <p className={`text-xs ${msg.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
+          {msg}
+        </p>
+      )}
+    </form>
+  );
+}
+
 export default function AdminDashboard() {
   const s = supabaseBrowser();
   const [settings, setSettings] = useState(null);
@@ -36,8 +125,16 @@ export default function AdminDashboard() {
   async function extendDeadline() {
     if (!settings?.auction_deadline) return;
 
-    const newDeadline = new Date(settings.auction_deadline);
-    newDeadline.setMinutes(newDeadline.getMinutes() + 30);
+    // Verification step
+    const currentDeadline = new Date(settings.auction_deadline);
+    const newDeadline = new Date(currentDeadline);
+    newDeadline.setMinutes(newDeadline.getMinutes() + 15);
+
+    const confirmMessage = `Extend deadline by 15 minutes?\n\nCurrent: ${currentDeadline.toLocaleString()}\nNew: ${newDeadline.toLocaleString()}`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
 
     try {
       const res = await fetch('/api/admin/settings', {
@@ -49,7 +146,7 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
-        setMsg('Deadline extended by 30 minutes');
+        setMsg('Deadline extended by 15 minutes');
         await load();
       } else {
         setMsg('Error extending deadline');
@@ -115,21 +212,31 @@ export default function AdminDashboard() {
             <b>Contact:</b> {settings.contact_email}
           </p>
         )}
-        <div className="mt-3 flex gap-2">
-          {deadline && (
-            <button
-              onClick={extendDeadline}
-              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Extend deadline +30m
-            </button>
+        <div className="mt-3 space-y-2">
+          {!deadline && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-sm text-yellow-800 mb-2">
+                <b>No deadline set.</b> Set the initial deadline below:
+              </p>
+              <SetInitialDeadline onSet={load} />
+            </div>
           )}
-          <button
-            onClick={closeAll}
-            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Close all items now
-          </button>
+          <div className="flex gap-2">
+            {deadline && (
+              <button
+                onClick={extendDeadline}
+                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Extend deadline +15m
+              </button>
+            )}
+            <button
+              onClick={closeAll}
+              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Close all items now
+            </button>
+          </div>
         </div>
       </div>
 

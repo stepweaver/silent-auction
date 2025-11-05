@@ -4,7 +4,11 @@ import { supabaseServer } from '@/lib/serverSupabase';
 
 export async function POST(req) {
   const headersList = await headers();
-  if (!checkBasicAuth(headersList)) {
+  const vendorAdminId = headersList.get('x-vendor-admin-id');
+  const isSuperAdmin = checkBasicAuth(headersList);
+
+  // Either super admin or vendor admin must be authenticated
+  if (!isSuperAdmin && !vendorAdminId) {
     return new Response('Unauthorized', {
       status: 401,
       headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },

@@ -206,14 +206,6 @@ export default function ItemPage({ params }) {
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
-      <div className="mb-4">
-        <div className="text-sm breadcrumbs">
-          <ul>
-            <li><Link href="/">Catalog</Link></li>
-            <li>{item?.title || 'Item'}</li>
-          </ul>
-        </div>
-      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card bg-base-100 shadow-lg">

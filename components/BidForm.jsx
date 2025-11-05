@@ -172,18 +172,11 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
     return (
       <div className="space-y-6">
         <div className="bg-gradient-to-br from-base-100 to-base-200 rounded-2xl border border-base-300 shadow-xl p-6 sm:p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <span className="text-2xl font-bold text-primary">1</span>
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-base-content mb-2">Create Your Bidding Alias</h3>
-              <p className="text-base text-base-content/70 leading-relaxed">
-                Choose a fun color and animal to create your secret identity. Your alias keeps your bids anonymous while we track who you are by email.
-              </p>
-            </div>
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold text-base-content mb-2">Create Your Bidding Alias</h3>
+            <p className="text-base text-base-content/70 leading-relaxed">
+              Choose a fun color and animal to create your secret identity. Your alias keeps your bids anonymous while we track who you are by email.
+            </p>
           </div>
 
           <div className="divider my-6"></div>
@@ -266,16 +259,9 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-br from-base-100 to-base-200 rounded-2xl border border-base-300 shadow-xl p-6 sm:p-8">
-        <div className="flex items-start gap-4 mb-6">
-          <div className="flex-shrink-0">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <span className="text-2xl font-bold text-primary">2</span>
-            </div>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-2xl font-bold text-base-content mb-2">Place Your Bid</h3>
-            <p className="text-base text-base-content/70">Enter your details and bid amount</p>
-          </div>
+        <div className="mb-6">
+          <h3 className="text-2xl font-bold text-base-content mb-2">Place Your Bid</h3>
+          <p className="text-base text-base-content/70">Enter your details and bid amount</p>
         </div>
 
         {/* Alias Display */}

@@ -10,8 +10,8 @@ export default function AdminNav() {
         <Link href="/admin/items/new" className="hover:underline">
           New Item
         </Link>
-        <Link href="/" className="hover:underline ml-auto">
-          View Catalog
+        <Link href="/admin/vendor-admins" className="hover:underline">
+          Vendor Admins
         </Link>
       </div>
     </nav>

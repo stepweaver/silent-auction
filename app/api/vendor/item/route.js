@@ -1,19 +1,14 @@
 import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
-import { checkBasicAuth } from '@/lib/auth';
 import { ItemSchema } from '@/lib/validation';
 
+// POST - Create item (vendor admin only)
 export async function POST(req) {
-  const headersList = await headers();
+  const headersList = headers();
   const vendorAdminId = headersList.get('x-vendor-admin-id');
-  const isSuperAdmin = checkBasicAuth(headersList);
 
-  // Either super admin or vendor admin must be authenticated
-  if (!isSuperAdmin && !vendorAdminId) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+  if (!vendorAdminId) {
+    return new Response('Unauthorized', { status: 401 });
   }
 
   try {
@@ -26,7 +21,7 @@ export async function POST(req) {
 
     const data = parsed.data;
 
-    // Normalize slug: lowercase, replace spaces with hyphens, remove special chars
+    // Normalize slug
     const slug = data.slug
       .toLowerCase()
       .trim()
@@ -42,30 +37,18 @@ export async function POST(req) {
       return new Response('Slug already exists', { status: 400 });
     }
 
-    // Check if this is a vendor admin request
-    const vendorAdminId = headersList.get('x-vendor-admin-id');
-    const isSuperAdmin = checkBasicAuth(headersList);
-
-    // Only super admin can create items without created_by (for backward compatibility)
-    // Vendor admins must provide their ID via header
-    const insertData = {
-      title: data.title,
-      slug,
-      description: data.description || null,
-      photo_url: data.photo_url || null,
-      start_price: Number(data.start_price),
-      min_increment: Number(data.min_increment),
-      is_closed: data.is_closed || false,
-    };
-
-    // If vendor admin, set created_by
-    if (vendorAdminId && !isSuperAdmin) {
-      insertData.created_by = vendorAdminId;
-    }
-
     const { data: item, error } = await s
       .from('items')
-      .insert(insertData)
+      .insert({
+        title: data.title,
+        slug,
+        description: data.description || null,
+        photo_url: data.photo_url || null,
+        start_price: Number(data.start_price),
+        min_increment: Number(data.min_increment),
+        is_closed: data.is_closed || false,
+        created_by: vendorAdminId,
+      })
       .select()
       .single();
 
@@ -80,3 +63,4 @@ export async function POST(req) {
     return new Response('Internal server error', { status: 500 });
   }
 }
+
