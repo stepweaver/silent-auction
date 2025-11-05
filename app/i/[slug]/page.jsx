@@ -1,13 +1,17 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import BidForm from '@/components/BidForm';
 import AliasAvatar from '@/components/AliasAvatar';
 import { formatDollar } from '@/lib/money';
 
+const ENROLLMENT_KEY = 'auction_enrolled';
+
 export default function ItemPage({ params }) {
+  const router = useRouter();
   const s = supabaseBrowser();
   const { slug } = use(params);
   const [item, setItem] = useState(null);
@@ -15,6 +19,8 @@ export default function ItemPage({ params }) {
   const [bids, setBids] = useState([]);
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+  const [bidsHash, setBidsHash] = useState(null); // Store hash of bids to detect changes
 
   async function loadAll() {
     try {
@@ -66,7 +72,16 @@ export default function ItemPage({ params }) {
         user_aliases: bid.alias_id ? aliasesMap[bid.alias_id] : null,
       }));
 
-      setBids(bidsWithAliases);
+      // Create hash to detect changes (only update if data actually changed)
+      const newHash = bidsWithAliases.map(b => 
+        `${b.id}-${b.amount}-${b.alias_id}`
+      ).join('|');
+      
+      // Only update state if data changed (or if this is first load)
+      if (!bidsHash || newHash !== bidsHash) {
+        setBids(bidsWithAliases);
+        setBidsHash(newHash);
+      }
 
       const { data: settingsData, error: settingsError } = await s
         .from('settings')
@@ -84,10 +99,25 @@ export default function ItemPage({ params }) {
     }
   }
 
+  // Check enrollment status
   useEffect(() => {
-    if (!slug) return;
+    if (typeof window !== 'undefined') {
+      const enrolled = localStorage.getItem(ENROLLMENT_KEY);
+      if (enrolled !== 'true') {
+        // Store the intended destination for after enrollment
+        localStorage.setItem('auction_redirect', `/i/${slug}`);
+        router.push('/landing');
+        return;
+      }
+      setCheckingEnrollment(false);
+    }
+  }, [router, slug]);
+
+  useEffect(() => {
+    if (!slug || checkingEnrollment) return;
     loadAll();
 
+    // Set up real-time subscription
     const channel = s
       .channel('rt-bids-item')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bids' }, () => {
@@ -95,10 +125,26 @@ export default function ItemPage({ params }) {
       })
       .subscribe();
 
-    return () => {
-      s.removeChannel(channel);
+    // Set up polling as backup (refresh every 10 seconds to reduce mobile data usage)
+    // Only poll when page is visible
+    let isPageVisible = true;
+    const handleVisibilityChange = () => {
+      isPageVisible = !document.hidden;
     };
-  }, [slug]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const pollInterval = setInterval(() => {
+      if (isPageVisible && !document.hidden) {
+        loadAll();
+      }
+    }, 10000); // 10 seconds instead of 5 to reduce mobile data usage
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      s.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
+  }, [slug, checkingEnrollment]);
 
   async function handleBidSubmit(data) {
     setMsg('');
@@ -124,9 +170,9 @@ export default function ItemPage({ params }) {
   }
 
 
-  if (loading) {
+  if (checkingEnrollment || loading) {
     return (
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
         <div className="flex items-center justify-center py-16">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -136,7 +182,7 @@ export default function ItemPage({ params }) {
 
   if (!item) {
     return (
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body text-center py-16">
             <p className="text-base-content/70 mb-4 text-lg">Item not found.</p>
@@ -159,11 +205,14 @@ export default function ItemPage({ params }) {
   const winner = bids?.[0];
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
       <div className="mb-4">
-        <Link href="/" className="btn btn-ghost btn-sm">
-          ← Back to catalog
-        </Link>
+        <div className="text-sm breadcrumbs">
+          <ul>
+            <li><Link href="/">Catalog</Link></li>
+            <li>{item?.title || 'Item'}</li>
+          </ul>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -266,7 +315,9 @@ export default function ItemPage({ params }) {
                             <span className="font-semibold">{b.user_aliases.alias}</span>
                           </>
                         ) : (
-                          <span className="text-base-content/50">Anonymous</span>
+                          <span className="text-base-content/70">
+                            {b.bidder_name || 'Anonymous'}
+                          </span>
                         )}
                       </div>
                       <span className="font-bold text-primary">{formatDollar(b.amount)}</span>

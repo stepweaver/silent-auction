@@ -16,16 +16,15 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
         try {
           const parsed = JSON.parse(stored);
           return {
-            bidder_name: parsed.bidder_name || '',
             email: parsed.email || '',
             amount: '',
           };
         } catch (e) {
-          return { bidder_name: '', email: '', amount: '' };
+          return { email: '', amount: '' };
         }
       }
     }
-    return { bidder_name: '', email: '', amount: '' };
+    return { email: '', amount: '' };
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +41,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
           const parsed = JSON.parse(stored);
           if (parsed.alias && parsed.email) {
             setUserAlias(parsed.alias);
-            setForm(prev => ({ ...prev, email: parsed.email, bidder_name: parsed.bidder_name || '' }));
+            setForm(prev => ({ ...prev, email: parsed.email }));
             setStep('bid'); // Skip to bid form if we have alias
           }
         } catch (e) {
@@ -55,14 +54,16 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
   // Save to localStorage when form changes (except amount)
   useEffect(() => {
     if (typeof window !== 'undefined' && form.email) {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const parsed = stored ? JSON.parse(stored) : {};
       const toStore = {
         email: form.email,
-        bidder_name: form.bidder_name,
+        bidder_name: parsed.bidder_name || '',
         alias: userAlias,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
     }
-  }, [form.email, form.bidder_name, userAlias]);
+  }, [form.email, userAlias]);
 
   // Check for existing alias when component mounts or email is entered
   useEffect(() => {
@@ -86,12 +87,14 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
           
           // Save to localStorage
           if (typeof window !== 'undefined') {
-            const toStore = {
-              email: form.email,
-              bidder_name: form.bidder_name,
-              alias: data.alias,
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+          const stored = localStorage.getItem(STORAGE_KEY);
+          const parsed = stored ? JSON.parse(stored) : {};
+          const toStore = {
+            email: form.email,
+            bidder_name: parsed.bidder_name || '',
+            alias: data.alias,
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
           }
         }
       } catch (err) {
@@ -118,8 +121,29 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
 
     setIsSubmitting(true);
     try {
-      await onSubmit({ slug, item_id: itemId, ...form, amount: Number(form.amount) });
-      // Clear amount but keep email/name/alias
+      // Get name from alias object (from database), fallback to localStorage, then alias name
+      let bidderName = userAlias?.name;
+      if (!bidderName && typeof window !== 'undefined') {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            bidderName = parsed.bidder_name;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+      }
+      bidderName = bidderName || userAlias?.alias || 'Anonymous';
+      
+      await onSubmit({ 
+        slug, 
+        item_id: itemId, 
+        email: form.email, 
+        bidder_name: bidderName,
+        amount: Number(form.amount) 
+      });
+      // Clear amount but keep email/alias
       setForm(prev => ({ ...prev, amount: '' }));
     } finally {
       setIsSubmitting(false);
@@ -132,9 +156,11 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
     
     // Save to localStorage
     if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const parsed = stored ? JSON.parse(stored) : {};
       const toStore = {
         email: form.email,
-        bidder_name: form.bidder_name,
+        bidder_name: parsed.bidder_name || '',
         alias: alias,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
@@ -169,7 +195,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
             </label>
             <input
               type="email"
-              className="input input-bordered input-lg w-full focus:input-primary transition-colors"
+              className="input input-bordered input-lg w-full border-2 focus:border-primary focus:outline-none transition-colors"
               placeholder="your@email.com"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -194,7 +220,12 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
           {userAlias && (
             <div className="bg-success/10 border-2 border-success/30 rounded-xl p-5 mb-6">
               <div className="flex items-center gap-4 mb-4">
-                <AliasAvatar alias={userAlias.alias} color={userAlias.color} animal={userAlias.animal} size="lg" />
+                <AliasAvatar 
+                  alias={userAlias.alias} 
+                  color={userAlias.color} 
+                  animal={userAlias.animal}
+                  size="lg" 
+                />
                 <div className="flex-1">
                   <div className="font-bold text-lg text-success mb-1">Alias Found!</div>
                   <div className="text-base-content/70">You're bidding as: <span className="font-semibold">{userAlias.alias}</span></div>
@@ -223,7 +254,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
           {/* Helper text when email not entered */}
           {(!form.email || !form.email.includes('@')) && (
             <div className="bg-info/10 border border-info/30 rounded-xl p-4 text-center">
-              <span className="text-base-content/70">👆 Enter your email above to get started</span>
+              <span className="text-base-content/70">Enter your email above to get started</span>
             </div>
           )}
         </div>
@@ -251,7 +282,12 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
         {userAlias && (
           <div className="bg-success/10 border-2 border-success/30 rounded-xl p-4 mb-6">
             <div className="flex items-center gap-4">
-              <AliasAvatar alias={userAlias.alias} color={userAlias.color} animal={userAlias.animal} size="md" />
+              <AliasAvatar 
+                alias={userAlias.alias} 
+                color={userAlias.color} 
+                animal={userAlias.animal}
+                size="md" 
+              />
               <div className="flex-1">
                 <div className="font-bold text-base-content">Bidding as: {userAlias.alias}</div>
                 <div className="text-sm text-base-content/70">This is how others see your bids</div>
@@ -272,25 +308,11 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="form-control">
             <label className="label pb-2">
-              <span className="label-text font-semibold text-base">Your name</span>
-            </label>
-            <input
-              type="text"
-              className="input input-bordered input-lg w-full focus:input-primary transition-colors"
-              placeholder="Jane Doe"
-              value={form.bidder_name}
-              onChange={(e) => setForm((f) => ({ ...f, bidder_name: e.target.value }))}
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-          <div className="form-control">
-            <label className="label pb-2">
               <span className="label-text font-semibold text-base">Email</span>
             </label>
             <input
               type="email"
-              className="input input-bordered input-lg w-full focus:input-primary transition-colors"
+              className="input input-bordered input-lg w-full border-2 focus:border-primary focus:outline-none transition-colors"
               placeholder="your@email.com"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -311,7 +333,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
                 type="number"
                 step="0.01"
                 min={nextMin}
-                className="input input-bordered input-lg w-full pl-8 focus:input-primary transition-colors"
+                className="input input-bordered input-lg w-full pl-8 border-2 focus:border-primary focus:outline-none transition-colors"
                 placeholder={formatDollar(nextMin)}
                 value={form.amount}
                 onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
@@ -326,7 +348,6 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
           {deadline && (
             <div className="bg-info/10 border border-info/30 rounded-xl p-4">
               <div className="flex items-center gap-2">
-                <span className="text-lg">⏰</span>
                 <span className="text-sm"><strong>Bidding closes:</strong> {new Date(deadline).toLocaleString()}</span>
               </div>
             </div>

@@ -2,8 +2,16 @@
 
 import { getColorByValue, getAnimalByValue } from '@/lib/alias';
 
-export default function AliasAvatar({ alias, color, animal, size = 'md' }) {
-  // If we have a full alias object
+export default function AliasAvatar({ alias, color, animal, avatar_style, avatar_seed, size = 'md' }) {
+  const sizeClasses = {
+    sm: 'w-8 h-8 text-sm',
+    md: 'w-12 h-12 text-lg',
+    lg: 'w-16 h-16 text-2xl',
+  };
+
+  const sizeClass = sizeClasses[size] || sizeClasses.md;
+
+  // Color + animal system
   let displayColor = color;
   let displayAnimal = animal;
   let displayAlias = alias;
@@ -19,14 +27,6 @@ export default function AliasAvatar({ alias, color, animal, size = 'md' }) {
 
   const colorObj = displayColor ? getColorByValue(displayColor) : null;
   const animalObj = displayAnimal ? getAnimalByValue(displayAnimal) : null;
-
-  const sizeClasses = {
-    sm: 'w-8 h-8 text-sm',
-    md: 'w-12 h-12 text-lg',
-    lg: 'w-16 h-16 text-2xl',
-  };
-
-  const sizeClass = sizeClasses[size] || sizeClasses.md;
 
   if (!colorObj || !animalObj) {
     // Fallback to initials if alias data is missing

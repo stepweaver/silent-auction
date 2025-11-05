@@ -2,12 +2,29 @@
 
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ItemCard from '@/components/ItemCard';
 
+const ENROLLMENT_KEY = 'auction_enrolled';
+
 export default function CatalogPage() {
+  const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const s = supabaseBrowser();
+
+  // Check enrollment status
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const enrolled = localStorage.getItem(ENROLLMENT_KEY);
+      if (enrolled !== 'true') {
+        router.push('/landing');
+        return;
+      }
+      setCheckingEnrollment(false);
+    }
+  }, [router]);
 
   async function load() {
     try {
@@ -25,6 +42,8 @@ export default function CatalogPage() {
   }
 
   useEffect(() => {
+    if (checkingEnrollment) return;
+    
     load();
 
     const channel = s
@@ -37,23 +56,11 @@ export default function CatalogPage() {
     return () => {
       s.removeChannel(channel);
     };
-  }, []);
+  }, [checkingEnrollment]);
 
-  if (loading) {
+  if (checkingEnrollment || loading) {
     return (
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <section className="mb-6 sm:mb-8">
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl sm:text-4xl font-bold text-primary">Silent Auction</h1>
-                  <p className="text-base-content/70 mt-2">Browse items and place your bids.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
         <div className="flex items-center justify-center py-12">
           <span className="loading loading-spinner loading-lg text-primary"></span>
         </div>
@@ -62,7 +69,7 @@ export default function CatalogPage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-dots">
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
       <section className="mb-6 sm:mb-8">
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
@@ -71,9 +78,14 @@ export default function CatalogPage() {
                 <h1 className="text-3xl sm:text-4xl font-bold text-primary">Silent Auction</h1>
                 <p className="text-base-content/70 mt-2">Browse items and place your bids.</p>
               </div>
-              <a href="/how-to-bid" className="btn btn-primary">
-                How to Bid
-              </a>
+              <div className="flex gap-2">
+                <a href="/avatar" className="btn btn-outline btn-primary">
+                  My Avatar
+                </a>
+                <a href="/how-to-bid" className="btn btn-primary">
+                  How to Bid
+                </a>
+              </div>
             </div>
           </div>
         </div>

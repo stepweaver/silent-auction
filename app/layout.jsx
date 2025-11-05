@@ -10,7 +10,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" data-theme="auction">
-      <body className="bg-base-200 min-h-screen flex flex-col">
+      <body className="bg-base-300 min-h-screen flex flex-col">
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 grid place-items-center">
           <img
             src="/logo-with-glow.png"

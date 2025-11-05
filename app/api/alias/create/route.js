@@ -3,11 +3,28 @@ import { supabaseServer } from '@/lib/serverSupabase';
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { email, alias, color, animal } = body;
+    const { email, alias, color, animal, icon, avatar_style, avatar_seed, name } = body;
 
-    if (!email || !alias || !color || !animal) {
+    // Support old system (color/animal), new system (color/icon), and avatar system (avatar_style/avatar_seed)
+    if (!email || !alias) {
       return Response.json(
-        { error: 'Email, alias, color, and animal are required' },
+        { error: 'Email and alias are required' },
+        { status: 400 }
+      );
+    }
+
+    // If using avatar system, don't require color/animal/icon
+    if (!avatar_style && !color) {
+      return Response.json(
+        { error: 'Color is required' },
+        { status: 400 }
+      );
+    }
+
+    // Require either animal (old) or icon (new) or avatar_style
+    if (!avatar_style && !animal && !icon) {
+      return Response.json(
+        { error: 'Either animal (old), icon (new), or avatar_style is required' },
         { status: 400 }
       );
     }
@@ -29,12 +46,15 @@ export async function POST(req) {
       );
     }
 
-    // If user already has an alias, return it
+    // If user already has an alias, return error with existing alias info
     if (existingUserAlias) {
-      return Response.json({
-        alias: existingUserAlias,
-        message: 'User already has an alias',
-      });
+      return Response.json(
+        { 
+          error: 'This email already has an alias. Please use your existing alias or contact support to change it.',
+          existingAlias: existingUserAlias,
+        },
+        { status: 400 }
+      );
     }
 
     // Check if alias is already taken
@@ -59,15 +79,41 @@ export async function POST(req) {
       );
     }
 
-    // Create new alias
+    // Create new alias - support old (color/animal), new (color/icon), and avatar systems
+    const insertData = {
+      email,
+      alias,
+    };
+
+    // Add name if provided
+    if (name) {
+      insertData.name = name.trim();
+    }
+
+    // Add color (required for all systems)
+    if (color) {
+      insertData.color = color;
+    }
+
+    // Add old system field if provided
+    if (animal) {
+      insertData.animal = animal;
+    }
+
+    // Add new icon system field if provided
+    if (icon) {
+      insertData.icon = icon;
+    }
+
+    // Add avatar system fields if provided
+    if (avatar_style) {
+      insertData.avatar_style = avatar_style;
+      insertData.avatar_seed = avatar_seed || email;
+    }
+
     const { data: newAlias, error: insertError } = await s
       .from('user_aliases')
-      .insert({
-        email,
-        alias,
-        color,
-        animal,
-      })
+      .insert(insertData)
       .select()
       .single();
 
