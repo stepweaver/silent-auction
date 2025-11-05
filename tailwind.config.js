@@ -10,11 +10,11 @@ module.exports = {
       keyframes: {
         scale: {
           '0%, 100%': { transform: 'scale(1)' },
-          '50%': { transform: 'scale(1.05)' },
+          '50%': { transform: 'scale(1.1)' },
         },
       },
       animation: {
-        scale: 'scale 1s ease-in-out infinite',
+        scale: 'scale 0.8s ease-in-out infinite',
       },
       colors: {
         primary: {

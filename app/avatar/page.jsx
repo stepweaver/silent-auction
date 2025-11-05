@@ -80,10 +80,14 @@ export default function DashboardPage() {
     ).join('|');
   };
 
-  const loadUserBids = async (emailToLoad, skipIfUnchanged = false) => {
+  const loadUserBids = async (emailToLoad, skipIfUnchanged = false, silent = false) => {
     if (!emailToLoad) return;
     
-    setBidsLoading(true);
+    // Only show loading spinner if not silent (manual refresh)
+    if (!silent) {
+      setBidsLoading(true);
+    }
+    
     try {
       const response = await fetch('/api/bid/user', {
         method: 'POST',
@@ -105,7 +109,9 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Error loading bids:', err);
     } finally {
-      setBidsLoading(false);
+      if (!silent) {
+        setBidsLoading(false);
+      }
     }
   };
 
@@ -134,10 +140,11 @@ export default function DashboardPage() {
 
     // Set up polling (refresh every 10 seconds to reduce mobile data usage and server load)
     // Only poll when page is visible, and only update if data changed
+    // Silent = true means no loading spinner, just quietly update data
     const startPolling = () => {
       pollInterval = setInterval(() => {
         if (isPageVisible && !document.hidden) {
-          loadUserBids(email, true); // true = skip update if unchanged
+          loadUserBids(email, true, true); // skipIfUnchanged=true, silent=true
         }
       }, 10000); // 10 seconds instead of 5 to reduce mobile data usage
     };
@@ -256,7 +263,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              {bidsLoading ? (
+              {bidsLoading && bids.length === 0 ? (
                 <div className="flex items-center justify-center py-12">
                   <span className="loading loading-spinner loading-md"></span>
                 </div>
@@ -344,7 +351,7 @@ export default function DashboardPage() {
                                     </span>
                                   )}
                                   {!isWinner && isOutbid && (
-                                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md bg-red-500 border border-red-400/50 animate-scale">
+                                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md bg-red-500 border border-red-400/50">
                                       Outbid
                                     </span>
                                   )}
@@ -370,18 +377,74 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          {/* Bid Form */}
-                          {!isClosed && (
+                          {/* Payment Instructions for Winners */}
+                          {isWinner && (
                             <div className="sm:w-48 flex-shrink-0">
-                              <DashboardBidForm
-                                item={{
-                                  ...item,
-                                  current_high_bid: bid.current_high_bid,
-                                }}
-                                userAlias={userAlias}
-                                email={email}
-                                onBidPlaced={handleBidPlaced}
-                              />
+                              <div className="bg-success/10 border-2 border-success/30 rounded-xl p-4">
+                                <div className="text-center mb-3">
+                                  <div className="text-3xl mb-2">🏆</div>
+                                  <h3 className="font-bold text-success">You Won!</h3>
+                                  <p className="text-xs text-base-content/70 mt-1">
+                                    Winning bid: {formatDollar(bid.amount)}
+                                  </p>
+                                </div>
+                                <Link
+                                  href="/payment-instructions"
+                                  className="btn btn-success btn-sm w-full"
+                                >
+                                  Payment Instructions →
+                                </Link>
+                              </div>
+                              <Link
+                                href={`/i/${item.slug}`}
+                                className="btn btn-ghost btn-sm w-full mt-2"
+                              >
+                                View Item →
+                              </Link>
+                            </div>
+                          )}
+
+                          {/* Bid Form */}
+                          {!isClosed && !isWinner && (
+                            <div className="sm:w-48 flex-shrink-0">
+                              {isWinning ? (
+                                <div className="space-y-3 opacity-50 pointer-events-none">
+                                  <div className="form-control">
+                                    <label className="label pb-1">
+                                      <span className="label-text text-xs font-semibold">Bid Amount</span>
+                                    </label>
+                                    <div className="relative">
+                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/30 font-semibold text-sm">$</span>
+                                      <input
+                                        type="text"
+                                        className="input input-bordered input-sm w-full pl-7 border-2 bg-base-200 cursor-not-allowed"
+                                        placeholder="You're leading!"
+                                        disabled
+                                      />
+                                    </div>
+                                    <label className="label pt-1">
+                                      <span className="label-text-alt text-xs text-base-content/50">You have the highest bid</span>
+                                    </label>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-primary btn-sm w-full opacity-50 cursor-not-allowed"
+                                    disabled
+                                  >
+                                    Place Bid
+                                  </button>
+                                </div>
+                              ) : (
+                                <DashboardBidForm
+                                  item={{
+                                    ...item,
+                                    current_high_bid: bid.current_high_bid,
+                                  }}
+                                  userAlias={userAlias}
+                                  email={email}
+                                  onBidPlaced={handleBidPlaced}
+                                />
+                              )}
                               <Link
                                 href={`/i/${item.slug}`}
                                 className="btn btn-ghost btn-sm w-full mt-2"
