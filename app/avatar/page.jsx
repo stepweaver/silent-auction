@@ -161,52 +161,64 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="w-full px-4 py-4 sm:py-6">
         <div className="flex items-center justify-center py-16">
-          <span className="loading loading-spinner loading-lg"></span>
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      <div className="mb-6">
-        <h1 className="text-4xl font-bold text-primary mb-2">Your Dashboard</h1>
-        <p className="text-base-content/70 text-lg">
+    <main className="w-full px-4 py-4 sm:py-6 pb-8 sm:pb-10">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: '#00b140' }}>Your Dashboard</h1>
+        <p className="text-xs sm:text-sm text-gray-600">
           Manage your avatar and track your bids
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Avatar Info Section */}
         <div className="lg:col-span-1">
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
-              <h2 className="card-title text-xl mb-4">Your Avatar</h2>
+          <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
+            <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Your Avatar</h2>
               
               {userAlias ? (
-                <div className="space-y-4">
-                  <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl">
+                <div className="space-y-3 sm:space-y-4">
+                  <div 
+                    className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-lg border"
+                    style={{ 
+                      backgroundColor: 'rgba(0, 177, 64, 0.05)',
+                      borderColor: 'rgba(0, 177, 64, 0.2)'
+                    }}
+                  >
                     <AliasAvatar
                       alias={userAlias.alias}
                       color={userAlias.color}
                       animal={userAlias.animal}
-                      size="lg"
+                      size="md"
                     />
-                    <div className="mt-4 text-center">
-                      <div className="text-xl font-bold text-base-content mb-1">
+                    <div className="mt-3 text-center">
+                      <div className="text-base sm:text-lg font-bold text-gray-900 mb-0.5">
                         {userAlias.alias}
                       </div>
-                      <div className="text-xs text-base-content/70">
+                      <div className="text-xs text-gray-600">
                         This is how others see your bids
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-info/10 border border-info/30 rounded-xl p-3">
-                    <div className="text-xs text-base-content/70">
-                      <p className="font-semibold mb-2 text-sm">Avatar Details:</p>
+                  <div 
+                    className="rounded-lg p-3 border"
+                    style={{ 
+                      backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                      borderColor: 'rgba(59, 130, 246, 0.2)'
+                    }}
+                  >
+                    <div className="text-xs text-gray-700">
+                      <p className="font-semibold mb-1.5 text-sm">Avatar Details:</p>
                       <ul className="space-y-1">
                         <li>Email: <span className="font-semibold">{userAlias.email || email || 'N/A'}</span></li>
                         <li>Color: <span className="font-semibold">{userAlias.color || 'N/A'}</span></li>
@@ -217,11 +229,15 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-base-300 flex items-center justify-center">
-                    <span className="text-2xl font-bold text-base-content/50">?</span>
+                  <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-xl font-bold text-gray-400">?</span>
                   </div>
-                  <p className="text-sm text-base-content/70 mb-4">No avatar yet.</p>
-                  <Link href="/landing" className="btn btn-primary btn-sm">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-3">No avatar yet.</p>
+                  <Link 
+                    href="/landing" 
+                    className="inline-block px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white"
+                    style={{ backgroundColor: '#00b140' }}
+                  >
                     Create Avatar
                   </Link>
                 </div>
@@ -232,26 +248,29 @@ export default function DashboardPage() {
 
         {/* Bids Section */}
         <div className="lg:col-span-2">
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
+          <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
+            <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="card-title text-xl">Your Bids</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Your Bids</h2>
                 <div className="flex items-center gap-2">
                   {lastUpdated && (
-                    <span className="text-xs text-base-content/50">
+                    <span className="text-xs text-gray-500">
                       Updated {lastUpdated.toLocaleTimeString()}
                     </span>
                   )}
                   <button
                     onClick={() => email && loadUserBids(email)}
-                    className="btn btn-sm btn-ghost"
+                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
                     disabled={bidsLoading}
                     title="Refresh bids"
                   >
                     {bidsLoading ? (
-                      <span className="loading loading-spinner loading-xs"></span>
+                      <svg className="animate-spin h-4 w-4" style={{ color: '#00b140' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
                     ) : (
-                      '🔄'
+                      <span className="text-base">🔄</span>
                     )}
                   </button>
                 </div>
@@ -259,20 +278,24 @@ export default function DashboardPage() {
               
               {bidsLoading && bids.length === 0 ? (
                 <div className="flex items-center justify-center py-12">
-                  <span className="loading loading-spinner loading-md"></span>
+                  <div className="w-6 h-6 border-3 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
                 </div>
               ) : bids.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-base-300 flex items-center justify-center">
-                    <span className="text-2xl">📦</span>
+                  <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
+                    <span className="text-xl">📦</span>
                   </div>
-                  <p className="text-base-content/70 mb-4">You haven't placed any bids yet.</p>
-                  <Link href="/" className="btn btn-primary">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-3">You haven't placed any bids yet.</p>
+                  <Link 
+                    href="/" 
+                    className="inline-block px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white"
+                    style={{ backgroundColor: '#00b140' }}
+                  >
                     Browse Catalog
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {(() => {
                     // Group bids by item_id and show only the highest bid per item
                     const bidsByItem = bids.reduce((acc, bid) => {
@@ -332,63 +355,86 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={bid.id}
-                        className={`border-2 rounded-xl p-4 ${
+                        className={`border-2 rounded-lg p-3 sm:p-4 ${
                           isOutbid
-                            ? 'border-error/30 bg-error/5'
+                            ? 'border-red-200'
                             : isWinning
-                            ? 'border-success/30 bg-success/5'
-                            : 'border-base-300 bg-base-50'
+                            ? 'border-green-200'
+                            : 'border-gray-200'
                         }`}
+                        style={isOutbid ? {
+                          backgroundColor: 'rgba(239, 68, 68, 0.05)'
+                        } : isWinning ? {
+                          backgroundColor: 'rgba(0, 177, 64, 0.05)'
+                        } : {
+                          backgroundColor: '#f9fafb'
+                        }}
                       >
-                        <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex flex-col gap-3 sm:gap-4">
                           {/* Item Info */}
                           <div className="flex-1">
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-2 sm:gap-3">
                               {item.photo_url && (
                                 <img
                                   src={item.photo_url}
                                   alt={item.title}
-                                  className="w-16 h-16 object-cover rounded-lg"
+                                  className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
                                 />
                               )}
                               <div className="flex-1 min-w-0">
                                 <Link
                                   href={`/i/${item.slug}`}
-                                  className="font-bold text-lg hover:text-primary transition-colors"
+                                  className="font-bold text-sm sm:text-base text-gray-900 hover:underline transition-colors block mb-1"
+                                  style={{ color: '#00b140' }}
                                 >
                                   {item.title}
                                 </Link>
-                                <div className="flex flex-wrap items-center gap-2 mt-1">
-                                  <span className="badge badge-primary badge-sm">
+                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                  <span 
+                                    className="px-2 py-0.5 rounded text-xs font-bold text-white"
+                                    style={{ backgroundColor: '#00b140' }}
+                                  >
                                     Your bid: {formatDollar(bid.amount)}
                                   </span>
                                   {isWinner && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md bg-green-500 border border-green-400/50">
-                                      <span className="text-sm">🏆</span>
+                                    <span 
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                                      style={{ backgroundColor: '#10b981' }}
+                                    >
+                                      <span className="text-xs">🏆</span>
                                       Winner
                                     </span>
                                   )}
                                   {!isWinner && isOutbid && (
-                                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md bg-red-500 border border-red-400/50">
+                                    <span 
+                                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                                      style={{ backgroundColor: '#ef4444' }}
+                                    >
                                       Outbid
                                     </span>
                                   )}
                                   {!isWinner && !isOutbid && isWinning && (
-                                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md bg-green-500 border border-green-400/50">
+                                    <span 
+                                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                                      style={{ backgroundColor: '#10b981' }}
+                                    >
                                       Leading
                                     </span>
                                   )}
                                   {!isWinner && !isOutbid && !isWinning && isClosed && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md bg-amber-500 border border-amber-400/50">
-                                      <span className="text-sm">🔒</span>
+                                    <span 
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                                      style={{ backgroundColor: '#f59e0b' }}
+                                    >
+                                      <span className="text-xs">🔒</span>
                                       Closed
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-xs text-base-content/70 mt-1">
+                                <div className="text-xs text-gray-600 mt-1">
                                   Current high: {formatDollar(bid.current_high_bid)}
                                 </div>
-                                <div className="text-xs text-base-content/50 mt-1">
+                                <div className="text-xs text-gray-500 mt-0.5">
                                   Placed {new Date(bid.created_at).toLocaleString()}
                                 </div>
                               </div>
@@ -398,24 +444,31 @@ export default function DashboardPage() {
                           {/* Payment Instructions for Winners */}
                           {isWinner && (
                             <div className="sm:w-48 flex-shrink-0">
-                              <div className="bg-success/10 border-2 border-success/30 rounded-xl p-4">
+                              <div 
+                                className="rounded-lg p-3 sm:p-4 border"
+                                style={{ 
+                                  backgroundColor: 'rgba(0, 177, 64, 0.05)',
+                                  borderColor: 'rgba(0, 177, 64, 0.2)'
+                                }}
+                              >
                                 <div className="text-center mb-3">
-                                  <div className="text-3xl mb-2">🏆</div>
-                                  <h3 className="font-bold text-success">You Won!</h3>
-                                  <p className="text-xs text-base-content/70 mt-1">
+                                  <div className="text-2xl mb-1.5">🏆</div>
+                                  <h3 className="font-bold text-sm sm:text-base mb-1" style={{ color: '#10b981' }}>You Won!</h3>
+                                  <p className="text-xs text-gray-600 mt-1">
                                     Winning bid: {formatDollar(bid.amount)}
                                   </p>
                                 </div>
                                 <Link
                                   href="/payment-instructions"
-                                  className="btn btn-success btn-sm w-full"
+                                  className="block w-full px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white text-center mb-2"
+                                  style={{ backgroundColor: '#10b981' }}
                                 >
                                   Payment Instructions →
                                 </Link>
                               </div>
                               <Link
                                 href={`/i/${item.slug}`}
-                                className="btn btn-ghost btn-sm w-full mt-2"
+                                className="block w-full px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-gray-700 text-center border border-gray-300 hover:bg-gray-50 transition-colors"
                               >
                                 View Item →
                               </Link>
@@ -426,27 +479,24 @@ export default function DashboardPage() {
                           {!isClosed && !isWinner && (
                             <div className="sm:w-48 flex-shrink-0">
                               {isWinning ? (
-                                <div className="space-y-3 opacity-50 pointer-events-none">
-                                  <div className="form-control">
-                                    <label className="label pb-1">
-                                      <span className="label-text text-xs font-semibold">Bid Amount</span>
-                                    </label>
+                                <div className="space-y-2 opacity-50 pointer-events-none">
+                                  <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Bid Amount</label>
                                     <div className="relative">
-                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/30 font-semibold text-sm">$</span>
+                                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-xs">$</span>
                                       <input
                                         type="text"
-                                        className="input input-bordered input-sm w-full pl-7 border-2 bg-base-200 cursor-not-allowed"
+                                        className="w-full px-2 pl-6 py-1.5 border-2 border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-xs"
                                         placeholder="You're leading!"
                                         disabled
                                       />
                                     </div>
-                                    <label className="label pt-1">
-                                      <span className="label-text-alt text-xs text-base-content/50">You have the highest bid</span>
-                                    </label>
+                                    <p className="mt-1 text-xs text-gray-500">You have the highest bid</p>
                                   </div>
                                   <button
                                     type="button"
-                                    className="btn btn-primary btn-sm w-full opacity-50 cursor-not-allowed"
+                                    className="w-full px-3 py-2 rounded-lg text-xs font-semibold text-white opacity-50 cursor-not-allowed"
+                                    style={{ backgroundColor: '#00b140' }}
                                     disabled
                                   >
                                     Place Bid
@@ -465,7 +515,7 @@ export default function DashboardPage() {
                               )}
                               <Link
                                 href={`/i/${item.slug}`}
-                                className="btn btn-ghost btn-sm w-full mt-2"
+                                className="block w-full px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-gray-700 text-center border border-gray-300 hover:bg-gray-50 transition-colors mt-2"
                               >
                                 View Item →
                               </Link>

@@ -10,11 +10,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme="auction" className="h-full">
-      <body className="bg-base-300 min-h-screen flex flex-col relative h-full">
+    <html lang='en' data-theme='auction' className='h-full'>
+      <body className='bg-gray-50 min-h-screen flex flex-col relative h-full'>
         <BackgroundLogo />
         <SiteHeader />
-        <div className="flex-1 relative z-0 min-w-0 min-h-0 overflow-auto">
+        <div className='flex-1 relative z-0 min-w-0 min-h-0 overflow-auto'>
           {children}
         </div>
         <SiteFooter />
