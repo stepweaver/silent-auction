@@ -3,9 +3,79 @@ import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import BackgroundLogo from '@/components/BackgroundLogo';
 
+const getMetadataBase = () => {
+  try {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    return new URL(siteUrl);
+  } catch {
+    return new URL('http://localhost:3000');
+  }
+};
+
 export const metadata = {
-  title: 'Silent Auction',
-  description: 'PTO Silent Auction',
+  metadataBase: getMetadataBase(),
+  title: {
+    default: 'Mary Frank Elementary Silent Auction',
+    template: '%s | Mary Frank Elementary Silent Auction',
+  },
+  description:
+    'Join the fun and support our PTO! Browse items, place bids, and win amazing prizes at the Mary Frank Elementary Silent Auction.',
+  keywords: [
+    'silent auction',
+    'elementary school',
+    'PTO',
+    'fundraiser',
+    'bidding',
+    'Mary Frank Elementary',
+  ],
+  authors: [{ name: 'Mary Frank Elementary PTO' }],
+  creator: 'Mary Frank Elementary PTO',
+  publisher: 'Mary Frank Elementary PTO',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: '/',
+    siteName: 'Mary Frank Elementary Silent Auction',
+    title: 'Mary Frank Elementary Silent Auction',
+    description:
+      'Join the fun and support our PTO! Browse items, place bids, and win amazing prizes.',
+    images: [
+      {
+        url: '/logo-with-glow.png',
+        width: 1200,
+        height: 1200,
+        alt: 'Mary Frank Elementary Silent Auction Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mary Frank Elementary Silent Auction',
+    description:
+      'Join the fun and support our PTO! Browse items, place bids, and win amazing prizes.',
+    images: ['/logo-with-glow.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: '/logo-with-glow.png',
+    apple: '/logo-with-glow.png',
+  },
+  manifest: '/manifest.json',
 };
 
 export const viewport = {
@@ -17,7 +87,12 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang='en' data-theme='auction' data-scroll-behavior='smooth' className='h-full'>
+    <html
+      lang='en'
+      data-theme='auction'
+      data-scroll-behavior='smooth'
+      className='h-full'
+    >
       <body className='bg-gray-50 min-h-screen flex flex-col relative h-full'>
         <BackgroundLogo />
         <SiteHeader />
