@@ -51,7 +51,7 @@ export async function POST(req) {
       // Check MX records first with timeout
       const mxRecords = await Promise.race([
         resolveMx(domain),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('DNS lookup timeout')), 5000)
         )
       ]);
@@ -61,7 +61,7 @@ export async function POST(req) {
       try {
         const aRecords = await Promise.race([
           resolve4(domain),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('DNS lookup timeout')), 5000)
           )
         ]);
@@ -127,7 +127,10 @@ export async function POST(req) {
       .maybeSingle();
 
     if (checkError) {
-      console.error('Error checking existing alias:', checkError);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error checking existing alias:', checkError);
+      }
       return Response.json(
         { error: 'Error checking existing alias' },
         { status: 500 }
@@ -137,7 +140,7 @@ export async function POST(req) {
     // If user already has an alias, return error with existing alias info
     if (existingUserAlias) {
       return Response.json(
-        { 
+        {
           error: 'This email already has an alias. Please use your existing alias or contact support to change it.',
           existingAlias: existingUserAlias,
         },
@@ -153,7 +156,10 @@ export async function POST(req) {
       .maybeSingle();
 
     if (aliasError) {
-      console.error('Error checking alias:', aliasError);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error checking alias:', aliasError);
+      }
       return Response.json(
         { error: 'Error checking alias availability' },
         { status: 500 }
@@ -221,8 +227,11 @@ export async function POST(req) {
       .single();
 
     if (insertError) {
-      console.error('Error creating alias:', insertError);
-      
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error creating alias:', insertError);
+      }
+
       // Check for unique constraint violation (alias already taken)
       if (insertError.code === '23505') {
         return Response.json(
@@ -243,7 +252,10 @@ export async function POST(req) {
       message: 'Alias created successfully!',
     });
   } catch (error) {
-    console.error('Alias creation error:', error);
+    // Log error server-side only, don't expose details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Alias creation error:', error);
+    }
     return Response.json(
       { error: 'Internal server error' },
       { status: 500 }

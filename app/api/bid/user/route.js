@@ -44,7 +44,10 @@ export async function POST(req) {
       .order('created_at', { ascending: false });
 
     if (bidsError) {
-      console.error('Error fetching user bids:', bidsError);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching user bids:', bidsError);
+      }
       return Response.json(
         { error: 'Error fetching bids', bids: [] },
         { status: 500 }
@@ -64,7 +67,10 @@ export async function POST(req) {
           .maybeSingle();
 
         if (topBidError) {
-          console.error('Error checking top bid:', topBidError);
+          // Log error server-side only, don't expose details to client
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Error checking top bid:', topBidError);
+          }
           return { ...bid, is_outbid: false };
         }
 
@@ -90,7 +96,10 @@ export async function POST(req) {
 
     return Response.json({ bids: bidsWithStatus });
   } catch (error) {
-    console.error('Get user bids error:', error);
+    // Log error server-side only, don't expose details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Get user bids error:', error);
+    }
     return Response.json(
       { error: 'Internal server error', bids: [] },
       { status: 500 }

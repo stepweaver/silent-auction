@@ -41,7 +41,10 @@ export async function POST(req) {
         .maybeSingle();
 
       if (error) {
-        console.error('Query error:', error);
+        // Log error server-side only, don't expose details to client
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Query error:', error);
+        }
         return new Response('Authentication error', { status: 500 });
       }
 
@@ -50,7 +53,7 @@ export async function POST(req) {
       }
 
       vendorAdmin = data;
-    } 
+    }
     // Email-based authentication (legacy)
     else if (email) {
       const { data, error } = await s
@@ -60,7 +63,10 @@ export async function POST(req) {
         .maybeSingle();
 
       if (error) {
-        console.error('Query error:', error);
+        // Log error server-side only, don't expose details to client
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Query error:', error);
+        }
         return new Response('Authentication error', { status: 500 });
       }
 
@@ -76,14 +82,17 @@ export async function POST(req) {
     // Generate a simple session token (in production, use JWT or similar)
     // For now, we'll just return the vendor admin ID
     // In a real app, you'd want proper session management
-    return Response.json({ 
-      ok: true, 
+    return Response.json({
+      ok: true,
       vendor_admin_id: vendorAdmin.id,
       email: vendorAdmin.email,
       name: vendorAdmin.name,
     });
   } catch (error) {
-    console.error('Vendor auth error:', error);
+    // Log error server-side only, don't expose details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Vendor auth error:', error);
+    }
     return new Response('Internal server error', { status: 500 });
   }
 }
@@ -109,12 +118,15 @@ export async function GET() {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    return Response.json({ 
-      ok: true, 
+    return Response.json({
+      ok: true,
       vendor_admin: vendorAdmin,
     });
   } catch (error) {
-    console.error('Verify vendor auth error:', error);
+    // Log error server-side only, don't expose details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Verify vendor auth error:', error);
+    }
     return new Response('Internal server error', { status: 500 });
   }
 }

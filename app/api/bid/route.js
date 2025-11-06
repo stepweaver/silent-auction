@@ -93,7 +93,10 @@ export async function POST(req) {
       .maybeSingle();
 
     if (aliasError) {
-      console.error('Error checking alias:', aliasError);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error checking alias:', aliasError);
+      }
       return new Response('Error checking avatar. Please try again.', { status: 500 });
     }
 
@@ -130,7 +133,10 @@ export async function POST(req) {
     });
 
     if (insertError) {
-      console.error('Insert error:', insertError);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Insert error:', insertError);
+      }
       return new Response('Failed to place bid', { status: 500 });
     }
 
@@ -148,7 +154,11 @@ export async function POST(req) {
         contactEmail: settings?.contact_email || process.env.AUCTION_CONTACT_EMAIL || null,
       });
     } catch (e) {
-      console.error('Confirmation email error:', e);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Confirmation email error:', e);
+      }
+      // Continue even if email fails - bid was already placed
     }
 
     // Outbid SMS notifications removed for free tier (email-only)
@@ -158,7 +168,10 @@ export async function POST(req) {
       next_min: needed + 1, // Fixed $1 increment
     });
   } catch (error) {
-    console.error('Bid route error:', error);
+    // Log error server-side only, don't expose details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Bid route error:', error);
+    }
     return new Response('Internal server error', { status: 500 });
   }
 }

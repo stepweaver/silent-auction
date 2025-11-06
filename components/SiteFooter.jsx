@@ -1,11 +1,21 @@
+import Link from 'next/link';
+
 export default function SiteFooter() {
   return (
     <footer className='mt-auto bg-white border-t border-gray-200'>
       <div className='max-w-7xl mx-auto px-4 py-3'>
         <div className='flex flex-col sm:flex-row items-center justify-between gap-2 w-full text-xs text-gray-600'>
-          <p className='text-center sm:text-left'>
-            © {new Date().getFullYear()} PTO Silent Auction
-          </p>
+          <div className='flex flex-col sm:flex-row items-center gap-2 sm:gap-4'>
+            <p className='text-center sm:text-left'>
+              © {new Date().getFullYear()} PTO Silent Auction
+            </p>
+            <Link
+              href='/terms'
+              className='text-gray-600 hover:text-primary transition-colors duration-200 underline'
+            >
+              Terms & Privacy
+            </Link>
+          </div>
           <p className='text-center sm:text-right'>
             Experience crafted by{' '}
             <a

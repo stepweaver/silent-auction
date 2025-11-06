@@ -80,7 +80,10 @@ export async function PATCH(req, { params }) {
       .single();
 
     if (error) {
-      console.error('Update error:', error);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Update error:', error);
+      }
       return new Response('Failed to update item', { status: 500 });
     }
 
@@ -90,7 +93,10 @@ export async function PATCH(req, { params }) {
 
     return Response.json({ ok: true, item });
   } catch (error) {
-    console.error('Update item error:', error);
+    // Log error server-side only, don't expose details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Update item error:', error);
+    }
     return new Response('Internal server error', { status: 500 });
   }
 }

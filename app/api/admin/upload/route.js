@@ -55,7 +55,10 @@ export async function POST(req) {
       });
 
     if (error) {
-      console.error('Storage upload error:', error);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Storage upload error:', error);
+      }
       return new Response('Failed to upload file', { status: 500 });
     }
 
@@ -64,7 +67,10 @@ export async function POST(req) {
 
     return Response.json({ url: urlData.publicUrl, path: filePath });
   } catch (error) {
-    console.error('Upload error:', error);
+    // Log error server-side only, don't expose details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Upload error:', error);
+    }
     return new Response('Internal server error', { status: 500 });
   }
 }

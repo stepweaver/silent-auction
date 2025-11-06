@@ -41,9 +41,20 @@ const EMOJI_CATEGORIES = {
   vehicles: ANIMALS.slice(VEHICLES_START),
 };
 
-export default function AliasSelector({ email, name: propName, onAliasSelected, initialAlias = null, isModal = false, onClose = null }) {
-  const [selectedColor, setSelectedColor] = useState(initialAlias?.color || null);
-  const [selectedAnimal, setSelectedAnimal] = useState(initialAlias?.animal || null);
+export default function AliasSelector({
+  email,
+  name: propName,
+  onAliasSelected,
+  initialAlias = null,
+  isModal = false,
+  onClose = null,
+}) {
+  const [selectedColor, setSelectedColor] = useState(
+    initialAlias?.color || null
+  );
+  const [selectedAnimal, setSelectedAnimal] = useState(
+    initialAlias?.animal || null
+  );
   const [isChecking, setIsChecking] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
@@ -53,26 +64,19 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
   const [checkingExistingEmail, setCheckingExistingEmail] = useState(false);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [localName, setLocalName] = useState(propName || '');
-  
-  // Use localName if propName is not provided, otherwise use propName
-  const name = propName || localName;
 
-  // Sync propName to localName when it changes
-  useEffect(() => {
-    if (propName && propName.trim()) {
-      setLocalName(propName);
-    }
-  }, [propName]);
+  // Use the name from verification token generation
+  const name = propName;
 
   // Check if email already has an alias when email changes
   useEffect(() => {
     let isMounted = true;
-    
+
     const checkExistingEmailAlias = async () => {
       // Basic format check - don't do expensive validation on every keystroke
-      if (!email || !email.includes('@') || email.split('@').length !== 2) return;
-      
+      if (!email || !email.includes('@') || email.split('@').length !== 2)
+        return;
+
       setCheckingExistingEmail(true);
       try {
         const response = await fetch('/api/alias/get', {
@@ -82,17 +86,19 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
         });
 
         const data = await response.json();
-        
+
         if (isMounted && response.ok && data.alias) {
           // Email already has an alias
-          setError('This email already has an alias. Your existing alias will be used.');
+          setError(
+            'This email already has an alias. Your existing alias will be used.'
+          );
           setSuccess(`Your existing alias: ${data.alias.alias}`);
           if (data.alias.color) setSelectedColor(data.alias.color);
           if (data.alias.animal) setSelectedAnimal(data.alias.animal);
-          
+
           // Note: Security notification is handled by landing page recovery logic
           // This component is used during alias creation flow, not recovery
-          
+
           if (onAliasSelected) {
             onAliasSelected(data.alias);
           }
@@ -134,7 +140,7 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
     setIsRandomizing(true);
     setError('');
     setSuccess('');
-    
+
     // Animate through a few random selections before settling
     let iterations = 0;
     const maxIterations = 8;
@@ -142,14 +148,14 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
       const random = generateRandomAlias();
       setSelectedColor(random.color);
       setSelectedAnimal(random.animal);
-      
+
       iterations++;
       if (iterations >= maxIterations) {
         clearInterval(interval);
         setIsRandomizing(false);
-        
+
         // Reset category to show the new selection
-        const selected = ANIMALS.find(a => a.value === random.animal);
+        const selected = ANIMALS.find((a) => a.value === random.animal);
         if (selected) {
           const index = ANIMALS.indexOf(selected);
           if (index < ANIMALS_END) setEmojiCategory('animals');
@@ -193,7 +199,9 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
     } catch (err) {
       console.error('Email validation error:', err);
       // If validation API fails, we MUST reject to prevent invalid registrations
-      setError('Unable to verify email address. Please check for typos and try again.');
+      setError(
+        'Unable to verify email address. Please check for typos and try again.'
+      );
       return; // BLOCK on validation failure
     }
 
@@ -262,12 +270,13 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
     } catch (err) {
       console.error('Email validation error:', err);
       // If validation API fails, we MUST reject to prevent invalid registrations
-      setError('Unable to verify email address. Please check for typos and try again.');
+      setError(
+        'Unable to verify email address. Please check for typos and try again.'
+      );
       return; // BLOCK on validation failure
     }
 
-    const finalName = name || localName;
-    if (!finalName || finalName.trim() === '') {
+    if (!name || name.trim() === '') {
       setError('Name is required to create an avatar');
       return;
     }
@@ -286,7 +295,7 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
           alias,
           color: selectedColor,
           animal: selectedAnimal,
-          name: (name || localName).trim(),
+          name: name.trim(),
         }),
       });
 
@@ -317,7 +326,10 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
 
       // Success - check if verification is required
       if (data.requiresVerification) {
-        setSuccess(data.message || 'Alias created! Please check your email to verify your address before you can start bidding.');
+        setSuccess(
+          data.message ||
+            'Alias created! Please check your email to verify your address before you can start bidding.'
+        );
         // Don't proceed to enrollment yet - user needs to verify email
         return;
       }
@@ -337,52 +349,63 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
   // Filter emojis by search and category
   const filteredEmojis = useMemo(() => {
     let emojis = EMOJI_CATEGORIES[emojiCategory] || [];
-    
+
     if (emojiSearch.trim()) {
       const searchLower = emojiSearch.toLowerCase();
-      emojis = emojis.filter(animal => 
-        animal.name.toLowerCase().includes(searchLower) ||
-        animal.value.toLowerCase().includes(searchLower)
+      emojis = emojis.filter(
+        (animal) =>
+          animal.name.toLowerCase().includes(searchLower) ||
+          animal.value.toLowerCase().includes(searchLower)
       );
     }
-    
+
     return emojis;
   }, [emojiCategory, emojiSearch]);
 
-  const selectedColorObj = COLORS.find(c => c.value === selectedColor);
-  const selectedAnimalObj = ANIMALS.find(a => a.value === selectedAnimal);
+  const selectedColorObj = COLORS.find((c) => c.value === selectedColor);
+  const selectedAnimalObj = ANIMALS.find((a) => a.value === selectedAnimal);
 
   const content = (
-    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div className='bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl overflow-hidden max-h-[90vh] flex flex-col'>
       {/* Header */}
-      <div 
-        className="px-4 py-3 sm:px-5 sm:py-4 text-center flex-shrink-0"
+      <div
+        className='px-4 py-3 sm:px-5 sm:py-4 text-center flex-shrink-0'
         style={{
-          backgroundColor: '#1e293b'
+          backgroundColor: '#1e293b',
         }}
       >
-        <div className="flex items-center justify-between mb-2">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 relative">
+        <div className='flex items-center justify-between mb-2'>
+          <div className='w-12 h-12 sm:w-14 sm:h-14 relative'>
             <Image
-              src="/logo-with-glow.png"
-              alt="Mary Frank Elementary"
+              src='/logo-with-glow.png'
+              alt='Mary Frank Elementary'
               fill
-              className="object-contain drop-shadow-lg"
+              className='object-contain drop-shadow-lg'
               priority
-              sizes="(max-width: 640px) 48px, 56px"
+              sizes='(max-width: 640px) 48px, 56px'
             />
           </div>
-          <h2 className="text-base sm:text-lg md:text-xl font-bold text-white flex-1">
+          <h2 className='text-base sm:text-lg md:text-xl font-bold text-white flex-1'>
             Create Your Avatar
           </h2>
           {isModal && onClose && (
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
-              aria-label="Close"
+              className='w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors'
+              aria-label='Close'
             >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className='w-5 h-5 text-white'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
               </svg>
             </button>
           )}
@@ -390,350 +413,440 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
       </div>
 
       {/* Content - Scrollable */}
-      <div className="px-4 sm:px-5 md:px-6 py-3 sm:py-4 overflow-y-auto flex-1">
-
-      {/* Name Input - Show if name is missing */}
-      {!name || name.trim() === '' ? (
-        <div className="mb-3">
-          <label className="block text-xs font-bold text-gray-900 mb-1.5">
-            Your Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-            placeholder="Enter your name"
-            value={localName}
-            onChange={(e) => {
-              setLocalName(e.target.value);
-              setError('');
+      <div className='px-4 sm:px-5 md:px-6 py-3 sm:py-4 overflow-y-auto flex-1'>
+        {/* Preview - Compact and Prominent */}
+        {selectedColor && selectedAnimal && (
+          <div
+            className='border-2 rounded-lg p-2.5 sm:p-3 mb-3'
+            style={{
+              backgroundColor: 'rgba(0, 177, 64, 0.05)',
+              borderColor: 'rgba(0, 177, 64, 0.2)',
+              animation: 'fadeIn 0.3s ease-out',
             }}
-            autoFocus
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            Required to create your avatar
-          </p>
-        </div>
-      ) : null}
-
-      {/* Preview - Compact and Prominent */}
-      {selectedColor && selectedAnimal && (
-        <div 
-          className="border-2 rounded-lg p-2.5 sm:p-3 mb-3"
-          style={{ 
-            backgroundColor: 'rgba(0, 177, 64, 0.05)',
-            borderColor: 'rgba(0, 177, 64, 0.2)',
-            animation: 'fadeIn 0.3s ease-out'
-          }}
-        >
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xl sm:text-2xl shadow-md flex-shrink-0 transition-all duration-300 ${
-                isRandomizing ? 'animate-spin' : ''
-              }`}
-              style={{ 
-                backgroundColor: selectedColorObj?.hex,
-                animation: isRandomizing ? 'randomizeSpin 0.6s ease-in-out' : undefined
-              }}
-            >
-              {selectedAnimalObj?.emoji}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm sm:text-base text-gray-900 mb-0.5 truncate">
-                {formatAlias(selectedColor, selectedAnimal)}
+          >
+            <div className='flex items-center gap-2.5'>
+              <div
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xl sm:text-2xl shadow-md flex-shrink-0 transition-all duration-300 ${
+                  isRandomizing ? 'animate-spin' : ''
+                }`}
+                style={{
+                  backgroundColor: selectedColorObj?.hex,
+                  animation: isRandomizing
+                    ? 'randomizeSpin 0.6s ease-in-out'
+                    : undefined,
+                }}
+              >
+                {selectedAnimalObj?.emoji}
               </div>
-              <div className="text-xs text-gray-600">
-                Your bidding identity
+              <div className='flex-1 min-w-0'>
+                <div className='font-bold text-sm sm:text-base text-gray-900 mb-0.5 truncate'>
+                  {formatAlias(selectedColor, selectedAnimal)}
+                </div>
+                <div className='text-xs text-gray-600'>
+                  Your bidding identity
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Color Selection */}
-      <div className="mb-3">
-        <label className="block text-xs font-bold text-gray-900 mb-1.5">
-          Color
-        </label>
-        <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 gap-1.5">
-          {COLORS.map((color) => (
-            <button
-              key={color.value}
-              type="button"
-              onClick={() => {
-                setSelectedColor(color.value);
-                setError('');
-                setSuccess('');
-              }}
-              className={`relative h-8 sm:h-9 rounded-lg transition-all duration-200 hover:scale-110 ${
-                selectedColor === color.value
-                  ? 'shadow-md scale-110 z-10 ring-2 ring-white'
-                  : 'hover:shadow-sm'
-              }`}
-              style={{
-                backgroundColor: color.hex,
-                border: selectedColor === color.value ? '2px solid white' : '1px solid rgba(0,0,0,0.1)',
-                boxShadow: selectedColor === color.value ? '0 0 0 2px #00b140, 0 4px 6px -1px rgba(0, 0, 0, 0.1)' : undefined,
-              }}
-              title={color.name}
-            >
-              {selectedColor === color.value && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Emoji Selection - Collapsible */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1.5">
-          <label className="block text-xs font-bold text-gray-900">
-            Emoji
+        {/* Color Selection */}
+        <div className='mb-3'>
+          <label className='block text-xs font-bold text-gray-900 mb-1.5'>
+            Color
           </label>
+          <div className='grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 gap-1.5'>
+            {COLORS.map((color) => (
+              <button
+                key={color.value}
+                type='button'
+                onClick={() => {
+                  setSelectedColor(color.value);
+                  setError('');
+                  setSuccess('');
+                }}
+                className={`relative h-8 sm:h-9 rounded-lg transition-all duration-200 hover:scale-110 ${
+                  selectedColor === color.value
+                    ? 'shadow-md scale-110 z-10 ring-2 ring-white'
+                    : 'hover:shadow-sm'
+                }`}
+                style={{
+                  backgroundColor: color.hex,
+                  border:
+                    selectedColor === color.value
+                      ? '2px solid white'
+                      : '1px solid rgba(0,0,0,0.1)',
+                  boxShadow:
+                    selectedColor === color.value
+                      ? '0 0 0 2px #00b140, 0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      : undefined,
+                }}
+                title={color.name}
+              >
+                {selectedColor === color.value && (
+                  <div className='absolute inset-0 flex items-center justify-center'>
+                    <svg
+                      className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-white drop-shadow-lg'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={3}
+                        d='M5 13l4 4L19 7'
+                      />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Emoji Selection - Collapsible */}
+        <div className='mb-3'>
+          <div className='flex items-center justify-between mb-1.5'>
+            <label className='block text-xs font-bold text-gray-900'>
+              Emoji
+            </label>
+            <button
+              type='button'
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className='text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors'
+              style={{ color: showEmojiPicker ? '#00b140' : undefined }}
+            >
+              {showEmojiPicker ? 'Hide' : 'Show'} Picker
+            </button>
+          </div>
+
+          {/* Quick Emoji Selection - Always Visible */}
+          {!showEmojiPicker && selectedAnimalObj && (
+            <div className='mb-2'>
+              <button
+                type='button'
+                onClick={() => setShowEmojiPicker(true)}
+                className='w-full h-10 rounded-lg border-2 border-gray-200 hover:border-primary transition-all flex items-center justify-center gap-2 bg-gray-50'
+              >
+                <span className='text-xl'>{selectedAnimalObj.emoji}</span>
+                <span className='text-xs text-gray-600'>
+                  {selectedAnimalObj.name}
+                </span>
+                <svg
+                  className='w-4 h-4 text-gray-400'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M19 9l-7 7-7-7'
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Full Emoji Picker - Collapsible */}
+          {showEmojiPicker && (
+            <div className='space-y-2'>
+              {/* Search Input */}
+              <input
+                type='text'
+                placeholder='Search emojis...'
+                className='w-full px-2.5 py-1.5 border-2 border-gray-200 rounded-lg outline-none transition-all text-xs'
+                style={{
+                  borderColor: 'rgb(229 231 235)',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#00b140';
+                  e.currentTarget.style.boxShadow =
+                    '0 0 0 2px rgba(0, 177, 64, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'rgb(229 231 235)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                value={emojiSearch}
+                onChange={(e) => setEmojiSearch(e.target.value)}
+              />
+
+              {/* Category Tabs */}
+              <div className='flex flex-wrap gap-1.5 mb-2'>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setEmojiCategory('animals');
+                    setEmojiSearch('');
+                  }}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
+                    emojiCategory === 'animals'
+                      ? 'text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  style={
+                    emojiCategory === 'animals'
+                      ? { backgroundColor: '#00b140' }
+                      : {}
+                  }
+                >
+                  🐾 Animals
+                </button>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setEmojiCategory('people');
+                    setEmojiSearch('');
+                  }}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
+                    emojiCategory === 'people'
+                      ? 'text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  style={
+                    emojiCategory === 'people'
+                      ? { backgroundColor: '#00b140' }
+                      : {}
+                  }
+                >
+                  👥 People
+                </button>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setEmojiCategory('vehicles');
+                    setEmojiSearch('');
+                  }}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
+                    emojiCategory === 'vehicles'
+                      ? 'text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  style={
+                    emojiCategory === 'vehicles'
+                      ? { backgroundColor: '#00b140' }
+                      : {}
+                  }
+                >
+                  🚗 Vehicles
+                </button>
+              </div>
+
+              {/* Emoji Grid */}
+              <div className='bg-gray-50 rounded-lg p-2 border border-gray-200'>
+                <div className='grid grid-cols-8 sm:grid-cols-10 gap-1.5 max-h-48 overflow-y-auto'>
+                  {filteredEmojis.length > 0 ? (
+                    filteredEmojis.map((animal) => (
+                      <button
+                        key={animal.value}
+                        type='button'
+                        onClick={() => {
+                          setSelectedAnimal(animal.value);
+                          setError('');
+                          setSuccess('');
+                        }}
+                        className={`h-8 sm:h-9 rounded-lg transition-all duration-200 hover:scale-110 flex items-center justify-center ${
+                          selectedAnimal === animal.value
+                            ? 'shadow-md scale-110 ring-2 ring-primary'
+                            : 'bg-white hover:shadow-sm border border-gray-200'
+                        }`}
+                        style={
+                          selectedAnimal === animal.value
+                            ? {
+                                backgroundColor: '#00b140',
+                                boxShadow:
+                                  '0 0 0 2px #00b140, 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              }
+                            : {}
+                        }
+                        title={animal.name}
+                      >
+                        <span className='text-base sm:text-lg'>
+                          {animal.emoji}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className='col-span-full text-center py-6 text-gray-500'>
+                      <p className='text-xs mb-2'>
+                        No emojis found matching "{emojiSearch}"
+                      </p>
+                      <button
+                        type='button'
+                        onClick={() => setEmojiSearch('')}
+                        className='text-xs hover:underline font-medium'
+                        style={{ color: '#00b140' }}
+                      >
+                        Clear search
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Random Button */}
+        <div className='mb-3'>
           <button
-            type="button"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            style={{ color: showEmojiPicker ? '#00b140' : undefined }}
+            type='button'
+            onClick={handleRandomize}
+            disabled={isRandomizing}
+            className={`w-full px-3 py-2 border-2 font-semibold rounded-lg transition-all duration-200 text-xs flex items-center justify-center gap-2 ${
+              isRandomizing ? 'cursor-wait' : ''
+            }`}
+            style={{
+              borderColor: '#00b140',
+              color: isRandomizing ? '#059669' : '#00b140',
+              backgroundColor: isRandomizing
+                ? 'rgba(0, 177, 64, 0.1)'
+                : 'transparent',
+              animation: isRandomizing
+                ? 'randomizeShake 0.5s ease-in-out'
+                : undefined,
+            }}
+            onMouseEnter={(e) => {
+              if (!isRandomizing) {
+                e.currentTarget.style.backgroundColor = '#00b140';
+                e.currentTarget.style.color = 'white';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isRandomizing) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#00b140';
+              }
+            }}
           >
-            {showEmojiPicker ? 'Hide' : 'Show'} Picker
+            <span className={isRandomizing ? 'animate-spin' : ''}>🎲</span>
+            {isRandomizing ? 'Randomizing...' : 'Randomize Selection'}
           </button>
         </div>
-        
-        {/* Quick Emoji Selection - Always Visible */}
-        {!showEmojiPicker && selectedAnimalObj && (
-          <div className="mb-2">
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(true)}
-              className="w-full h-10 rounded-lg border-2 border-gray-200 hover:border-primary transition-all flex items-center justify-center gap-2 bg-gray-50"
-            >
-              <span className="text-xl">{selectedAnimalObj.emoji}</span>
-              <span className="text-xs text-gray-600">{selectedAnimalObj.name}</span>
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+
+        {/* Error/Success Messages */}
+        {error && (
+          <div
+            className='bg-red-50 border-2 border-red-200 rounded-lg p-2 mb-2'
+            style={{ animation: 'slideUp 0.3s ease-out' }}
+          >
+            <p className='text-red-700 font-medium text-xs flex items-center gap-1.5'>
+              <svg
+                className='w-4 h-4 flex-shrink-0'
+                fill='currentColor'
+                viewBox='0 0 20 20'
+              >
+                <path
+                  fillRule='evenodd'
+                  d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z'
+                  clipRule='evenodd'
+                />
               </svg>
-            </button>
+              {error}
+            </p>
+          </div>
+        )}
+        {success && (
+          <div
+            className='bg-green-50 border-2 border-green-200 rounded-lg p-2 mb-2'
+            style={{ animation: 'slideUp 0.3s ease-out' }}
+          >
+            <p className='text-green-700 font-medium text-xs flex items-center gap-1.5'>
+              <svg
+                className='w-4 h-4 flex-shrink-0'
+                fill='currentColor'
+                viewBox='0 0 20 20'
+              >
+                <path
+                  fillRule='evenodd'
+                  d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'
+                  clipRule='evenodd'
+                />
+              </svg>
+              {success}
+            </p>
           </div>
         )}
 
-        {/* Full Emoji Picker - Collapsible */}
-        {showEmojiPicker && (
-          <div className="space-y-2">
-            {/* Search Input */}
-            <input
-              type="text"
-              placeholder="Search emojis..."
-              className="w-full px-2.5 py-1.5 border-2 border-gray-200 rounded-lg outline-none transition-all text-xs"
-              style={{ 
-                borderColor: 'rgb(229 231 235)'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#00b140';
-                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'rgb(229 231 235)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-              value={emojiSearch}
-              onChange={(e) => setEmojiSearch(e.target.value)}
-            />
-
-            {/* Category Tabs */}
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmojiCategory('animals');
-                  setEmojiSearch('');
-                }}
-                className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
-                  emojiCategory === 'animals'
-                    ? 'text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                style={emojiCategory === 'animals' ? { backgroundColor: '#00b140' } : {}}
-              >
-                🐾 Animals
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmojiCategory('people');
-                  setEmojiSearch('');
-                }}
-                className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
-                  emojiCategory === 'people'
-                    ? 'text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                style={emojiCategory === 'people' ? { backgroundColor: '#00b140' } : {}}
-              >
-                👥 People
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmojiCategory('vehicles');
-                  setEmojiSearch('');
-                }}
-                className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
-                  emojiCategory === 'vehicles'
-                    ? 'text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                style={emojiCategory === 'vehicles' ? { backgroundColor: '#00b140' } : {}}
-              >
-                🚗 Vehicles
-              </button>
-            </div>
-
-            {/* Emoji Grid */}
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-              <div className="grid grid-cols-8 sm:grid-cols-10 gap-1.5 max-h-48 overflow-y-auto">
-            {filteredEmojis.length > 0 ? (
-              filteredEmojis.map((animal) => (
-                <button
-                  key={animal.value}
-                  type="button"
-                  onClick={() => {
-                    setSelectedAnimal(animal.value);
-                    setError('');
-                    setSuccess('');
-                  }}
-                  className={`h-8 sm:h-9 rounded-lg transition-all duration-200 hover:scale-110 flex items-center justify-center ${
-                    selectedAnimal === animal.value
-                      ? 'shadow-md scale-110 ring-2 ring-primary'
-                      : 'bg-white hover:shadow-sm border border-gray-200'
-                  }`}
-                  style={selectedAnimal === animal.value ? {
-                    backgroundColor: '#00b140',
-                    boxShadow: '0 0 0 2px #00b140, 0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  } : {}}
-                  title={animal.name}
+        {/* Action Buttons */}
+        <div className='flex gap-2 flex-shrink-0 pt-2 border-t border-gray-200'>
+          <button
+            type='button'
+            onClick={handleCheckAlias}
+            disabled={
+              !selectedColor || !selectedAnimal || isChecking || isCreating
+            }
+            className='flex-1 px-3 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-xs flex items-center justify-center gap-1.5'
+          >
+            {isChecking ? (
+              <>
+                <svg
+                  className='animate-spin h-3.5 w-3.5'
+                  xmlns='http://www.w3.org/2000/svg'
+                  fill='none'
+                  viewBox='0 0 24 24'
                 >
-                  <span className="text-base sm:text-lg">{animal.emoji}</span>
-                </button>
-              ))
+                  <circle
+                    className='opacity-25'
+                    cx='12'
+                    cy='12'
+                    r='10'
+                    stroke='currentColor'
+                    strokeWidth='4'
+                  ></circle>
+                  <path
+                    className='opacity-75'
+                    fill='currentColor'
+                    d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                  ></path>
+                </svg>
+                Checking...
+              </>
             ) : (
-              <div className="col-span-full text-center py-6 text-gray-500">
-                <p className="text-xs mb-2">No emojis found matching "{emojiSearch}"</p>
-                <button
-                  type="button"
-                  onClick={() => setEmojiSearch('')}
-                  className="text-xs hover:underline font-medium"
-                  style={{ color: '#00b140' }}
-                >
-                  Clear search
-                </button>
-              </div>
+              'Check'
             )}
-          </div>
-        </div>
-          </div>
-        )}
-      </div>
-
-      {/* Random Button */}
-      <div className="mb-3">
-        <button
-          type="button"
-          onClick={handleRandomize}
-          disabled={isRandomizing}
-          className={`w-full px-3 py-2 border-2 font-semibold rounded-lg transition-all duration-200 text-xs flex items-center justify-center gap-2 ${
-            isRandomizing ? 'cursor-wait' : ''
-          }`}
-          style={{
-            borderColor: '#00b140',
-            color: isRandomizing ? '#059669' : '#00b140',
-            backgroundColor: isRandomizing ? 'rgba(0, 177, 64, 0.1)' : 'transparent',
-            animation: isRandomizing ? 'randomizeShake 0.5s ease-in-out' : undefined
-          }}
-          onMouseEnter={(e) => {
-            if (!isRandomizing) {
-              e.currentTarget.style.backgroundColor = '#00b140';
-              e.currentTarget.style.color = 'white';
+          </button>
+          <button
+            type='button'
+            onClick={handleCreateAlias}
+            disabled={
+              !selectedColor || !selectedAnimal || isCreating || !!error
             }
-          }}
-          onMouseLeave={(e) => {
-            if (!isRandomizing) {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#00b140';
-            }
-          }}
-        >
-          <span className={isRandomizing ? 'animate-spin' : ''}>🎲</span>
-          {isRandomizing ? 'Randomizing...' : 'Randomize Selection'}
-        </button>
-      </div>
-
-      {/* Error/Success Messages */}
-      {error && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-2 mb-2" style={{ animation: 'slideUp 0.3s ease-out' }}>
-          <p className="text-red-700 font-medium text-xs flex items-center gap-1.5">
-            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </p>
+            className='flex-1 px-3 py-2 text-white font-semibold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-xs flex items-center justify-center gap-1.5'
+            style={{ backgroundColor: '#00b140' }}
+          >
+            {isCreating ? (
+              <>
+                <svg
+                  className='animate-spin h-3.5 w-3.5'
+                  xmlns='http://www.w3.org/2000/svg'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                >
+                  <circle
+                    className='opacity-25'
+                    cx='12'
+                    cy='12'
+                    r='10'
+                    stroke='currentColor'
+                    strokeWidth='4'
+                  ></circle>
+                  <path
+                    className='opacity-75'
+                    fill='currentColor'
+                    d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                  ></path>
+                </svg>
+                Creating...
+              </>
+            ) : (
+              'Create Alias'
+            )}
+          </button>
         </div>
-      )}
-      {success && (
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-2 mb-2" style={{ animation: 'slideUp 0.3s ease-out' }}>
-          <p className="text-green-700 font-medium text-xs flex items-center gap-1.5">
-            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            {success}
-          </p>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-2 flex-shrink-0 pt-2 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={handleCheckAlias}
-          disabled={!selectedColor || !selectedAnimal || isChecking || isCreating}
-          className="flex-1 px-3 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-xs flex items-center justify-center gap-1.5"
-        >
-          {isChecking ? (
-            <>
-              <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Checking...
-            </>
-          ) : (
-            'Check'
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={handleCreateAlias}
-          disabled={!selectedColor || !selectedAnimal || isCreating || !!error}
-          className="flex-1 px-3 py-2 text-white font-semibold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-xs flex items-center justify-center gap-1.5"
-          style={{ backgroundColor: '#00b140' }}
-        >
-          {isCreating ? (
-            <>
-              <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Creating...
-            </>
-          ) : (
-            'Create Alias'
-          )}
-        </button>
-      </div>
       </div>
     </div>
   );
@@ -743,8 +856,8 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
     return (
       <>
         <style jsx>{randomizeAnimation}</style>
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        <div
+          className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm'
           style={{ animation: 'fadeIn 0.2s ease-out' }}
           onClick={(e) => {
             if (e.target === e.currentTarget && onClose) {
@@ -752,8 +865,8 @@ export default function AliasSelector({ email, name: propName, onAliasSelected, 
             }
           }}
         >
-          <div 
-            className="w-full max-w-md"
+          <div
+            className='w-full max-w-md'
             style={{ animation: 'slideUp 0.3s ease-out' }}
             onClick={(e) => e.stopPropagation()}
           >

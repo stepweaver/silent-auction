@@ -69,10 +69,6 @@ export async function POST(req) {
       }
     }
 
-    // Check if this is a vendor admin request
-    const vendorAdminId = headersList.get('x-vendor-admin-id');
-    const isSuperAdmin = checkBasicAuth(headersList);
-
     // Only super admin can create items without created_by (for backward compatibility)
     // Vendor admins must provide their ID via header
     const insertData = {
@@ -97,13 +93,19 @@ export async function POST(req) {
       .single();
 
     if (error) {
-      console.error('Insert error:', error);
+      // Log error server-side only, don't expose details to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Insert error:', error);
+      }
       return new Response('Failed to create item', { status: 500 });
     }
 
     return Response.json({ ok: true, item });
   } catch (error) {
-    console.error('Create item error:', error);
+    // Log error server-side only, don't expose details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Create item error:', error);
+    }
     return new Response('Internal server error', { status: 500 });
   }
 }
