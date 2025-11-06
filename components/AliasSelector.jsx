@@ -233,27 +233,31 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
   const selectedAnimalObj = ANIMALS.find(a => a.value === selectedAnimal);
 
   return (
-    <div className="bg-gradient-to-br from-base-100 to-base-200 rounded-2xl border-2 border-primary/20 shadow-2xl p-4 sm:p-6 lg:p-8 animate-fade-in">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-xl">A</span>
+    <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-primary via-primary/95 to-primary/90 px-5 sm:px-6 md:px-8 py-6 sm:py-8">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
+            <span className="text-white font-bold text-xl sm:text-2xl">A</span>
           </div>
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-base-content">Create Your Avatar</h2>
-            <p className="text-sm text-base-content/70">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Create Your Avatar</h2>
+            <p className="text-sm sm:text-base text-white/90 mt-0.5">
               Design your unique bidding identity
             </p>
           </div>
         </div>
       </div>
 
-      {/* Color Selection - Full Color Buttons */}
-      <div className="form-control w-full mb-6">
-        <label className="label pb-3">
-          <span className="label-text font-bold text-lg">1. Choose Your Color</span>
+      {/* Content */}
+      <div className="px-5 sm:px-6 md:px-8 py-5 sm:py-6 md:py-8">
+
+      {/* Color Selection */}
+      <div className="mb-5 sm:mb-6">
+        <label className="block text-sm sm:text-base font-bold text-gray-900 mb-3">
+          1. Choose Your Color
         </label>
-        <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-2">
           {COLORS.map((color) => (
             <button
               key={color.value}
@@ -263,20 +267,20 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
                 setError('');
                 setSuccess('');
               }}
-              className={`relative h-12 sm:h-14 lg:h-16 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-xl ${
+              className={`relative h-10 sm:h-12 md:h-14 rounded-lg transition-all duration-200 hover:scale-110 ${
                 selectedColor === color.value
-                  ? 'ring-4 ring-primary ring-offset-2 shadow-2xl scale-105 z-10'
-                  : 'hover:shadow-lg'
+                  ? 'ring-3 ring-primary ring-offset-2 shadow-lg scale-105 z-10'
+                  : 'hover:shadow-md'
               }`}
               style={{
                 backgroundColor: color.hex,
-                border: selectedColor === color.value ? '3px solid white' : '2px solid transparent',
+                border: selectedColor === color.value ? '2px solid white' : '1px solid rgba(0,0,0,0.1)',
               }}
               title={color.name}
             >
               {selectedColor === color.value && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -285,43 +289,41 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
           ))}
         </div>
         {selectedColorObj && (
-          <label className="label pt-2">
-            <span className="label-text-alt text-primary font-semibold">
-              Selected: {selectedColorObj.name}
-            </span>
-          </label>
+          <p className="mt-2 text-xs sm:text-sm text-primary font-semibold">
+            Selected: {selectedColorObj.name}
+          </p>
         )}
       </div>
 
-      {/* Emoji Selection - Categorized with Search */}
-      <div className="form-control w-full mb-6">
+      {/* Emoji Selection */}
+      <div className="mb-5 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-          <label className="label pb-0">
-            <span className="label-text font-bold text-lg">2. Choose Your Emoji</span>
+          <label className="block text-sm sm:text-base font-bold text-gray-900">
+            2. Choose Your Emoji
           </label>
           
           {/* Search Input */}
-          <div className="form-control flex-1 sm:max-w-xs">
-            <input
-              type="text"
-              placeholder="Search emojis..."
-              className="input input-bordered input-sm w-full border-2 focus:border-primary focus:outline-none"
-              value={emojiSearch}
-              onChange={(e) => setEmojiSearch(e.target.value)}
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Search emojis..."
+            className="w-full sm:w-48 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+            value={emojiSearch}
+            onChange={(e) => setEmojiSearch(e.target.value)}
+          />
         </div>
 
         {/* Category Tabs */}
-        <div className="tabs tabs-boxed mb-4 bg-base-200/50 justify-center sm:justify-start">
+        <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
           <button
             type="button"
             onClick={() => {
               setEmojiCategory('animals');
               setEmojiSearch('');
             }}
-            className={`tab tab-sm sm:tab-md transition-all ${
-              emojiCategory === 'animals' ? 'tab-active' : ''
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              emojiCategory === 'animals'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             🐾 Animals ({EMOJI_CATEGORIES.animals.length})
@@ -332,8 +334,10 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
               setEmojiCategory('people');
               setEmojiSearch('');
             }}
-            className={`tab tab-sm sm:tab-md transition-all ${
-              emojiCategory === 'people' ? 'tab-active' : ''
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              emojiCategory === 'people'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             👥 People ({EMOJI_CATEGORIES.people.length})
@@ -344,8 +348,10 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
               setEmojiCategory('vehicles');
               setEmojiSearch('');
             }}
-            className={`tab tab-sm sm:tab-md transition-all ${
-              emojiCategory === 'vehicles' ? 'tab-active' : ''
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              emojiCategory === 'vehicles'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             🚗 Vehicles ({EMOJI_CATEGORIES.vehicles.length})
@@ -353,8 +359,8 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
         </div>
 
         {/* Emoji Grid */}
-        <div className="bg-base-200/30 rounded-xl p-3 sm:p-4 border border-base-300">
-          <div className="grid grid-cols-6 sm:grid-cols-8 lg:grid-cols-10 gap-2 max-h-64 sm:max-h-80 overflow-y-auto">
+        <div className="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
+          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-64 sm:max-h-80 overflow-y-auto">
             {filteredEmojis.length > 0 ? (
               filteredEmojis.map((animal) => (
                 <button
@@ -365,23 +371,23 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
                     setError('');
                     setSuccess('');
                   }}
-                  className={`btn btn-sm h-12 sm:h-14 transition-all duration-200 hover:scale-110 hover:shadow-lg ${
+                  className={`h-10 sm:h-12 md:h-14 rounded-lg transition-all duration-200 hover:scale-110 flex items-center justify-center ${
                     selectedAnimal === animal.value
-                      ? 'ring-4 ring-primary ring-offset-2 shadow-xl scale-110 bg-primary text-primary-content'
-                      : 'hover:shadow-md'
+                      ? 'ring-3 ring-primary ring-offset-2 shadow-lg scale-110 bg-primary text-white'
+                      : 'bg-white hover:shadow-md border border-gray-200'
                   }`}
                   title={animal.name}
                 >
-                  <span className="text-2xl sm:text-3xl">{animal.emoji}</span>
+                  <span className="text-xl sm:text-2xl md:text-3xl">{animal.emoji}</span>
                 </button>
               ))
             ) : (
-              <div className="col-span-full text-center py-8 text-base-content/50">
-                <p className="text-sm">No emojis found matching "{emojiSearch}"</p>
+              <div className="col-span-full text-center py-8 text-gray-500">
+                <p className="text-sm mb-2">No emojis found matching "{emojiSearch}"</p>
                 <button
                   type="button"
                   onClick={() => setEmojiSearch('')}
-                  className="btn btn-sm btn-ghost mt-2"
+                  className="text-sm text-primary hover:underline font-medium"
                 >
                   Clear search
                 </button>
@@ -391,34 +397,36 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
         </div>
         
         {selectedAnimalObj && (
-          <label className="label pt-2">
-            <span className="label-text-alt text-primary font-semibold">
-              Selected: {selectedAnimalObj.name}
-            </span>
-          </label>
+          <p className="mt-2 text-xs sm:text-sm text-primary font-semibold">
+            Selected: {selectedAnimalObj.name}
+          </p>
         )}
       </div>
 
       {/* Preview */}
       {selectedColor && selectedAnimal && (
-        <div className="bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/50 rounded-2xl p-4 sm:p-6 mb-6 shadow-xl animate-pulse-subtle">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+        <div className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-xl sm:rounded-2xl p-4 sm:p-5 mb-5 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
             <div
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center text-4xl sm:text-5xl shadow-2xl transition-transform hover:scale-110 cursor-pointer"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-3xl sm:text-4xl shadow-lg transition-transform hover:scale-110"
               style={{ backgroundColor: selectedColorObj?.hex }}
             >
               {selectedAnimalObj?.emoji}
             </div>
             <div className="flex-1 text-center sm:text-left">
-              <div className="font-bold text-xl sm:text-2xl text-base-content mb-2">
+              <div className="font-bold text-lg sm:text-xl md:text-2xl text-gray-900 mb-1">
                 {formatAlias(selectedColor, selectedAnimal)}
               </div>
-              <div className="text-sm text-base-content/70 mb-2">
+              <div className="text-xs sm:text-sm text-gray-600 mb-2">
                 This is how others will see your bids
               </div>
-              <div className="flex items-center justify-center sm:justify-start gap-2 text-xs text-base-content/60">
-                <span className="badge badge-primary badge-sm">{selectedColorObj?.name}</span>
-                <span className="badge badge-secondary badge-sm">{selectedAnimalObj?.name}</span>
+              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                  {selectedColorObj?.name}
+                </span>
+                <span className="px-2 py-0.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full">
+                  {selectedAnimalObj?.name}
+                </span>
               </div>
             </div>
           </div>
@@ -426,25 +434,35 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
       )}
 
       {/* Random Button */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-5">
         <button
           type="button"
           onClick={handleRandomize}
-          className="btn btn-outline btn-primary w-full btn-lg hover:btn-primary transition-all duration-200 hover:scale-105"
+          className="w-full px-4 py-2.5 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary hover:text-white transition-all duration-200 text-sm sm:text-base"
         >
-          Randomize Selection
+          🎲 Randomize Selection
         </button>
       </div>
 
       {/* Error/Success Messages */}
       {error && (
-        <div className="bg-error/10 border-2 border-error/30 rounded-xl p-4 mb-4 animate-fade-in">
-          <span className="text-error font-semibold">{error}</span>
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3 sm:p-4 mb-4">
+          <p className="text-red-700 font-medium text-sm flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {error}
+          </p>
         </div>
       )}
       {success && (
-        <div className="bg-success/10 border-2 border-success/30 rounded-xl p-4 mb-4 animate-fade-in">
-          <span className="text-success font-semibold">{success}</span>
+        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3 sm:p-4 mb-4">
+          <p className="text-green-700 font-medium text-sm flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            {success}
+          </p>
         </div>
       )}
 
@@ -454,11 +472,14 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
           type="button"
           onClick={handleCheckAlias}
           disabled={!selectedColor || !selectedAnimal || isChecking || isCreating}
-          className="btn btn-outline btn-lg flex-1 transition-all hover:scale-105"
+          className="flex-1 px-4 py-2.5 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base flex items-center justify-center gap-2"
         >
           {isChecking ? (
             <>
-              <span className="loading loading-spinner loading-sm"></span>
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
               Checking...
             </>
           ) : (
@@ -469,17 +490,21 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
           type="button"
           onClick={handleCreateAlias}
           disabled={!selectedColor || !selectedAnimal || isCreating || !!error}
-          className="btn btn-primary btn-lg flex-1 transition-all hover:scale-105 shadow-lg"
+          className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base flex items-center justify-center gap-2"
         >
           {isCreating ? (
             <>
-              <span className="loading loading-spinner loading-sm"></span>
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
               Creating...
             </>
           ) : (
             'Create Alias'
           )}
         </button>
+      </div>
       </div>
     </div>
   );

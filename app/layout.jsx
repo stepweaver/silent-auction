@@ -1,6 +1,7 @@
 import './globals.css';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
+import BackgroundLogo from '@/components/BackgroundLogo';
 
 export const metadata = {
   title: 'Silent Auction',
@@ -9,24 +10,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme="auction">
-      <body className="bg-base-300 min-h-screen flex flex-col">
-        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 grid place-items-center">
-          <img
-            src="/logo-with-glow.png"
-            alt=""
-            className="opacity-10 object-contain"
-            style={{
-              maxWidth: 'min(88vw, 1100px)',
-              maxHeight: '70vh',
-              width: '100%',
-              height: '100%',
-              transform: 'translateY(8vh)'
-            }}
-          />
-        </div>
+    <html lang="en" data-theme="auction" className="h-full">
+      <body className="bg-base-300 min-h-screen flex flex-col relative h-full">
+        <BackgroundLogo />
         <SiteHeader />
-        <div className="flex-1">
+        <div className="flex-1 relative z-0 min-w-0 min-h-0 overflow-auto">
           {children}
         </div>
         <SiteFooter />
