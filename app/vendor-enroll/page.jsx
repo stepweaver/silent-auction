@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function VendorEnrollPage() {
+function VendorEnrollContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -205,6 +205,25 @@ export default function VendorEnrollPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function VendorEnrollPage() {
+  return (
+    <Suspense fallback={
+      <main className="w-full px-4 py-4 sm:py-6">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl">
+            <div className="px-4 sm:px-6 py-12 text-center">
+              <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: '#00b140' }}></div>
+              <p className="text-xs sm:text-sm text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    }>
+      <VendorEnrollContent />
+    </Suspense>
   );
 }
 
