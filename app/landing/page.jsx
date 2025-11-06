@@ -701,33 +701,14 @@ export default function LandingPage() {
   }
 
   return (
-    <div className='w-full min-h-0 px-4 py-4 sm:py-6 pb-8 sm:pb-10'>
-      <div className='max-w-2xl mx-auto'>
-        <button
-          onClick={() => setStep('intro')}
-          className='mb-4 sm:mb-6 flex items-center gap-2 text-sm sm:text-base text-gray-600 hover:text-gray-900 font-medium transition-colors'
-        >
-          <svg
-            className='w-5 h-5'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M15 19l-7-7 7-7'
-            />
-          </svg>
-          Back
-        </button>
-        <AliasSelector
-          email={email}
-          name={name}
-          onAliasSelected={handleAliasSelected}
-        />
-      </div>
-    </div>
+    <>
+      <AliasSelector
+        email={email}
+        name={name}
+        onAliasSelected={handleAliasSelected}
+        isModal={true}
+        onClose={() => setStep('intro')}
+      />
+    </>
   );
 }
