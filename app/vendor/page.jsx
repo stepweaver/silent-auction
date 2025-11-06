@@ -176,7 +176,6 @@ export default function VendorDashboard() {
                       <div className="space-y-1.5 text-xs text-gray-600 mb-3">
                         <div><span className="font-semibold">Slug:</span> <span className="font-mono">{item.slug}</span></div>
                         <div><span className="font-semibold">Current High:</span> {formatDollar(current)}</div>
-                        <div><span className="font-semibold">Min Increment:</span> {formatDollar(item.min_increment)}</div>
                       </div>
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                         <Link
@@ -203,7 +202,6 @@ export default function VendorDashboard() {
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Title</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Slug</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Current High</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Min Increment</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">Actions</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">QR</th>
@@ -223,7 +221,6 @@ export default function VendorDashboard() {
                           <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.title}</td>
                           <td className="px-4 py-3 text-xs font-mono text-gray-600">{item.slug}</td>
                           <td className="px-4 py-3 text-sm text-gray-900">{formatDollar(current)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{formatDollar(item.min_increment)}</td>
                           <td className="px-4 py-3">
                             {item.is_closed ? (
                               <span 

@@ -307,52 +307,66 @@ export default function AdminDashboard() {
               )}`;
 
               return (
-                <div key={item.id} className='border rounded-lg p-3 bg-white'>
-                  <div className='flex justify-between items-start mb-2'>
+                <Link
+                  key={item.id}
+                  href={`/admin/items/${item.id}`}
+                  className='block border rounded-lg bg-white overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02]'
+                >
+                  <div className='p-3 flex gap-3'>
+                    {/* Small Preview Image */}
+                    <div className='shrink-0'>
+                      {item.photo_url ? (
+                        <div className='w-16 h-16 bg-gray-100 rounded overflow-hidden'>
+                          <img
+                            src={item.photo_url}
+                            alt={item.title}
+                            className='w-full h-full object-contain'
+                          />
+                        </div>
+                      ) : (
+                        <div className='w-16 h-16 bg-gray-100 rounded grid place-items-center text-gray-400 text-xs'>
+                          No photo
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Card Content */}
                     <div className='flex-1 min-w-0'>
-                      <h3 className='font-semibold text-sm truncate'>
-                        {item.title}
-                      </h3>
-                      <p className='text-xs text-gray-500 font-mono truncate'>
-                        {item.slug}
-                      </p>
+                      <div className='flex justify-between items-start mb-2'>
+                        <div className='flex-1 min-w-0'>
+                          <h3 className='font-semibold text-sm truncate'>
+                            {item.title}
+                          </h3>
+                          <p className='text-xs text-gray-500 font-mono truncate'>
+                            {item.slug}
+                          </p>
+                        </div>
+                        <img
+                          alt='QR'
+                          src={qrUrl}
+                          className='w-12 h-12 shrink-0 ml-2 rounded border border-gray-200'
+                        />
+                      </div>
+                      <div className='grid grid-cols-2 gap-2 text-xs'>
+                        <div>
+                          <span className='text-gray-600'>High:</span>{' '}
+                          <span className='font-semibold text-green-600'>
+                            {formatDollar(current)}
+                          </span>
+                        </div>
+                        <div className='text-right'>
+                          <span
+                            className={`text-xs font-semibold ${
+                              item.is_closed ? 'text-red-600' : 'text-green-600'
+                            }`}
+                          >
+                            {item.is_closed ? 'Closed' : 'Open'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <img
-                      alt='QR'
-                      src={qrUrl}
-                      className='w-12 h-12 shrink-0 ml-2'
-                    />
                   </div>
-                  <div className='grid grid-cols-2 gap-2 text-xs mb-2'>
-                    <div>
-                      <span className='text-gray-600'>High:</span>{' '}
-                      <span className='font-semibold'>
-                        {formatDollar(current)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className='text-gray-600'>Min:</span>{' '}
-                      <span className='font-semibold'>
-                        {formatDollar(item.min_increment)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className='flex justify-between items-center'>
-                    <span
-                      className={`text-xs font-semibold ${
-                        item.is_closed ? 'text-red-600' : 'text-green-600'
-                      }`}
-                    >
-                      {item.is_closed ? 'Closed' : 'Open'}
-                    </span>
-                    <Link
-                      href={`/admin/items/${item.id}`}
-                      className='text-blue-600 underline hover:no-underline text-xs sm:text-sm'
-                    >
-                      Edit
-                    </Link>
-                  </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -362,14 +376,11 @@ export default function AdminDashboard() {
             <table className='w-full border-collapse border'>
               <thead>
                 <tr className='bg-gray-100'>
+                  <th className='border p-2 text-left text-sm'>Preview</th>
                   <th className='border p-2 text-left text-sm'>Title</th>
                   <th className='border p-2 text-left text-sm'>Slug</th>
                   <th className='border p-2 text-left text-sm'>Current High</th>
-                  <th className='border p-2 text-left text-sm'>
-                    Min Increment
-                  </th>
                   <th className='border p-2 text-left text-sm'>Status</th>
-                  <th className='border p-2 text-left text-sm'>Actions</th>
                   <th className='border p-2 text-left text-sm'>QR</th>
                 </tr>
               </thead>
@@ -385,16 +396,36 @@ export default function AdminDashboard() {
                   )}`;
 
                   return (
-                    <tr key={item.id}>
+                    <tr
+                      key={item.id}
+                      className='cursor-pointer hover:bg-gray-50 transition-colors'
+                      onClick={() => {
+                        window.location.href = `/admin/items/${item.id}`;
+                      }}
+                    >
+                      <td className='border p-2'>
+                        {item.photo_url ? (
+                          <div className='w-20 h-20 bg-gray-100 rounded overflow-hidden'>
+                            <img
+                              src={item.photo_url}
+                              alt={item.title}
+                              className='w-full h-full object-contain'
+                            />
+                          </div>
+                        ) : (
+                          <div className='w-20 h-20 bg-gray-100 rounded grid place-items-center text-gray-400 text-xs'>
+                            No photo
+                          </div>
+                        )}
+                      </td>
                       <td className='border p-2 text-sm'>{item.title}</td>
                       <td className='border p-2 font-mono text-xs'>
                         {item.slug}
                       </td>
                       <td className='border p-2 text-sm'>
-                        {formatDollar(current)}
-                      </td>
-                      <td className='border p-2 text-sm'>
-                        {formatDollar(item.min_increment)}
+                        <span className='font-semibold text-green-600'>
+                          {formatDollar(current)}
+                        </span>
                       </td>
                       <td className='border p-2'>
                         {item.is_closed ? (
@@ -408,15 +439,7 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td className='border p-2'>
-                        <Link
-                          href={`/admin/items/${item.id}`}
-                          className='text-blue-600 underline hover:no-underline text-sm'
-                        >
-                          Edit
-                        </Link>
-                      </td>
-                      <td className='border p-2'>
-                        <img alt='QR' src={qrUrl} className='w-16 h-16' />
+                        <img alt='QR' src={qrUrl} className='w-16 h-16 rounded border border-gray-200' />
                       </td>
                     </tr>
                   );

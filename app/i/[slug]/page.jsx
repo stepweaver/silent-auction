@@ -205,7 +205,7 @@ export default function ItemPage({ params }) {
 
   const current = Number(item.current_high_bid ?? item.start_price);
   const hasBids = Array.isArray(bids) && bids.length > 0;
-  const nextMin = hasBids ? (current + Number(item.min_increment)) : Number(item.start_price);
+  const nextMin = hasBids ? (current + 1) : Number(item.start_price); // Fixed $1 increment
   const winner = bids?.[0];
 
   return (
@@ -267,7 +267,7 @@ export default function ItemPage({ params }) {
                           color: '#1e40af'
                         }}
                       >
-                        First bid sets the price.
+                        Starting bid
                       </div>
                     )}
                     <div className="mt-4">

@@ -29,7 +29,7 @@ export async function PATCH(req, { params }) {
     if (body.description !== undefined) updateData.description = body.description || null;
     if (body.photo_url !== undefined) updateData.photo_url = body.photo_url || null;
     if (body.start_price !== undefined) updateData.start_price = Number(body.start_price);
-    if (body.min_increment !== undefined) updateData.min_increment = Number(body.min_increment);
+    // min_increment is fixed at $1, not editable
     if (body.is_closed !== undefined) updateData.is_closed = Boolean(body.is_closed);
 
     // Validate with partial schema

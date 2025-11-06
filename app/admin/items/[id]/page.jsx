@@ -19,7 +19,6 @@ export default function EditItemPage({ params }) {
     description: '',
     photo_url: '',
     start_price: '0',
-    min_increment: '5',
     is_closed: false,
   });
   const [msg, setMsg] = useState('');
@@ -47,7 +46,6 @@ export default function EditItemPage({ params }) {
         description: data.description || '',
         photo_url: data.photo_url || '',
         start_price: String(data.start_price || 0),
-        min_increment: String(data.min_increment || 5),
         is_closed: data.is_closed || false,
       });
       setPhotoFile(null);
@@ -315,33 +313,18 @@ export default function EditItemPage({ params }) {
             </div>
           </Field>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <Field label="Start Price" required>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                className="border rounded px-3 py-2 w-full"
-                value={form.start_price}
-                onChange={(e) => setForm((f) => ({ ...f, start_price: e.target.value }))}
-                required
-                disabled={isSubmitting}
-              />
-            </Field>
-
-            <Field label="Min Increment" required>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                className="border rounded px-3 py-2 w-full"
-                value={form.min_increment}
-                onChange={(e) => setForm((f) => ({ ...f, min_increment: e.target.value }))}
-                required
-                disabled={isSubmitting}
-              />
-            </Field>
-          </div>
+          <Field label="Start Price" required>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              className="border rounded px-3 py-2 w-full"
+              value={form.start_price}
+              onChange={(e) => setForm((f) => ({ ...f, start_price: e.target.value }))}
+              required
+              disabled={isSubmitting}
+            />
+          </Field>
 
           <Field label="Status">
             <label className="flex items-center gap-2">
@@ -389,7 +372,7 @@ export default function EditItemPage({ params }) {
               )}
               <h4 className="font-medium text-sm">{form.title || 'Item title'}</h4>
               <p className="mt-1 text-xs text-gray-600">
-                Start: {formatDollar(form.start_price)} • Min: {formatDollar(form.min_increment)}
+                Start: {formatDollar(form.start_price)}
               </p>
             </div>
           </div>

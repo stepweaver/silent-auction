@@ -11,7 +11,9 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
   const [message, setMessage] = useState('');
 
   const currentHigh = Number(item.current_high_bid ?? item.start_price);
-  const nextMin = currentHigh + Number(item.min_increment);
+  const nextMin = currentHigh === Number(item.start_price) 
+    ? Number(item.start_price) 
+    : currentHigh + 1; // Fixed $1 increment
 
   async function handleSubmit(e) {
     e.preventDefault();

@@ -79,7 +79,7 @@ export async function POST(req) {
 
     const hasBids = topBid && typeof topBid.amount !== 'undefined';
     const current = hasBids ? Number(topBid.amount) : Number(item.start_price);
-    const needed = hasBids ? (Number(current) + Number(item.min_increment)) : Number(item.start_price);
+    const needed = hasBids ? (Number(current) + 1) : Number(item.start_price); // Fixed $1 increment
 
     if (Number(amount) < needed) {
       return new Response(`Minimum allowed bid: ${needed.toFixed(2)}`, { status: 400 });
@@ -135,7 +135,7 @@ export async function POST(req) {
 
     return Response.json({
       ok: true,
-      next_min: needed + Number(item.min_increment),
+      next_min: needed + 1, // Fixed $1 increment
     });
   } catch (error) {
     console.error('Bid route error:', error);

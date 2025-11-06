@@ -13,7 +13,6 @@ export default function NewItemPage() {
     description: '',
     photo_url: '',
     start_price: '0',
-    min_increment: '5',
     is_closed: false,
   });
   const [msg, setMsg] = useState('');
@@ -209,18 +208,6 @@ export default function NewItemPage() {
             />
           </Field>
 
-          <Field label="Min Increment" required>
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              className="border rounded px-3 py-2 w-full"
-              value={form.min_increment}
-              onChange={(e) => setForm((f) => ({ ...f, min_increment: e.target.value }))}
-              required
-              disabled={isSubmitting}
-            />
-          </Field>
         </div>
 
         {msg && (

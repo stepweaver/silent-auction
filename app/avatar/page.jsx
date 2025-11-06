@@ -325,7 +325,7 @@ export default function DashboardPage() {
                         title: 'Test Won Item',
                         photo_url: null,
                         start_price: 25,
-                        min_increment: 5,
+                        min_increment: 1,
                         is_closed: true,
                       },
                     };

@@ -5,7 +5,7 @@ export default function ItemCard({ item }) {
   const current = Number(item.current_high_bid ?? item.start_price);
   const nextMin = current === Number(item.start_price)
     ? Number(item.start_price)
-    : current + Number(item.min_increment);
+    : current + 1; // Fixed $1 increment
   const url = `/i/${item.slug}`;
   
   // Check if item is closed (either manually closed or deadline passed)

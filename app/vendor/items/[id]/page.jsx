@@ -20,7 +20,6 @@ export default function VendorEditItemPage({ params }) {
     description: '',
     photo_url: '',
     start_price: '0',
-    min_increment: '5',
     is_closed: false,
   });
   const [msg, setMsg] = useState('');
@@ -69,7 +68,6 @@ export default function VendorEditItemPage({ params }) {
         description: data.description || '',
         photo_url: data.photo_url || '',
         start_price: String(data.start_price || 0),
-        min_increment: String(data.min_increment || 5),
         is_closed: data.is_closed || false,
       });
       setPhotoFile(null);
@@ -407,55 +405,29 @@ export default function VendorEditItemPage({ params }) {
                     </div>
                   </Field>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Field label="Start Price" required>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm sm:text-base"
-                        style={{
-                          borderColor: 'rgb(229 231 235)'
-                        }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = '#00b140';
-                          e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = 'rgb(229 231 235)';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }}
-                        value={form.start_price}
-                        onChange={(e) => setForm((f) => ({ ...f, start_price: e.target.value }))}
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </Field>
-
-                    <Field label="Min Increment" required>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm sm:text-base"
-                        style={{
-                          borderColor: 'rgb(229 231 235)'
-                        }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = '#00b140';
-                          e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = 'rgb(229 231 235)';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }}
-                        value={form.min_increment}
-                        onChange={(e) => setForm((f) => ({ ...f, min_increment: e.target.value }))}
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </Field>
-                  </div>
+                  <Field label="Start Price" required>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm sm:text-base"
+                      style={{
+                        borderColor: 'rgb(229 231 235)'
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#00b140';
+                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = 'rgb(229 231 235)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                      value={form.start_price}
+                      onChange={(e) => setForm((f) => ({ ...f, start_price: e.target.value }))}
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </Field>
 
                   <Field label="Status">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -531,7 +503,7 @@ export default function VendorEditItemPage({ params }) {
                   )}
                   <h4 className="font-medium text-sm text-gray-900">{form.title || 'Item title'}</h4>
                   <p className="mt-1 text-xs text-gray-600">
-                    Start: {formatDollar(form.start_price)} • Min: {formatDollar(form.min_increment)}
+                    Start: {formatDollar(form.start_price)}
                   </p>
                 </div>
               </div>
