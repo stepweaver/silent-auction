@@ -338,25 +338,7 @@ export default function DashboardPage() {
                       return acc;
                     }, {});
 
-                    // Add test won item for testing
-                    const testWonBid = {
-                      id: 'test-won-bid',
-                      amount: 50,
-                      current_high_bid: 50,
-                      is_outbid: false,
-                      created_at: new Date().toISOString(),
-                      items: {
-                        id: 'test-item',
-                        slug: 'test-item',
-                        title: 'Test Won Item',
-                        photo_url: null,
-                        start_price: 25,
-                        min_increment: 1,
-                        is_closed: true,
-                      },
-                    };
-
-                    const allBids = [...Object.values(bidsByItem), testWonBid];
+                    const allBids = Object.values(bidsByItem);
 
                     return allBids.map((bid) => {
                     const item = bid.items;
