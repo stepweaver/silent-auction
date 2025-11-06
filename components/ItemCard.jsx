@@ -54,8 +54,8 @@ export default function ItemCard({ item }) {
           </div>
         )}
       </figure>
-      <div className="p-3 sm:p-4">
-        <h2 className="font-bold text-base sm:text-lg mb-1 text-gray-900 line-clamp-2">
+      <div className="p-4">
+        <h2 className="font-bold text-base mb-1 text-gray-900 line-clamp-2">
           {item.title}
         </h2>
         {item.description && (
@@ -101,17 +101,17 @@ export default function ItemCard({ item }) {
         </div>
         <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
           {isClosed ? (
-            <span className="text-xs font-medium text-gray-600">View Details</span>
+            <span className="text-sm font-medium text-gray-600">View Details</span>
           ) : (
             <span 
-              className="text-xs font-semibold text-white px-3 py-1.5 rounded-lg"
-              style={{ backgroundColor: '#00b140' }}
+              className="text-sm font-semibold text-white px-4 py-2 rounded-lg"
+              style={{ backgroundColor: '#00b140', minHeight: '44px', display: 'inline-flex', alignItems: 'center' }}
             >
               Place Bid
             </span>
           )}
           <div className="tooltip tooltip-top" data-tip="Scan to view item">
-            <img alt="QR Code" src={qrUrl} className="w-10 h-10 rounded border border-gray-300" />
+            <img alt="QR Code" src={qrUrl} className="w-12 h-12 rounded border border-gray-300" />
           </div>
         </div>
       </div>

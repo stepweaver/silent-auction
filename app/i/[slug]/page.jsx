@@ -209,18 +209,19 @@ export default function ItemPage({ params }) {
   const winner = bids?.[0];
 
   return (
-    <main className="w-full px-4 py-4 sm:py-6 pb-8 sm:pb-10">
+    <main className="w-full px-4 py-4 pb-8">
       <div className="max-w-5xl mx-auto">
         <Link 
           href="/" 
-          className="inline-flex items-center gap-2 text-xs sm:text-sm text-gray-600 hover:text-gray-900 font-medium mb-4 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-gray-600 active:text-gray-900 font-medium mb-4 transition-colors touch-manipulation"
+          style={{ minHeight: '44px' }}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to catalog
         </Link>
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
             <figure className="bg-gray-100">
               {item.photo_url ? (
@@ -234,17 +235,17 @@ export default function ItemPage({ params }) {
           </div>
 
           <div className="flex flex-col gap-4 sm:gap-6">
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-              <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">{item.title}</h1>
-                {item.description && <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mt-2">{item.description}</p>}
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-4">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">{item.title}</h1>
+                {item.description && <p className="text-sm text-gray-600 leading-relaxed mt-2">{item.description}</p>}
 
                 {!closed ? (
                   <>
-                    <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
+                    <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                         <div className="text-xs font-semibold text-gray-600 mb-1">Current Bid</div>
-                        <div className="text-xl sm:text-2xl font-bold" style={{ color: '#00b140' }}>{formatDollar(current)}</div>
+                        <div className="text-2xl font-bold" style={{ color: '#00b140' }}>{formatDollar(current)}</div>
                       </div>
                       <div 
                         className="rounded-lg p-3 border"
@@ -254,7 +255,7 @@ export default function ItemPage({ params }) {
                         }}
                       >
                         <div className="text-xs font-semibold text-gray-600 mb-1">Next Minimum</div>
-                        <div className="text-xl sm:text-2xl font-bold text-gray-900">{formatDollar(nextMin)}</div>
+                        <div className="text-2xl font-bold text-gray-900">{formatDollar(nextMin)}</div>
                       </div>
                     </div>
                     {!hasBids && (

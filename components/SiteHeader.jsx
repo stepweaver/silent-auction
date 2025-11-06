@@ -18,32 +18,32 @@ export default function SiteHeader() {
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="flex items-center h-14 sm:h-16">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center h-16">
           {/* Logo and Title - Left Side */}
-          <Link href="/" className="flex items-center space-x-2 sm:space-x-2.5 hover:opacity-80 transition-opacity min-w-0 flex-1 pr-2">
+          <Link href="/" className="flex items-center space-x-2.5 hover:opacity-80 transition-opacity min-w-0 flex-1 pr-2 touch-manipulation">
             <div className="flex-shrink-0">
               <Image
                 src="/logo-with-glow.png"
                 alt="Mary Frank Elementary"
-                width={32}
-                height={32}
+                width={36}
+                height={36}
                 className="object-contain"
-                style={{ width: '32px', height: '32px' }}
+                style={{ width: '36px', height: '36px' }}
               />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-xs sm:text-sm leading-tight text-gray-900">
-                Mary Frank Elementary Silent Auction
+              <span className="font-bold text-sm leading-tight text-gray-900">
+                Mary Frank Elementary
               </span>
               <span className="text-xs leading-tight text-gray-600">
-                PTO Fundraiser
+                PTO Silent Auction Fundraiser
               </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links - Right Side */}
-          <div className="hidden md:flex items-center space-x-1 flex-shrink-0">
+          {/* Desktop Navigation Links - Right Side - Only show on very large screens */}
+          <div className="hidden xl:flex items-center space-x-1 flex-shrink-0">
             <Link 
               href="/" 
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -85,15 +85,15 @@ export default function SiteHeader() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Show on all screens except xl */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden flex-shrink-0 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 hover:bg-gray-100 transition-colors"
+            className="xl:hidden flex-shrink-0 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 active:bg-gray-100 transition-colors touch-manipulation"
             aria-label="Toggle menu"
             type="button"
             style={{ 
-              minWidth: '40px',
-              minHeight: '40px',
+              minWidth: '48px',
+              minHeight: '48px',
             }}
           >
             {mobileMenuOpen ? (
@@ -108,49 +108,58 @@ export default function SiteHeader() {
           </button>
         </div>
 
-        {/* Mobile Menu Dropdown */}
+        {/* Mobile Menu Dropdown - Show on all screens except xl */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
+          <div className="xl:hidden border-t border-gray-200 bg-white">
             <div className="py-2 px-1">
               <Link 
                 href="/" 
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-1 ${
+                className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors mb-1 active:opacity-80 touch-manipulation ${
                   isActive('/') && pathname !== '/avatar' && pathname !== '/how-to-bid' 
                     ? 'text-white' 
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-700 active:bg-gray-100'
                 }`}
                 style={isActive('/') && pathname !== '/avatar' && pathname !== '/how-to-bid' ? {
-                  backgroundColor: '#00b140'
-                } : {}}
+                  backgroundColor: '#00b140',
+                  minHeight: '48px'
+                } : {
+                  minHeight: '48px'
+                }}
               >
                 Catalog
               </Link>
               <Link 
                 href="/avatar" 
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-1 ${
+                className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors mb-1 active:opacity-80 touch-manipulation ${
                   isActive('/avatar') 
                     ? 'text-white' 
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-700 active:bg-gray-100'
                 }`}
                 style={isActive('/avatar') ? {
-                  backgroundColor: '#00b140'
-                } : {}}
+                  backgroundColor: '#00b140',
+                  minHeight: '48px'
+                } : {
+                  minHeight: '48px'
+                }}
               >
                 Dashboard
               </Link>
               <Link 
                 href="/how-to-bid" 
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors active:opacity-80 touch-manipulation ${
                   isActive('/how-to-bid') 
                     ? 'text-white' 
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-700 active:bg-gray-100'
                 }`}
                 style={isActive('/how-to-bid') ? {
-                  backgroundColor: '#00b140'
-                } : {}}
+                  backgroundColor: '#00b140',
+                  minHeight: '48px'
+                } : {
+                  minHeight: '48px'
+                }}
               >
                 How to Bid
               </Link>

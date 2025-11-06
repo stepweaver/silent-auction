@@ -199,7 +199,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
                   type="number"
                   step="0.01"
                   min={nextMin}
-                  className="w-full px-3 pl-8 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm sm:text-base"
+                  className="w-full px-3 pl-8 py-3 border-2 border-gray-200 rounded-lg outline-none transition-all text-base"
                   style={{
                     borderColor: 'rgb(229 231 235)'
                   }}
@@ -260,10 +260,10 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
             <div className="pt-4 border-t border-gray-200">
               <button
                 type="submit"
-                className="w-full px-4 py-2.5 text-white font-semibold rounded-lg text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                style={{ backgroundColor: '#00b140' }}
-                disabled={isSubmitting || !userAlias}
-              >
+                  className="w-full px-4 py-3.5 text-white font-semibold rounded-lg text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ backgroundColor: '#00b140', minHeight: '48px' }}
+                  disabled={isSubmitting || !userAlias}
+                >
                 {isSubmitting ? (
                   <>
                     <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

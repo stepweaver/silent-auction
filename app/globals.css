@@ -71,3 +71,39 @@
 .animate-pulse-subtle {
   animation: pulse-subtle 3s ease-in-out infinite;
 }
+
+/* Mobile-first optimizations */
+* {
+  -webkit-tap-highlight-color: rgba(0, 177, 64, 0.1);
+}
+
+/* Touch-friendly buttons and links */
+button, a, input[type="button"], input[type="submit"], [role="button"] {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent text selection on buttons for better mobile UX */
+button, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Ensure inputs are readable on mobile */
+input, textarea, select {
+  font-size: 16px; /* Prevents zoom on iOS */
+}
+
+/* Smooth scrolling for mobile */
+html {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Better touch targets */
+@media (max-width: 1024px) {
+  button, a, input[type="button"], input[type="submit"], [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

@@ -87,25 +87,25 @@ export default function CatalogPage() {
   }
 
   return (
-    <main className="w-full px-4 py-4 sm:py-6 pb-8 sm:pb-10">
-      <section className="mb-4 sm:mb-6">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: '#00b140' }}>
+    <main className="w-full px-4 py-4 pb-8">
+      <section className="mb-4">
+        <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="px-4 py-4">
+            <h1 className="text-2xl font-bold mb-1" style={{ color: '#00b140' }}>
               Silent Auction
             </h1>
-            <p className="text-xs sm:text-sm text-gray-600">Browse items and place your bids.</p>
+            <p className="text-sm text-gray-600">Browse items and place your bids.</p>
           </div>
         </div>
       </section>
       {items.length === 0 ? (
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200">
-          <div className="px-4 sm:px-6 py-12 text-center">
-            <p className="text-sm sm:text-base text-gray-600">No items available.</p>
+        <div className="bg-white rounded-xl shadow-xl border border-gray-200">
+          <div className="px-4 py-12 text-center">
+            <p className="text-sm text-gray-600">No items available.</p>
           </div>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid gap-3 xl:grid-cols-2 2xl:grid-cols-3">
           {items.map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}

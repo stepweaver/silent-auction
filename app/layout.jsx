@@ -6,6 +6,12 @@ import BackgroundLogo from '@/components/BackgroundLogo';
 export const metadata = {
   title: 'Silent Auction',
   description: 'PTO Silent Auction',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 };
 
 export default function RootLayout({ children }) {
