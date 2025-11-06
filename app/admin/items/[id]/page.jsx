@@ -236,15 +236,15 @@ export default function EditItemPage({ params }) {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-4">
-        <Link href="/admin" className="underline">
+      <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <Link href="/admin" className="text-sm underline text-gray-700 hover:text-gray-900">
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-semibold">Edit Item</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">Edit Item</h1>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <form onSubmit={handleSubmit} className="space-y-3 lg:col-span-2">
+      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 lg:col-span-2">
           <Field label="Title" required>
             <input
               type="text"
@@ -315,7 +315,7 @@ export default function EditItemPage({ params }) {
             </div>
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Field label="Start Price" required>
               <input
                 type="number"
@@ -358,7 +358,7 @@ export default function EditItemPage({ params }) {
 
           {msg && (
             <div
-              className={`p-2 rounded ${
+              className={`p-2 sm:p-3 rounded text-sm ${
                 msg.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
               }`}
             >
@@ -366,21 +366,21 @@ export default function EditItemPage({ params }) {
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <button
               type="submit"
-              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
-            <Link href="/admin" className="px-4 py-2 border rounded hover:bg-gray-50">
+            <Link href="/admin" className="px-4 py-2 border rounded hover:bg-gray-50 text-center text-sm sm:text-base">
               Cancel
             </Link>
           </div>
         </form>
 
-        <div className="space-y-4">
+        <div className="space-y-4 sm:space-y-6">
           <div>
             <h3 className="font-semibold mb-2 text-sm">Preview</h3>
             <div className="border rounded-lg p-3">
@@ -397,7 +397,7 @@ export default function EditItemPage({ params }) {
           <div>
             <h3 className="font-semibold mb-2 text-sm">Current Bid</h3>
             <div className="border rounded-lg p-3 bg-gray-50">
-              <div className="text-2xl font-bold text-primary mb-1">
+              <div className="text-xl sm:text-2xl font-bold text-primary mb-1">
                 {formatDollar(currentBid)}
               </div>
               {topBid ? (
@@ -411,10 +411,10 @@ export default function EditItemPage({ params }) {
                           animal={topBid.user_aliases.animal}
                           size="sm"
                         />
-                        <span className="text-sm font-medium">{topBid.user_aliases.alias}</span>
+                        <span className="text-xs sm:text-sm font-medium">{topBid.user_aliases.alias}</span>
                       </>
                     ) : (
-                      <span className="text-sm text-gray-600">
+                      <span className="text-xs sm:text-sm text-gray-600">
                         {topBid.bidder_name || 'Anonymous'}
                       </span>
                     )}
@@ -428,7 +428,7 @@ export default function EditItemPage({ params }) {
 
           <div>
             <h3 className="font-semibold mb-2 text-sm">QR Code</h3>
-            <img alt="QR Code" src={qrUrl} className="border rounded w-full max-w-[120px]" />
+            <img alt="QR Code" src={qrUrl} className="border rounded w-full max-w-[120px] sm:max-w-[150px]" />
           </div>
         </div>
       </div>

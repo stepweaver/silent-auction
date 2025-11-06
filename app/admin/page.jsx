@@ -5,11 +5,25 @@ import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 
-function SetInitialDeadline({ onSet }) {
+function SetDeadline({ onSet, currentDeadline }) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [msg, setMsg] = useState('');
+
+  // Pre-fill with current deadline if it exists
+  useEffect(() => {
+    if (currentDeadline) {
+      const d = new Date(currentDeadline);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      setDate(`${year}-${month}-${day}`);
+      setTime(`${hours}:${minutes}`);
+    }
+  }, [currentDeadline]);
 
   async function handleSetDeadline(e) {
     e.preventDefault();
@@ -38,7 +52,7 @@ function SetInitialDeadline({ onSet }) {
       });
 
       if (res.ok) {
-        setMsg('Deadline set successfully!');
+        setMsg('Deadline updated successfully!');
         setTimeout(() => {
           onSet();
         }, 500);
@@ -53,40 +67,48 @@ function SetInitialDeadline({ onSet }) {
   }
 
   return (
-    <form onSubmit={handleSetDeadline} className="space-y-2">
-      <div className="flex gap-2 items-end">
-        <div className="flex-1">
-          <label className="block text-xs font-semibold text-yellow-900 mb-1">Date</label>
+    <form onSubmit={handleSetDeadline} className='space-y-2'>
+      <div className='flex flex-col sm:flex-row gap-2 sm:items-end'>
+        <div className='flex-1'>
+          <label className='block text-xs font-semibold text-yellow-900 mb-1'>
+            Date
+          </label>
           <input
-            type="date"
+            type='date'
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border rounded px-2 py-1 text-sm w-full"
+            className='border rounded px-2 py-1.5 text-sm w-full'
             required
             disabled={isSubmitting}
           />
         </div>
-        <div className="flex-1">
-          <label className="block text-xs font-semibold text-yellow-900 mb-1">Time</label>
+        <div className='flex-1'>
+          <label className='block text-xs font-semibold text-yellow-900 mb-1'>
+            Time
+          </label>
           <input
-            type="time"
+            type='time'
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="border rounded px-2 py-1 text-sm w-full"
+            className='border rounded px-2 py-1.5 text-sm w-full'
             required
             disabled={isSubmitting}
           />
         </div>
         <button
-          type="submit"
-          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50"
+          type='submit'
+          className='px-3 py-1.5 sm:py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50 whitespace-nowrap'
           disabled={isSubmitting}
         >
           Set
         </button>
       </div>
       {msg && (
-        <p className={`text-xs ${msg.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
+        <p
+          className={`text-xs ${
+            msg.includes('Error') ? 'text-red-600' : 'text-green-600'
+          }`}
+        >
           {msg}
         </p>
       )}
@@ -131,7 +153,7 @@ export default function AdminDashboard() {
     newDeadline.setMinutes(newDeadline.getMinutes() + 15);
 
     const confirmMessage = `Extend deadline by 15 minutes?\n\nCurrent: ${currentDeadline.toLocaleString()}\nNew: ${newDeadline.toLocaleString()}`;
-    
+
     if (!confirm(confirmMessage)) {
       return;
     }
@@ -177,8 +199,8 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600">Loading...</p>
+      <div className='flex items-center justify-center py-12'>
+        <p className='text-gray-600'>Loading...</p>
       </div>
     );
   }
@@ -189,50 +211,70 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">Admin Dashboard</h1>
+      <h1 className='text-xl sm:text-2xl font-semibold mb-3 sm:mb-4'>
+        Admin Dashboard
+      </h1>
 
       {msg && (
         <div
-          className={`mb-4 p-2 rounded ${
-            msg.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+          className={`mb-3 sm:mb-4 p-2 sm:p-3 rounded text-sm ${
+            msg.includes('Error')
+              ? 'bg-red-100 text-red-700'
+              : 'bg-green-100 text-green-700'
           }`}
         >
           {msg}
         </div>
       )}
 
-      <div className="mb-6 p-4 border rounded-xl bg-gray-50">
-        <h2 className="font-semibold mb-2">Current Settings</h2>
-        <p>
-          <b>Deadline:</b>{' '}
-          {deadline ? deadline.toLocaleString() : 'Not set'}
-        </p>
-        {settings?.contact_email && (
+      <div className='mb-4 sm:mb-6 p-3 sm:p-4 border rounded-xl bg-gray-50'>
+        <h2 className='font-semibold mb-2 text-base sm:text-lg'>
+          Current Settings
+        </h2>
+        <div className='space-y-1.5 sm:space-y-2 text-sm'>
           <p>
-            <b>Contact:</b> {settings.contact_email}
+            <b>Deadline:</b> {deadline ? deadline.toLocaleString() : 'Not set'}
           </p>
-        )}
-        <div className="mt-3 space-y-2">
-          {!deadline && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-              <p className="text-sm text-yellow-800 mb-2">
-                <b>No deadline set.</b> Set the initial deadline below:
-              </p>
-              <SetInitialDeadline onSet={load} />
-            </div>
+          {deadline && (
+            <p>
+              <b>Status:</b>{' '}
+              {new Date() >= deadline ? (
+                <span className='text-red-600 font-semibold'>
+                  CLOSED (deadline passed)
+                </span>
+              ) : (
+                <span className='text-green-600 font-semibold'>OPEN</span>
+              )}
+            </p>
           )}
-          <div className="flex gap-2">
+          {settings?.contact_email && (
+            <p className='break-all'>
+              <b>Contact:</b> {settings.contact_email}
+            </p>
+          )}
+        </div>
+        <div className='mt-3 space-y-2'>
+          <div className='p-2 sm:p-3 bg-white border rounded'>
+            <p className='text-sm font-semibold mb-2'>
+              {deadline ? 'Update Deadline' : 'Set Deadline'}
+            </p>
+            <SetDeadline
+              onSet={load}
+              currentDeadline={settings?.auction_deadline}
+            />
+          </div>
+          <div className='flex flex-col sm:flex-row gap-2'>
             {deadline && (
               <button
                 onClick={extendDeadline}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className='px-3 py-2 sm:py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm'
               >
                 Extend deadline +15m
               </button>
             )}
             <button
               onClick={closeAll}
-              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+              className='px-3 py-2 sm:py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm'
             >
               Close all items now
             </button>
@@ -240,71 +282,149 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Items</h2>
+      <div className='mb-3 sm:mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3'>
+        <h2 className='text-lg sm:text-xl font-semibold'>Items</h2>
         <Link
-          href="/admin/items/new"
-          className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+          href='/admin/items/new'
+          className='px-4 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm sm:text-base text-center'
         >
           New Item
         </Link>
       </div>
 
       {items.length === 0 ? (
-        <p className="text-gray-600">No items yet.</p>
+        <p className='text-gray-600 text-sm sm:text-base'>No items yet.</p>
       ) : (
-        <div className="overflow-x-auto -mx-6 px-6">
-          <table className="w-full border-collapse border min-w-full">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2 text-left">Title</th>
-                <th className="border p-2 text-left">Slug</th>
-                <th className="border p-2 text-left">Current High</th>
-                <th className="border p-2 text-left">Min Increment</th>
-                <th className="border p-2 text-left">Status</th>
-                <th className="border p-2 text-left">Actions</th>
-                <th className="border p-2 text-left">QR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => {
-                const current = Number(item.current_high_bid ?? item.start_price);
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
-                  typeof window !== 'undefined'
-                    ? window.location.origin + `/i/${item.slug}`
-                    : `/i/${item.slug}`
-                )}`;
+        <>
+          {/* Mobile: Card View */}
+          <div className='block md:hidden space-y-3'>
+            {items.map((item) => {
+              const current = Number(item.current_high_bid ?? item.start_price);
+              const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
+                typeof window !== 'undefined'
+                  ? window.location.origin + `/i/${item.slug}`
+                  : `/i/${item.slug}`
+              )}`;
 
-                return (
-                  <tr key={item.id}>
-                    <td className="border p-2">{item.title}</td>
-                    <td className="border p-2 font-mono text-xs">{item.slug}</td>
-                    <td className="border p-2">{formatDollar(current)}</td>
-                    <td className="border p-2">{formatDollar(item.min_increment)}</td>
-                    <td className="border p-2">
-                      {item.is_closed ? (
-                        <span className="text-red-600 font-semibold">Closed</span>
-                      ) : (
-                        <span className="text-green-600 font-semibold">Open</span>
-                      )}
-                    </td>
-                    <td className="border p-2">
-                      <Link
-                        href={`/admin/items/${item.id}`}
-                        className="text-blue-600 underline hover:no-underline"
-                      >
-                        Edit
-                      </Link>
-                    </td>
-                    <td className="border p-2">
-                      <img alt="QR" src={qrUrl} className="w-16 h-16" />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+              return (
+                <div key={item.id} className='border rounded-lg p-3 bg-white'>
+                  <div className='flex justify-between items-start mb-2'>
+                    <div className='flex-1 min-w-0'>
+                      <h3 className='font-semibold text-sm truncate'>
+                        {item.title}
+                      </h3>
+                      <p className='text-xs text-gray-500 font-mono truncate'>
+                        {item.slug}
+                      </p>
+                    </div>
+                    <img
+                      alt='QR'
+                      src={qrUrl}
+                      className='w-12 h-12 shrink-0 ml-2'
+                    />
+                  </div>
+                  <div className='grid grid-cols-2 gap-2 text-xs mb-2'>
+                    <div>
+                      <span className='text-gray-600'>High:</span>{' '}
+                      <span className='font-semibold'>
+                        {formatDollar(current)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className='text-gray-600'>Min:</span>{' '}
+                      <span className='font-semibold'>
+                        {formatDollar(item.min_increment)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className='flex justify-between items-center'>
+                    <span
+                      className={`text-xs font-semibold ${
+                        item.is_closed ? 'text-red-600' : 'text-green-600'
+                      }`}
+                    >
+                      {item.is_closed ? 'Closed' : 'Open'}
+                    </span>
+                    <Link
+                      href={`/admin/items/${item.id}`}
+                      className='text-blue-600 underline hover:no-underline text-xs sm:text-sm'
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop: Table View */}
+          <div className='hidden md:block overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6'>
+            <table className='w-full border-collapse border'>
+              <thead>
+                <tr className='bg-gray-100'>
+                  <th className='border p-2 text-left text-sm'>Title</th>
+                  <th className='border p-2 text-left text-sm'>Slug</th>
+                  <th className='border p-2 text-left text-sm'>Current High</th>
+                  <th className='border p-2 text-left text-sm'>
+                    Min Increment
+                  </th>
+                  <th className='border p-2 text-left text-sm'>Status</th>
+                  <th className='border p-2 text-left text-sm'>Actions</th>
+                  <th className='border p-2 text-left text-sm'>QR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => {
+                  const current = Number(
+                    item.current_high_bid ?? item.start_price
+                  );
+                  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
+                    typeof window !== 'undefined'
+                      ? window.location.origin + `/i/${item.slug}`
+                      : `/i/${item.slug}`
+                  )}`;
+
+                  return (
+                    <tr key={item.id}>
+                      <td className='border p-2 text-sm'>{item.title}</td>
+                      <td className='border p-2 font-mono text-xs'>
+                        {item.slug}
+                      </td>
+                      <td className='border p-2 text-sm'>
+                        {formatDollar(current)}
+                      </td>
+                      <td className='border p-2 text-sm'>
+                        {formatDollar(item.min_increment)}
+                      </td>
+                      <td className='border p-2'>
+                        {item.is_closed ? (
+                          <span className='text-red-600 font-semibold text-sm'>
+                            Closed
+                          </span>
+                        ) : (
+                          <span className='text-green-600 font-semibold text-sm'>
+                            Open
+                          </span>
+                        )}
+                      </td>
+                      <td className='border p-2'>
+                        <Link
+                          href={`/admin/items/${item.id}`}
+                          className='text-blue-600 underline hover:no-underline text-sm'
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                      <td className='border p-2'>
+                        <img alt='QR' src={qrUrl} className='w-16 h-16' />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

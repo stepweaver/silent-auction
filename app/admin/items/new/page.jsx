@@ -114,14 +114,14 @@ export default function NewItemPage() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-4">
-        <Link href="/admin" className="underline">
+      <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <Link href="/admin" className="text-sm underline text-gray-700 hover:text-gray-900">
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-semibold">New Item</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">New Item</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4">
+      <form onSubmit={handleSubmit} className="max-w-2xl space-y-3 sm:space-y-4">
         <Field label="Title" required>
           <input
             type="text"
@@ -195,7 +195,7 @@ export default function NewItemPage() {
           </div>
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <Field label="Start Price" required>
             <input
               type="number"
@@ -224,22 +224,22 @@ export default function NewItemPage() {
         </div>
 
         {msg && (
-          <div className={`p-2 rounded ${msg.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          <div className={`p-2 sm:p-3 rounded text-sm ${msg.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
             {msg}
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             type="submit"
-            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Creating...' : 'Create Item'}
           </button>
           <Link
             href="/admin"
-            className="px-4 py-2 border rounded hover:bg-gray-50"
+            className="px-4 py-2 border rounded hover:bg-gray-50 text-center text-sm sm:text-base"
           >
             Cancel
           </Link>

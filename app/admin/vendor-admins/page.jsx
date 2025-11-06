@@ -74,16 +74,16 @@ export default function VendorAdminsPage() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-4">
-        <Link href="/admin" className="underline">
+      <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <Link href="/admin" className="text-sm underline text-gray-700 hover:text-gray-900">
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-semibold">Vendor Admins</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">Vendor Admins</h1>
       </div>
 
       {msg && (
         <div
-          className={`mb-4 p-2 rounded ${
+          className={`mb-3 sm:mb-4 p-2 sm:p-3 rounded text-sm ${
             msg.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
           }`}
         >
@@ -91,24 +91,24 @@ export default function VendorAdminsPage() {
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="mb-3 sm:mb-4">
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+          className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm sm:text-base w-full sm:w-auto"
         >
           {showForm ? 'Cancel' : '+ Add Vendor Admin'}
         </button>
       </div>
 
       {showForm && (
-        <div className="mb-6 p-4 border rounded-xl bg-gray-50">
-          <h2 className="font-semibold mb-3">Add New Vendor Admin</h2>
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 border rounded-xl bg-gray-50">
+          <h2 className="font-semibold mb-3 text-base sm:text-lg">Add New Vendor Admin</h2>
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="block text-sm font-semibold mb-1">Name</label>
               <input
                 type="text"
-                className="border rounded px-3 py-2 w-full max-w-md"
+                className="border rounded px-3 py-2 w-full sm:max-w-md"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 required
@@ -120,7 +120,7 @@ export default function VendorAdminsPage() {
               <label className="block text-sm font-semibold mb-1">Email</label>
               <input
                 type="email"
-                className="border rounded px-3 py-2 w-full max-w-md"
+                className="border rounded px-3 py-2 w-full sm:max-w-md"
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 required
@@ -133,7 +133,7 @@ export default function VendorAdminsPage() {
             </div>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Creating...' : 'Create Vendor Admin'}
@@ -143,30 +143,46 @@ export default function VendorAdminsPage() {
       )}
 
       {vendorAdmins.length === 0 ? (
-        <p className="text-gray-600">No vendor admins yet.</p>
+        <p className="text-gray-600 text-sm sm:text-base">No vendor admins yet.</p>
       ) : (
-        <div className="overflow-x-auto -mx-6 px-6">
-          <table className="w-full border-collapse border min-w-full">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2 text-left">Name</th>
-                <th className="border p-2 text-left">Email</th>
-                <th className="border p-2 text-left">Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendorAdmins.map((admin) => (
-                <tr key={admin.id}>
-                  <td className="border p-2">{admin.name}</td>
-                  <td className="border p-2">{admin.email}</td>
-                  <td className="border p-2">
-                    {new Date(admin.created_at).toLocaleDateString()}
-                  </td>
+        <>
+          {/* Mobile: Card View */}
+          <div className="block md:hidden space-y-3">
+            {vendorAdmins.map((admin) => (
+              <div key={admin.id} className="border rounded-lg p-3 bg-white">
+                <h3 className="font-semibold text-sm mb-1">{admin.name}</h3>
+                <p className="text-xs text-gray-600 break-all mb-1">{admin.email}</p>
+                <p className="text-xs text-gray-500">
+                  Created: {new Date(admin.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: Table View */}
+          <div className="hidden md:block overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
+            <table className="w-full border-collapse border">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border p-2 text-left text-sm">Name</th>
+                  <th className="border p-2 text-left text-sm">Email</th>
+                  <th className="border p-2 text-left text-sm">Created</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {vendorAdmins.map((admin) => (
+                  <tr key={admin.id}>
+                    <td className="border p-2 text-sm">{admin.name}</td>
+                    <td className="border p-2 text-sm break-all">{admin.email}</td>
+                    <td className="border p-2 text-sm">
+                      {new Date(admin.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
