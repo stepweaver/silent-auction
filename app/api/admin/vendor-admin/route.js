@@ -82,27 +82,66 @@ export async function POST(req) {
     // Generate enrollment token and link
     const enrollmentToken = generateEnrollmentToken(vendorAdmin.id, vendorAdmin.email);
     
-    // Get site URL - use env var, or construct from request headers, or fallback
+    // Get site URL - try multiple methods
     let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    
     if (!siteUrl) {
+      // Try to get from origin or referer header (most reliable in production)
+      const origin = headersList.get('origin');
+      const referer = headersList.get('referer');
+      
+      if (origin) {
+        try {
+          const url = new URL(origin);
+          if (url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
+            siteUrl = origin;
+          }
+        } catch (e) {
+          // Invalid origin, continue
+        }
+      }
+      
+      if (!siteUrl && referer) {
+        try {
+          const url = new URL(referer);
+          if (url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
+            siteUrl = `${url.protocol}//${url.host}`;
+          }
+        } catch (e) {
+          // Invalid referer, continue
+        }
+      }
+      
       // Try to construct from request headers
-      const host = headersList.get('host');
-      const protocol = headersList.get('x-forwarded-proto') || 'https';
-      if (host) {
-        siteUrl = `${protocol}://${host}`;
-      } else {
-        // Last resort fallback
-        siteUrl = 'http://localhost:3000';
-        console.warn('NEXT_PUBLIC_SITE_URL not set and could not determine from headers, using localhost fallback');
+      if (!siteUrl) {
+        const host = headersList.get('host');
+        const protocol = headersList.get('x-forwarded-proto') || 
+                        headersList.get('x-forwarded-protocol') ||
+                        'https'; // Default to https in production
+        
+        if (host && host !== 'localhost' && !host.includes('127.0.0.1')) {
+          siteUrl = `${protocol}://${host}`;
+        }
       }
     }
     
-    // Ensure siteUrl doesn't end with a slash
-    siteUrl = siteUrl.replace(/\/$/, '');
+    // Last resort: use localhost for dev, but warn
+    if (!siteUrl) {
+      siteUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://your-site.com' // This will fail - user needs to set NEXT_PUBLIC_SITE_URL
+        : 'http://localhost:3000';
+      console.warn('⚠️ NEXT_PUBLIC_SITE_URL not set. Please set it in your environment variables. Using fallback:', siteUrl);
+    }
+    
+    // Ensure siteUrl doesn't end with a slash and is properly formatted
+    siteUrl = siteUrl.replace(/\/$/, '').trim();
     
     // URL encode the token to handle any special characters
     const encodedToken = encodeURIComponent(enrollmentToken);
     const enrollmentLink = `${siteUrl}/vendor-enroll?token=${encodedToken}`;
+    
+    // Log for debugging (remove in production if sensitive)
+    console.log('Generated enrollment link:', enrollmentLink.replace(encodedToken, '[TOKEN]'));
 
     // Get contact email from settings
     const { data: settings } = await s
@@ -130,6 +169,7 @@ export async function POST(req) {
       ok: true, 
       vendor_admin: vendorAdmin,
       enrollment_token: enrollmentToken,
+      enrollment_link: enrollmentLink, // Include for debugging/admin visibility
       email_sent: true,
     });
   } catch (error) {
@@ -197,4 +237,5 @@ export async function GET() {
     );
   }
 }
+
 

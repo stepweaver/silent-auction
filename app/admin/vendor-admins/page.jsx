@@ -57,13 +57,23 @@ export default function VendorAdminsPage() {
       const data = await res.json();
       
       if (data.email_sent) {
+        // Show the generated link for verification (even if email was sent)
+        if (data.enrollment_link) {
+          setEnrollmentLink(data.enrollment_link);
+        }
         setMsg('Donor created successfully! An enrollment email has been sent to ' + form.email + '.');
       } else {
         // Fallback: show link if email wasn't sent
-        const token = data.enrollment_token;
-        if (token) {
-          const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-          const link = `${baseUrl}/vendor-enroll?token=${token}`;
+        const link = data.enrollment_link || (() => {
+          const token = data.enrollment_token;
+          if (token) {
+            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+            return `${baseUrl}/vendor-enroll?token=${encodeURIComponent(token)}`;
+          }
+          return null;
+        })();
+        
+        if (link) {
           setEnrollmentLink(link);
           setMsg('Donor created successfully! Email could not be sent. Please send them the enrollment link below.');
         } else {
@@ -120,10 +130,14 @@ export default function VendorAdminsPage() {
       )}
 
       {enrollmentLink && (
-        <div className="mb-3 sm:mb-4 p-3 sm:p-4 border rounded-xl bg-yellow-50 border-yellow-200">
-          <h3 className="font-semibold mb-2 text-sm sm:text-base">Enrollment Link (Fallback)</h3>
+        <div className={`mb-3 sm:mb-4 p-3 sm:p-4 border rounded-xl ${msg.includes('Email could not be sent') ? 'bg-yellow-50 border-yellow-200' : 'bg-blue-50 border-blue-200'}`}>
+          <h3 className="font-semibold mb-2 text-sm sm:text-base">
+            {msg.includes('Email could not be sent') ? 'Enrollment Link (Fallback)' : 'Enrollment Link'}
+          </h3>
           <p className="text-xs sm:text-sm text-gray-600 mb-2">
-            Email could not be sent automatically. Please send this link to the donor manually.
+            {msg.includes('Email could not be sent') 
+              ? 'Email could not be sent automatically. Please send this link to the donor manually.'
+              : 'Enrollment link that was sent via email (for your reference):'}
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
