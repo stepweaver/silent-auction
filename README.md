@@ -74,6 +74,9 @@ NEXT_PUBLIC_SITE_URL=https://your-auction-site.com
 # Email notifications via Resend (required for bid confirmations and winner notices)
 RESEND_API_KEY=re_xxxxx
 RESEND_FROM_EMAIL=noreply@yourdomain.com
+
+# Admin emails (comma-separated) - will receive winners list when auction closes
+ADMIN_EMAILS=admin1@example.org,admin2@example.org
 ```
 
 **Where to find Supabase keys:**
@@ -173,12 +176,12 @@ The platform sends email notifications for bid confirmations and winner notifica
 
 - **Bid Confirmation**: Sent immediately when a bid is placed (includes bid amount and link to item)
 - **Winner Notification**: Sent when auction closes to the winning bidder (includes payment/pickup instructions)
+- **Admin Winners List**: Sent to all admins (configured in `ADMIN_EMAILS`) when auction closes, containing a list of all winners with names, emails, and winning bid amounts
 
 ## Future Enhancements
 
 - Soft-close (extend deadline on late bids)
 - Buy-It-Now prices
-- Email/SMS notifications to winners (after auction closes)
 - CSV export of winners
 - Countdown timer component
 

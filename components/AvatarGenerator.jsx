@@ -7,7 +7,7 @@ const AVATAR_STYLES = [
   { id: 'custom', name: 'Initials', description: 'Clean initials with gradient colors' },
 ];
 
-export default function AvatarGenerator({ email, onAvatarSelected, initialSeed = null }) {
+export default function AvatarGenerator({ email, name, onAvatarSelected, initialSeed = null }) {
   const [selectedStyle, setSelectedStyle] = useState('custom');
   const [seed, setSeed] = useState(initialSeed || email || 'default');
   const [isCreating, setIsCreating] = useState(false);
@@ -26,6 +26,11 @@ export default function AvatarGenerator({ email, onAvatarSelected, initialSeed =
   const handleCreate = async () => {
     if (!email) {
       setError('Email is required');
+      return;
+    }
+
+    if (!name || name.trim() === '') {
+      setError('Name is required to create an avatar');
       return;
     }
 
@@ -49,6 +54,7 @@ export default function AvatarGenerator({ email, onAvatarSelected, initialSeed =
           alias: alias,
           avatar_style: selectedStyle,
           avatar_seed: avatarSeed,
+          name: name.trim(),
         }),
       });
 
@@ -171,7 +177,7 @@ export default function AvatarGenerator({ email, onAvatarSelected, initialSeed =
       <button
         type="button"
         onClick={handleCreate}
-        disabled={isCreating || !email}
+        disabled={isCreating || !email || !name || name.trim() === ''}
         className="btn btn-primary btn-lg w-full shadow-lg"
       >
         {isCreating ? (

@@ -158,6 +158,13 @@ export default function ItemPage({ params }) {
       if (!res.ok) {
         const text = await res.text();
         setMsg(text || 'Error placing bid');
+        
+        // If avatar is missing, redirect to landing page
+        if (text && (text.includes('create an avatar') || text.includes('avatar must have a name'))) {
+          setTimeout(() => {
+            router.push('/landing');
+          }, 2000);
+        }
         return;
       }
 

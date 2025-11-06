@@ -85,20 +85,40 @@ export async function POST(req) {
       return new Response(`Minimum allowed bid: ${needed.toFixed(2)}`, { status: 400 });
     }
 
-    // Get or create user alias
-    let aliasId = null;
+    // Require existing user alias with email and name
     const { data: existingAlias, error: aliasError } = await s
       .from('user_aliases')
-      .select('id')
+      .select('id, email, name')
       .eq('email', email)
       .maybeSingle();
 
     if (aliasError) {
       console.error('Error checking alias:', aliasError);
-      // Continue without alias if check fails
-    } else if (existingAlias) {
-      aliasId = existingAlias.id;
+      return new Response('Error checking avatar. Please try again.', { status: 500 });
     }
+
+    if (!existingAlias) {
+      return new Response('You must create an avatar before placing a bid. Please create your avatar first.', { status: 400 });
+    }
+
+    // BEST PRACTICE: Check verified_emails table to ensure email was verified
+    // Since we only create aliases for verified emails, this is a double-check
+    const { data: verifiedEmail } = await s
+      .from('verified_emails')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (!verifiedEmail) {
+      return new Response('Please verify your email address before placing bids. Check your email for the verification link.', { status: 400 });
+    }
+
+    // Ensure the alias has a name (required for bids)
+    if (!existingAlias.name || existingAlias.name.trim() === '') {
+      return new Response('Your avatar must have a name before placing bids. Please update your avatar with your name.', { status: 400 });
+    }
+
+    const aliasId = existingAlias.id;
 
     // Insert bid
     const { error: insertError } = await s.from('bids').insert({

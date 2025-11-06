@@ -33,7 +33,8 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
     let isMounted = true;
     
     const checkExistingEmailAlias = async () => {
-      if (!email || !email.includes('@')) return;
+      // Basic format check - don't do expensive validation on every keystroke
+      if (!email || !email.includes('@') || email.split('@').length !== 2) return;
       
       setCheckingExistingEmail(true);
       try {
@@ -115,9 +116,34 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
       return;
     }
 
-    if (!email) {
+    if (!email || !email.trim()) {
       setError('Email is required');
       return;
+    }
+
+    // Validate email format and domain - REQUIRED before proceeding
+    try {
+      const response = await fetch('/api/email/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!data.valid) {
+        let errorMsg = data.error || 'Please enter a valid email address';
+        if (data.suggestion) {
+          errorMsg += ` Did you mean ${data.suggestion}?`;
+        }
+        setError(errorMsg);
+        return; // BLOCK if validation fails
+      }
+    } catch (err) {
+      console.error('Email validation error:', err);
+      // If validation API fails, we MUST reject to prevent invalid registrations
+      setError('Unable to verify email address. Please check for typos and try again.');
+      return; // BLOCK on validation failure
     }
 
     setIsChecking(true);
@@ -159,8 +185,38 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
       return;
     }
 
-    if (!email) {
+    if (!email || !email.trim()) {
       setError('Email is required');
+      return;
+    }
+
+    // Validate email format and domain - REQUIRED before proceeding
+    try {
+      const response = await fetch('/api/email/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!data.valid) {
+        let errorMsg = data.error || 'Please enter a valid email address';
+        if (data.suggestion) {
+          errorMsg += ` Did you mean ${data.suggestion}?`;
+        }
+        setError(errorMsg);
+        return; // BLOCK if validation fails
+      }
+    } catch (err) {
+      console.error('Email validation error:', err);
+      // If validation API fails, we MUST reject to prevent invalid registrations
+      setError('Unable to verify email address. Please check for typos and try again.');
+      return; // BLOCK on validation failure
+    }
+
+    if (!name || name.trim() === '') {
+      setError('Name is required to create an avatar');
       return;
     }
 
@@ -174,11 +230,11 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email,
+          email: email.trim(), // Use trimmed email
           alias,
           color: selectedColor,
           animal: selectedAnimal,
-          name: name || undefined,
+          name: name.trim(),
         }),
       });
 
@@ -207,7 +263,14 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
         return;
       }
 
-      // Success - notify parent
+      // Success - check if verification is required
+      if (data.requiresVerification) {
+        setSuccess(data.message || 'Alias created! Please check your email to verify your address before you can start bidding.');
+        // Don't proceed to enrollment yet - user needs to verify email
+        return;
+      }
+
+      // Success - notify parent (only if already verified)
       if (onAliasSelected) {
         onAliasSelected(data.alias);
       }

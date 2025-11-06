@@ -51,6 +51,13 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
       if (!res.ok) {
         const text = await res.text();
         setMessage(text || 'Error placing bid');
+        
+        // If avatar is missing, redirect to landing page
+        if (text && (text.includes('create an avatar') || text.includes('avatar must have a name'))) {
+          setTimeout(() => {
+            window.location.href = '/landing';
+          }, 2000);
+        }
         return;
       }
 

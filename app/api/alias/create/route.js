@@ -1,4 +1,10 @@
 import { supabaseServer } from '@/lib/serverSupabase';
+import { isValidEmailFormat, getEmailDomain, suggestEmailCorrection } from '@/lib/validation';
+import dns from 'dns';
+import { promisify } from 'util';
+
+const resolveMx = promisify(dns.resolveMx);
+const resolve4 = promisify(dns.resolve4);
 
 export async function POST(req) {
   try {
@@ -9,6 +15,88 @@ export async function POST(req) {
     if (!email || !alias) {
       return Response.json(
         { error: 'Email and alias are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!isValidEmailFormat(trimmedEmail)) {
+      const suggestion = suggestEmailCorrection(trimmedEmail);
+      let errorMsg = 'Please enter a valid email address';
+      if (suggestion) {
+        errorMsg += `. Did you mean ${suggestion}?`;
+      }
+      return Response.json(
+        { error: errorMsg },
+        { status: 400 }
+      );
+    }
+
+    // Validate email domain (check if it can receive email)
+    // This is CRITICAL - we must verify the domain exists before allowing registration
+    const domain = getEmailDomain(trimmedEmail);
+    if (!domain) {
+      return Response.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Check both MX records (preferred) and A records (fallback)
+    let hasMxRecords = false;
+    let hasARecords = false;
+
+    try {
+      // Check MX records first with timeout
+      const mxRecords = await Promise.race([
+        resolveMx(domain),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('DNS lookup timeout')), 5000)
+        )
+      ]);
+      hasMxRecords = mxRecords && mxRecords.length > 0;
+    } catch (mxError) {
+      // If MX lookup fails, check A records as fallback
+      try {
+        const aRecords = await Promise.race([
+          resolve4(domain),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('DNS lookup timeout')), 5000)
+          )
+        ]);
+        hasARecords = aRecords && aRecords.length > 0;
+      } catch (aError) {
+        // Both lookups failed - domain doesn't exist
+        const suggestion = suggestEmailCorrection(trimmedEmail);
+        let errorMsg = `The domain "${domain}" does not exist or cannot receive email. Please check for typos.`;
+        if (suggestion) {
+          errorMsg += ` Did you mean ${suggestion}?`;
+        }
+        return Response.json(
+          { error: errorMsg },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Domain must have either MX or A records to be valid
+    if (!hasMxRecords && !hasARecords) {
+      const suggestion = suggestEmailCorrection(trimmedEmail);
+      let errorMsg = `The domain "${domain}" does not appear to receive email. Please check for typos.`;
+      if (suggestion) {
+        errorMsg += ` Did you mean ${suggestion}?`;
+      }
+      return Response.json(
+        { error: errorMsg },
+        { status: 400 }
+      );
+    }
+
+    // Name is required for bidding
+    if (!name || name.trim() === '') {
+      return Response.json(
+        { error: 'Name is required. You must provide your name to create an avatar and place bids.' },
         { status: 400 }
       );
     }
@@ -31,11 +119,11 @@ export async function POST(req) {
 
     const s = supabaseServer();
 
-    // Check if user already has an alias
+    // Check if user already has an alias (use trimmed email)
     const { data: existingUserAlias, error: checkError } = await s
       .from('user_aliases')
       .select('*')
-      .eq('email', email)
+      .eq('email', trimmedEmail)
       .maybeSingle();
 
     if (checkError) {
@@ -79,16 +167,30 @@ export async function POST(req) {
       );
     }
 
-    // Create new alias - support old (color/animal), new (color/icon), and avatar systems
-    const insertData = {
-      email,
-      alias,
-    };
+    // BEST PRACTICE: Check verified_emails table, NOT user_aliases
+    // This ensures we only create aliases for verified emails
+    const { data: verifiedEmail } = await s
+      .from('verified_emails')
+      .select('*')
+      .eq('email', trimmedEmail)
+      .maybeSingle();
 
-    // Add name if provided
-    if (name) {
-      insertData.name = name.trim();
+    // CRITICAL: Email must be verified before creating alias
+    if (!verifiedEmail) {
+      return Response.json(
+        { error: 'Please verify your email address before creating an alias. Check your email for the verification link.' },
+        { status: 400 }
+      );
     }
+
+    // Email is verified and no alias exists (we already checked existingUserAlias above) - create the alias
+    // This is the FIRST and ONLY time we write to user_aliases
+    const insertData = {
+      email: trimmedEmail,
+      alias,
+      name: name.trim(),
+      email_verified: true, // Mark as verified since we checked verified_emails
+    };
 
     // Add color (required for all systems)
     if (color) {
@@ -108,9 +210,10 @@ export async function POST(req) {
     // Add avatar system fields if provided
     if (avatar_style) {
       insertData.avatar_style = avatar_style;
-      insertData.avatar_seed = avatar_seed || email;
+      insertData.avatar_seed = avatar_seed || trimmedEmail;
     }
 
+    // Create the alias (FIRST write to user_aliases - only after verification)
     const { data: newAlias, error: insertError } = await s
       .from('user_aliases')
       .insert(insertData)
@@ -120,10 +223,10 @@ export async function POST(req) {
     if (insertError) {
       console.error('Error creating alias:', insertError);
       
-      // Check for unique constraint violation
+      // Check for unique constraint violation (alias already taken)
       if (insertError.code === '23505') {
         return Response.json(
-          { error: 'This alias or email is already registered' },
+          { error: 'This alias is already taken. Please choose another.' },
           { status: 400 }
         );
       }
@@ -134,9 +237,10 @@ export async function POST(req) {
       );
     }
 
+    // Alias created successfully - email was verified, alias is now created
     return Response.json({
       alias: newAlias,
-      message: 'Alias created successfully',
+      message: 'Alias created successfully!',
     });
   } catch (error) {
     console.error('Alias creation error:', error);

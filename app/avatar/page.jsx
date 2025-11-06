@@ -172,10 +172,36 @@ export default function DashboardPage() {
   return (
     <main className="w-full px-4 py-4 sm:py-6 pb-8 sm:pb-10">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: '#00b140' }}>Your Dashboard</h1>
-        <p className="text-xs sm:text-sm text-gray-600">
-          Manage your avatar and track your bids
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: '#00b140' }}>Your Dashboard</h1>
+            <p className="text-xs sm:text-sm text-gray-600">
+              Manage your avatar and track your bids
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
+              style={{ backgroundColor: '#00b140' }}
+            >
+              <span>🛍️</span>
+              <span>Browse Catalog</span>
+            </Link>
+            <Link
+              href="/how-to-bid"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border-2 hover:opacity-90 transition-opacity"
+              style={{ 
+                backgroundColor: 'white',
+                borderColor: '#00b140',
+                color: '#00b140'
+              }}
+            >
+              <span>📖</span>
+              <span>How to Bid</span>
+            </Link>
+          </div>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">

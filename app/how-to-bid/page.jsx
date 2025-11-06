@@ -1,25 +1,60 @@
+'use client';
+
+import Link from 'next/link';
+
 export default function HowToBidPage() {
   return (
     <main className='max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8'>
-      <h1 className='text-2xl sm:text-3xl font-semibold'>How to bid</h1>
-      <p className='mt-2 text-gray-700'>
-        Bidding is simple and fast—no account required. You'll need to provide
-        your name and email for bid confirmations and winner notifications only.
-      </p>
-      <ol className='mt-6 list-decimal list-inside space-y-3 text-gray-800'>
-        <li>Create your bidding alias (choose a color and animal).</li>
-        <li>Open an item from the catalog.</li>
-        <li>Enter your bid amount.</li>
-        <li>
-          Submit. We'll email a confirmation. Monitor your dashboard for live
-          updates on items you've bid on.
+      <div className="mb-6">
+        <h1 className='text-2xl sm:text-3xl font-semibold mb-2'>How to Bid</h1>
+        <p className='text-gray-700'>
+          Bidding is simple and fast. You'll need to provide
+          your name and email for bid confirmations and winner notifications only.
+        </p>
+      </div>
+
+      <div className="mb-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-base font-semibold text-white hover:opacity-90 transition-opacity shadow-lg"
+          style={{ backgroundColor: '#00b140' }}
+        >
+          <span>🛍️</span>
+          <span>Browse Catalog</span>
+        </Link>
+      </div>
+
+      <ol className='mt-6 list-decimal list-inside space-y-4 text-gray-800'>
+        <li className="pl-2">
+          <strong>Create your bidding alias</strong> - Choose a color and emoji to represent you anonymously. This is how others will see your bids.
+        </li>
+        <li className="pl-2">
+          <strong>Browse the catalog</strong> - Explore all available items with photos, descriptions, and current bid amounts.
+        </li>
+        <li className="pl-2">
+          <strong>Open an item</strong> - Click on any item to see details and place a bid.
+        </li>
+        <li className="pl-2">
+          <strong>Enter your bid amount</strong> - Your bid must be at least the minimum shown. Higher bids help your PTO even more!
+        </li>
+        <li className="pl-2">
+          <strong>Submit your bid</strong> - We'll email you a confirmation. Monitor your dashboard for live updates on items you've bid on.
         </li>
       </ol>
-      <div className='mt-6 rounded-2xl border bg-indigo-50 p-4'>
-        <p className='text-sm text-indigo-900'>
-          Tip: Bids must be at least the displayed minimum. Higher bids help
-          your PTO even more!
-        </p>
+
+      <div className='mt-6 rounded-xl border-2 p-5' style={{ backgroundColor: 'rgba(0, 177, 64, 0.05)', borderColor: 'rgba(0, 177, 64, 0.2)' }}>
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">💡</span>
+          <div>
+            <p className='font-semibold text-gray-900 mb-1'>Pro Tips:</p>
+            <ul className='text-sm text-gray-700 space-y-1 list-disc list-inside'>
+              <li>Bids must be at least the displayed minimum amount</li>
+              <li>Check your dashboard regularly to see if you've been outbid</li>
+              <li>You can increase your bid at any time before the auction closes</li>
+              <li>Winners will receive payment and pickup instructions via email</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Legal Disclaimer & Usage Policy */}

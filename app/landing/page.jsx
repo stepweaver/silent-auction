@@ -14,10 +14,47 @@ export default function LandingPage() {
   const [name, setName] = useState('');
   const [enrolling, setEnrolling] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState('intro'); // 'intro', 'enroll'
+  const [step, setStep] = useState('intro'); // 'intro', 'verify', 'enroll'
   const [checkingExisting, setCheckingExisting] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
 
   useEffect(() => {
+    // Check if email was just verified
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const verified = searchParams.get('verified');
+      const verifiedEmail = searchParams.get('email');
+
+      if (verified === 'true' && verifiedEmail) {
+        // Email was verified, proceed to alias creation
+        setEmail(verifiedEmail);
+        setVerifiedEmail(verifiedEmail);
+
+        // Restore name from localStorage if it was stored during verification
+        const storedName = localStorage.getItem('auction_pending_name');
+        if (storedName) {
+          setName(storedName);
+          localStorage.removeItem('auction_pending_name'); // Clean up after use
+        }
+
+        setStep('enroll');
+        // Clean up URL
+        window.history.replaceState({}, '', '/landing');
+        return;
+      }
+    }
+
+    // Fallback: If we're in enroll step but name is empty, try to restore from localStorage
+    // This handles cases where the component remounts or the URL params were already cleaned
+    if (step === 'enroll' && email && !name) {
+      const storedName = localStorage.getItem('auction_pending_name');
+      if (storedName) {
+        setName(storedName);
+        localStorage.removeItem('auction_pending_name');
+      }
+    }
+
     // Check if already enrolled
     if (typeof window !== 'undefined') {
       const enrolled = localStorage.getItem(ENROLLMENT_KEY);
@@ -41,7 +78,8 @@ export default function LandingPage() {
     let timeoutId;
 
     const checkExistingAlias = async () => {
-      if (!email || !email.includes('@')) {
+      // Basic format check - don't do expensive validation on every keystroke
+      if (!email || !email.includes('@') || email.split('@').length !== 2) {
         setCheckingExisting(false);
         return;
       }
@@ -129,7 +167,47 @@ export default function LandingPage() {
       setError('Please enter your name');
       return;
     }
-    if (!email || !email.includes('@')) {
+
+    // Validate email format first
+    if (!email || !email.trim()) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    // Validate email format and domain - REQUIRED before proceeding
+    setError('');
+    let emailValid = false;
+
+    try {
+      const response = await fetch('/api/email/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!data.valid) {
+        let errorMsg = data.error || 'Please enter a valid email address';
+        if (data.suggestion) {
+          errorMsg += ` Did you mean ${data.suggestion}?`;
+        }
+        setError(errorMsg);
+        return; // BLOCK submission if validation fails
+      }
+
+      emailValid = true;
+    } catch (err) {
+      console.error('Email validation error:', err);
+      // If validation API fails, we MUST reject the email to prevent invalid registrations
+      setError(
+        'Unable to verify email address. Please check for typos and try again.'
+      );
+      return; // BLOCK submission on validation failure
+    }
+
+    // Only proceed if email validation passed
+    if (!emailValid) {
       setError('Please enter a valid email address');
       return;
     }
@@ -193,13 +271,95 @@ export default function LandingPage() {
       }
     }
 
-    // No existing alias found, proceed to enrollment step
-    setStep('enroll');
+    // No existing alias found - send verification email FIRST
+    // User must verify email before creating alias
     setError('');
+    setEnrolling(true);
+
+    try {
+      const response = await fetch('/api/email/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          name: name.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.hasExistingAlias) {
+          // Email already has verified alias - redirect to recovery
+          setError(data.error || 'This email already has an alias');
+          // Try to get the existing alias
+          try {
+            const aliasResponse = await fetch('/api/alias/get', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email.trim() }),
+            });
+            const aliasData = await aliasResponse.json();
+            if (aliasData.alias) {
+              // Auto-login with existing alias
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(ENROLLMENT_KEY, 'true');
+                const bidderName =
+                  aliasData.alias.name || name.trim() || aliasData.alias.alias;
+                localStorage.setItem(
+                  STORAGE_KEY,
+                  JSON.stringify({
+                    email: email.trim(),
+                    bidder_name: bidderName,
+                    alias: aliasData.alias,
+                  })
+                );
+                router.push('/');
+              }
+            }
+          } catch (err) {
+            console.error('Error fetching existing alias:', err);
+          }
+        } else {
+          setError(
+            data.error || 'Failed to send verification email. Please try again.'
+          );
+        }
+        setEnrolling(false);
+        return;
+      }
+
+      // Verification email sent successfully
+      // Store name in localStorage so we can restore it after verification
+      if (typeof window !== 'undefined' && name && name.trim()) {
+        localStorage.setItem('auction_pending_name', name.trim());
+      }
+
+      setVerificationSent(true);
+      setVerifiedEmail(email.trim());
+      setStep('verify');
+      setError('');
+    } catch (err) {
+      console.error('Error sending verification email:', err);
+      setError('Failed to send verification email. Please try again.');
+      setEnrolling(false);
+      return;
+    }
+
+    setEnrolling(false);
   };
 
   const handleAliasSelected = (alias) => {
-    // Save enrollment
+    // Only proceed if email is verified
+    if (alias && !alias.email_verified) {
+      // Don't save enrollment yet - user needs to verify email first
+      setError(
+        'Please check your email and verify your address before continuing.'
+      );
+      return;
+    }
+
+    // Save enrollment (only after verification)
     if (typeof window !== 'undefined') {
       localStorage.setItem(ENROLLMENT_KEY, 'true');
       // Store name from alias object if available, otherwise from form
@@ -219,10 +379,108 @@ export default function LandingPage() {
         localStorage.removeItem('auction_redirect');
         router.push(redirect);
       } else {
-        router.push('/');
+        // Redirect to Dashboard after creating avatar
+        router.push('/avatar');
       }
     }
   };
+
+  // Verification step - show message to check email
+  if (step === 'verify') {
+    return (
+      <div className='w-full px-4 py-4 pb-8'>
+        <div className='w-full max-w-lg mx-auto'>
+          <div className='bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden'>
+            {/* Header */}
+            <div
+              className='px-4 py-5 text-center'
+              style={{
+                backgroundColor: '#1e293b',
+              }}
+            >
+              <div className='flex flex-col items-center justify-center mb-3'>
+                <div className='w-24 h-24 mb-3 relative'>
+                  <Image
+                    src='/logo-with-glow.png'
+                    alt='Mary Frank Elementary'
+                    fill
+                    className='object-contain drop-shadow-lg'
+                    priority
+                    sizes='96px'
+                  />
+                </div>
+              </div>
+              <h1 className='text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-1.5'>
+                Check Your Email
+              </h1>
+            </div>
+
+            {/* Content */}
+            <div className='px-4 sm:px-5 md:px-6 py-4 sm:py-5'>
+              <div className='text-center mb-4'>
+                <div className='mb-4'>
+                  <svg
+                    className='w-16 h-16 mx-auto text-primary'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                    style={{ color: '#00b140' }}
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+                    />
+                  </svg>
+                </div>
+                <h2 className='text-xl font-bold text-gray-900 mb-2'>
+                  Verification Email Sent
+                </h2>
+                <p className='text-gray-700 mb-4'>
+                  We've sent a verification email to:
+                </p>
+                <p
+                  className='text-lg font-semibold text-primary mb-4 break-all'
+                  style={{ color: '#00b140' }}
+                >
+                  {verifiedEmail}
+                </p>
+                <p className='text-gray-600 mb-4'>
+                  Please check your inbox and click the verification link to
+                  continue creating your alias.
+                </p>
+                <p className='text-sm text-gray-500 mb-4'>
+                  The verification link will expire in 24 hours.
+                </p>
+                {error && (
+                  <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded-lg'>
+                    <p className='text-sm text-red-700'>{error}</p>
+                  </div>
+                )}
+                <div className='mt-6 space-y-2'>
+                  <button
+                    onClick={() => {
+                      setStep('intro');
+                      setError('');
+                      setVerificationSent(false);
+                    }}
+                    className='w-full px-4 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors'
+                  >
+                    Change Email
+                  </button>
+                  <p className='text-xs text-gray-500'>
+                    Didn't receive the email? Check your spam folder or try
+                    again.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (step === 'intro') {
     return (
@@ -243,6 +501,7 @@ export default function LandingPage() {
                     src='/logo-with-glow.png'
                     alt='Mary Frank Elementary'
                     fill
+                    sizes='96px'
                     className='object-contain drop-shadow-lg'
                     priority
                   />
@@ -393,11 +652,11 @@ export default function LandingPage() {
 
                 <button
                   type='submit'
-                  disabled={checkingExisting}
+                  disabled={checkingExisting || enrolling}
                   className='w-full bg-primary active:bg-primary/90 text-white font-semibold py-3.5 px-4 rounded-lg shadow-md active:shadow-lg transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
                   style={{ backgroundColor: '#00b140', minHeight: '48px' }}
                 >
-                  {checkingExisting ? (
+                  {checkingExisting || enrolling ? (
                     <>
                       <svg
                         className='animate-spin h-4 w-4'
@@ -419,7 +678,9 @@ export default function LandingPage() {
                           d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
                         ></path>
                       </svg>
-                      Checking...
+                      {checkingExisting
+                        ? 'Checking...'
+                        : 'Sending verification email...'}
                     </>
                   ) : (
                     'Get Started →'
