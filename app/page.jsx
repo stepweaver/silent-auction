@@ -78,32 +78,34 @@ export default function CatalogPage() {
 
   if (checkingEnrollment || loading) {
     return (
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="w-full px-4 py-4 sm:py-6">
         <div className="flex items-center justify-center py-12">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
-      <section className="mb-6 sm:mb-8">
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h1 className="text-3xl sm:text-4xl font-bold text-primary">Silent Auction</h1>
-            <p className="text-base-content/70 mt-2">Browse items and place your bids.</p>
+    <main className="w-full px-4 py-4 sm:py-6 pb-8 sm:pb-10">
+      <section className="mb-4 sm:mb-6">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: '#00b140' }}>
+              Silent Auction
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-600">Browse items and place your bids.</p>
           </div>
         </div>
       </section>
       {items.length === 0 ? (
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body text-center py-12">
-            <p className="text-base-content/70 text-lg">No items available.</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200">
+          <div className="px-4 sm:px-6 py-12 text-center">
+            <p className="text-sm sm:text-base text-gray-600">No items available.</p>
           </div>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {items.map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}

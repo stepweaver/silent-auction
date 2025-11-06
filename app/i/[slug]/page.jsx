@@ -172,9 +172,9 @@ export default function ItemPage({ params }) {
 
   if (checkingEnrollment || loading) {
     return (
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
+      <main className="w-full px-4 py-4 sm:py-6">
         <div className="flex items-center justify-center py-16">
-          <span className="loading loading-spinner loading-lg"></span>
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
         </div>
       </main>
     );
@@ -182,11 +182,15 @@ export default function ItemPage({ params }) {
 
   if (!item) {
     return (
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body text-center py-16">
-            <p className="text-base-content/70 mb-4 text-lg">Item not found.</p>
-            <Link href="/" className="btn btn-primary">
+      <main className="w-full px-4 py-4 sm:py-6">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200">
+          <div className="px-4 sm:px-6 py-16 text-center">
+            <p className="text-sm sm:text-base text-gray-600 mb-4">Item not found.</p>
+            <Link 
+              href="/" 
+              className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white"
+              style={{ backgroundColor: '#00b140' }}
+            >
               ← Back to catalog
             </Link>
           </div>
@@ -205,60 +209,89 @@ export default function ItemPage({ params }) {
   const winner = bids?.[0];
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 bg-base-300">
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="card bg-base-100 shadow-lg">
-          <figure className="bg-base-200">
-            {item.photo_url ? (
-              <img src={item.photo_url} alt={item.title} className="w-full object-contain max-h-[28rem] p-4" />
-            ) : (
-              <div className="w-full h-64 grid place-items-center text-base-content/50">
-                <span className="text-lg">No photo</span>
-              </div>
-            )}
-          </figure>
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
-              <h1 className="card-title text-2xl sm:text-3xl">{item.title}</h1>
-              {item.description && <p className="text-base-content/70 leading-7 mt-2">{item.description}</p>}
-
-              {!closed ? (
-                <>
-                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="stat bg-base-200 rounded-lg">
-                      <div className="stat-title text-xs">Current Bid</div>
-                      <div className="stat-value text-2xl text-primary">{formatDollar(current)}</div>
-                    </div>
-                    <div className="stat bg-primary/10 rounded-lg">
-                      <div className="stat-title text-xs">Next Minimum</div>
-                      <div className="stat-value text-2xl">{formatDollar(nextMin)}</div>
-                    </div>
-                  </div>
-                  {!hasBids && (
-                    <div className="alert alert-info">
-                      <span>First bid sets the price.</span>
-                    </div>
-                  )}
-                  <BidForm
-                    slug={slug}
-                    itemId={item.id}
-                    nextMin={nextMin}
-                    deadline={settings?.auction_deadline}
-                    onSubmit={handleBidSubmit}
-                    message={msg}
-                  />
-                </>
+    <main className="w-full px-4 py-4 sm:py-6 pb-8 sm:pb-10">
+      <div className="max-w-5xl mx-auto">
+        <Link 
+          href="/" 
+          className="inline-flex items-center gap-2 text-xs sm:text-sm text-gray-600 hover:text-gray-900 font-medium mb-4 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to catalog
+        </Link>
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <figure className="bg-gray-100">
+              {item.photo_url ? (
+                <img src={item.photo_url} alt={item.title} className="w-full object-contain max-h-[28rem] p-4" />
               ) : (
-                <div className="alert alert-warning">
-                  <div>
-                    <h3 className="font-bold">Bidding Closed</h3>
+                <div className="w-full h-64 grid place-items-center text-gray-400">
+                  <span className="text-sm">No photo</span>
+                </div>
+              )}
+            </figure>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">{item.title}</h1>
+                {item.description && <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mt-2">{item.description}</p>}
+
+                {!closed ? (
+                  <>
+                    <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div className="text-xs font-semibold text-gray-600 mb-1">Current Bid</div>
+                        <div className="text-xl sm:text-2xl font-bold" style={{ color: '#00b140' }}>{formatDollar(current)}</div>
+                      </div>
+                      <div 
+                        className="rounded-lg p-3 border"
+                        style={{ 
+                          backgroundColor: 'rgba(0, 177, 64, 0.05)',
+                          borderColor: 'rgba(0, 177, 64, 0.2)'
+                        }}
+                      >
+                        <div className="text-xs font-semibold text-gray-600 mb-1">Next Minimum</div>
+                        <div className="text-xl sm:text-2xl font-bold text-gray-900">{formatDollar(nextMin)}</div>
+                      </div>
+                    </div>
+                    {!hasBids && (
+                      <div 
+                        className="mt-3 rounded-lg p-3 border text-xs"
+                        style={{ 
+                          backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                          borderColor: 'rgba(59, 130, 246, 0.2)',
+                          color: '#1e40af'
+                        }}
+                      >
+                        First bid sets the price.
+                      </div>
+                    )}
+                    <div className="mt-4">
+                      <BidForm
+                        slug={slug}
+                        itemId={item.id}
+                        nextMin={nextMin}
+                        deadline={settings?.auction_deadline}
+                        onSubmit={handleBidSubmit}
+                        message={msg}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div 
+                    className="mt-4 rounded-lg p-4 border"
+                    style={{ 
+                      backgroundColor: 'rgba(245, 158, 11, 0.05)',
+                      borderColor: 'rgba(245, 158, 11, 0.3)'
+                    }}
+                  >
+                    <h3 className="font-bold text-sm sm:text-base mb-2" style={{ color: '#d97706' }}>Bidding Closed</h3>
                     {winner ? (
-                      <div className="mt-2 space-y-1">
-                        <p>Winning bid: <span className="font-bold">{formatDollar(winner.amount)}</span></p>
+                      <div className="space-y-2">
+                        <p className="text-xs sm:text-sm text-gray-700">Winning bid: <span className="font-bold">{formatDollar(winner.amount)}</span></p>
                         {winner.user_aliases ? (
                           <div className="flex items-center gap-2 mt-2">
                             <AliasAvatar
@@ -267,14 +300,14 @@ export default function ItemPage({ params }) {
                               animal={winner.user_aliases.animal}
                               size="sm"
                             />
-                            <span className="font-semibold">{winner.user_aliases.alias}</span>
+                            <span className="font-semibold text-xs sm:text-sm">{winner.user_aliases.alias}</span>
                           </div>
                         ) : null}
                       </div>
                     ) : (
-                      <p>No bids were placed.</p>
+                      <p className="text-xs sm:text-sm text-gray-700">No bids were placed.</p>
                     )}
-                    <div className="mt-3 text-sm space-y-1">
+                    <div className="mt-3 text-xs space-y-1 text-gray-700">
                       <p><b>Payment:</b> {settings?.payment_instructions || 'See checkout table.'}</p>
                       <p><b>Pickup:</b> {settings?.pickup_instructions || 'See gym stage.'}</p>
                       {settings?.contact_email && (
@@ -282,45 +315,45 @@ export default function ItemPage({ params }) {
                       )}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
-              <h2 className="card-title text-xl">Top Bids</h2>
-              <div className="divider"></div>
-              {bids.length > 0 ? (
-                <div className="space-y-2">
-                  {bids.map((b) => (
-                    <div key={b.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-base-200 transition-colors">
-                      <div className="flex items-center gap-3">
-                        {b.user_aliases ? (
-                          <>
-                            <AliasAvatar
-                              alias={b.user_aliases.alias}
-                              color={b.user_aliases.color}
-                              animal={b.user_aliases.animal}
-                              size="sm"
-                            />
-                            <span className="font-semibold">{b.user_aliases.alias}</span>
-                          </>
-                        ) : (
-                          <span className="text-base-content/70">
-                            {b.bidder_name || 'Anonymous'}
-                          </span>
-                        )}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">Top Bids</h2>
+                <div className="h-px bg-gray-200 mb-3"></div>
+                {bids.length > 0 ? (
+                  <div className="space-y-2">
+                    {bids.map((b) => (
+                      <div key={b.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          {b.user_aliases ? (
+                            <>
+                              <AliasAvatar
+                                alias={b.user_aliases.alias}
+                                color={b.user_aliases.color}
+                                animal={b.user_aliases.animal}
+                                size="sm"
+                              />
+                              <span className="font-semibold text-xs sm:text-sm">{b.user_aliases.alias}</span>
+                            </>
+                          ) : (
+                            <span className="text-xs sm:text-sm text-gray-600">
+                              {b.bidder_name || 'Anonymous'}
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-bold text-sm sm:text-base" style={{ color: '#00b140' }}>{formatDollar(b.amount)}</span>
                       </div>
-                      <span className="font-bold text-primary">{formatDollar(b.amount)}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-base-content/50">
-                  No bids yet.
-                </div>
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-xs sm:text-sm text-gray-500">
+                    No bids yet.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
