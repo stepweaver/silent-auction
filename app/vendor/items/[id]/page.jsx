@@ -116,13 +116,25 @@ export default function VendorEditItemPage({ params }) {
     }
   }, [id, vendorAdminId]);
 
-  function handleSlugChange(e) {
-    const slug = e.target.value
+  // Auto-generate slug from title
+  function generateSlug(title) {
+    if (!title) return '';
+    return title
       .toLowerCase()
       .trim()
       .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-    setForm((f) => ({ ...f, slug }));
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function handleTitleChange(e) {
+    const title = e.target.value;
+    setForm((f) => ({ 
+      ...f, 
+      title,
+      slug: generateSlug(title) // Auto-generate slug from title
+    }));
   }
 
   async function handlePhotoUpload(file) {
@@ -310,33 +322,12 @@ export default function VendorEditItemPage({ params }) {
                         e.currentTarget.style.boxShadow = 'none';
                       }}
                       value={form.title}
-                      onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                      onChange={handleTitleChange}
                       required
                       disabled={isSubmitting}
                     />
                   </Field>
 
-                  <Field label="Slug" required>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm sm:text-base font-mono"
-                      style={{
-                        borderColor: 'rgb(229 231 235)'
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = '#00b140';
-                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'rgb(229 231 235)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                      value={form.slug}
-                      onChange={handleSlugChange}
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </Field>
 
                   <Field label="Description">
                     <textarea

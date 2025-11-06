@@ -21,20 +21,47 @@ export async function POST(req) {
 
     const data = parsed.data;
 
+    // Generate slug from title if not provided or empty
+    let baseSlug = data.slug?.trim() || '';
+    if (!baseSlug && data.title) {
+      baseSlug = data.title
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+
     // Normalize slug
-    const slug = data.slug
+    const normalizedSlug = baseSlug
       .toLowerCase()
       .trim()
       .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    if (!normalizedSlug) {
+      return new Response('Title is required to generate slug', { status: 400 });
+    }
 
     const s = supabaseServer();
 
-    // Check if slug already exists
-    const { data: existing } = await s.from('items').select('id').eq('slug', slug).maybeSingle();
-
-    if (existing) {
-      return new Response('Slug already exists', { status: 400 });
+    // Check if slug already exists and append number if needed
+    let slug = normalizedSlug;
+    let counter = 1;
+    while (true) {
+      const { data: existing } = await s.from('items').select('id').eq('slug', slug).maybeSingle();
+      if (!existing) {
+        break; // Slug is available
+      }
+      slug = `${normalizedSlug}-${counter}`;
+      counter++;
+      if (counter > 100) {
+        // Safety limit
+        return new Response('Unable to generate unique slug', { status: 500 });
+      }
     }
 
     const { data: item, error } = await s
