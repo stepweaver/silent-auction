@@ -51,6 +51,10 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
           setSuccess(`Your existing alias: ${data.alias.alias}`);
           if (data.alias.color) setSelectedColor(data.alias.color);
           if (data.alias.animal) setSelectedAnimal(data.alias.animal);
+          
+          // Note: Security notification is handled by landing page recovery logic
+          // This component is used during alias creation flow, not recovery
+          
           if (onAliasSelected) {
             onAliasSelected(data.alias);
           }

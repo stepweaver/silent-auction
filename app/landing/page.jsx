@@ -15,6 +15,7 @@ export default function LandingPage() {
   const [enrolling, setEnrolling] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState('intro'); // 'intro', 'enroll'
+  const [checkingExisting, setCheckingExisting] = useState(false);
 
   useEffect(() => {
     // Check if already enrolled
@@ -33,7 +34,90 @@ export default function LandingPage() {
     }
   }, [router]);
 
-  const handleEmailSubmit = (e) => {
+  // Check for existing alias when email is entered and valid
+  // Only triggers if localStorage is missing (recovery scenario)
+  useEffect(() => {
+    let isMounted = true;
+    let timeoutId;
+
+    const checkExistingAlias = async () => {
+      if (!email || !email.includes('@')) {
+        setCheckingExisting(false);
+        return;
+      }
+
+      // Only check if localStorage is missing (recovery scenario)
+      if (typeof window !== 'undefined') {
+        const enrolled = localStorage.getItem(ENROLLMENT_KEY);
+        if (enrolled === 'true') {
+          // Already enrolled, don't check for recovery
+          setCheckingExisting(false);
+          return;
+        }
+      }
+
+      setCheckingExisting(true);
+      try {
+        const response = await fetch('/api/alias/get', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (isMounted && response.ok && data.alias) {
+          // Existing alias found - this is a recovery scenario
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(ENROLLMENT_KEY, 'true');
+            const bidderName = data.alias.name || name.trim() || data.alias.alias;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+              email,
+              bidder_name: bidderName,
+              alias: data.alias,
+            }));
+
+            // Send security notification only for recovery (localStorage was missing)
+            fetch('/api/alias/security-notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email }),
+            }).catch(err => console.error('Security notification error:', err));
+
+            // Redirect to catalog or intended destination
+            const redirect = localStorage.getItem('auction_redirect');
+            if (redirect) {
+              localStorage.removeItem('auction_redirect');
+              router.push(redirect);
+            } else {
+              router.push('/');
+            }
+          }
+        }
+      } catch (err) {
+        // Silently fail - email might not have an alias yet
+        if (isMounted) {
+          console.error('Error checking existing alias:', err);
+        }
+      } finally {
+        if (isMounted) {
+          setCheckingExisting(false);
+        }
+      }
+    };
+
+    // Debounce the check
+    timeoutId = setTimeout(() => {
+      checkExistingAlias();
+    }, 800);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [email, name, router]);
+
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     if (!name || name.trim().length === 0) {
       setError('Please enter your name');
@@ -43,6 +127,59 @@ export default function LandingPage() {
       setError('Please enter a valid email address');
       return;
     }
+
+    // Check for existing alias as a fallback (in case useEffect didn't catch it)
+    // Only if localStorage is missing (recovery scenario)
+    const isRecovery = typeof window !== 'undefined' && localStorage.getItem(ENROLLMENT_KEY) !== 'true';
+    
+    if (isRecovery) {
+      setCheckingExisting(true);
+      try {
+        const response = await fetch('/api/alias/get', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.alias) {
+          // Existing alias found - this is a recovery scenario
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(ENROLLMENT_KEY, 'true');
+            const bidderName = data.alias.name || name.trim() || data.alias.alias;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+              email,
+              bidder_name: bidderName,
+              alias: data.alias,
+            }));
+
+            // Send security notification only for recovery (localStorage was missing)
+            fetch('/api/alias/security-notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email }),
+            }).catch(err => console.error('Security notification error:', err));
+
+            // Redirect to catalog or intended destination
+            const redirect = localStorage.getItem('auction_redirect');
+            if (redirect) {
+              localStorage.removeItem('auction_redirect');
+              router.push(redirect);
+            } else {
+              router.push('/');
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error checking existing alias on submit:', err);
+      } finally {
+        setCheckingExisting(false);
+      }
+    }
+
+    // No existing alias found, proceed to enrollment step
     setStep('enroll');
     setError('');
   };
@@ -194,10 +331,21 @@ export default function LandingPage() {
 
                 <button
                   type="submit"
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 text-sm sm:text-base"
+                  disabled={checkingExisting}
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   style={{ backgroundColor: '#00b140' }}
                 >
-                  Get Started →
+                  {checkingExisting ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Checking...
+                    </>
+                  ) : (
+                    'Get Started →'
+                  )}
                 </button>
               </form>
             </div>

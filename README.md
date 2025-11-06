@@ -160,7 +160,7 @@ Supabase Realtime is used to automatically update:
 
 ## Notifications
 
-The platform sends email notifications for bid confirmations and winner notifications. Users can opt-in to SMS alerts for outbid notifications.
+The platform sends email notifications for bid confirmations and winner notifications. Users should monitor their dashboard for live updates on items they've bid on.
 
 **Email Notifications (Required):**
 
