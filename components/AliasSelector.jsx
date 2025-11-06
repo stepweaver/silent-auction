@@ -41,7 +41,7 @@ const EMOJI_CATEGORIES = {
   vehicles: ANIMALS.slice(VEHICLES_START),
 };
 
-export default function AliasSelector({ email, name, onAliasSelected, initialAlias = null, isModal = false, onClose = null }) {
+export default function AliasSelector({ email, name: propName, onAliasSelected, initialAlias = null, isModal = false, onClose = null }) {
   const [selectedColor, setSelectedColor] = useState(initialAlias?.color || null);
   const [selectedAnimal, setSelectedAnimal] = useState(initialAlias?.animal || null);
   const [isChecking, setIsChecking] = useState(false);
@@ -53,6 +53,17 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
   const [checkingExistingEmail, setCheckingExistingEmail] = useState(false);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [localName, setLocalName] = useState(propName || '');
+  
+  // Use localName if propName is not provided, otherwise use propName
+  const name = propName || localName;
+
+  // Sync propName to localName when it changes
+  useEffect(() => {
+    if (propName && propName.trim()) {
+      setLocalName(propName);
+    }
+  }, [propName]);
 
   // Check if email already has an alias when email changes
   useEffect(() => {
@@ -255,7 +266,8 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
       return; // BLOCK on validation failure
     }
 
-    if (!name || name.trim() === '') {
+    const finalName = name || localName;
+    if (!finalName || finalName.trim() === '') {
       setError('Name is required to create an avatar');
       return;
     }
@@ -274,7 +286,7 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
           alias,
           color: selectedColor,
           animal: selectedAnimal,
-          name: name.trim(),
+          name: (name || localName).trim(),
         }),
       });
 
@@ -379,6 +391,29 @@ export default function AliasSelector({ email, name, onAliasSelected, initialAli
 
       {/* Content - Scrollable */}
       <div className="px-4 sm:px-5 md:px-6 py-3 sm:py-4 overflow-y-auto flex-1">
+
+      {/* Name Input - Show if name is missing */}
+      {!name || name.trim() === '' ? (
+        <div className="mb-3">
+          <label className="block text-xs font-bold text-gray-900 mb-1.5">
+            Your Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+            placeholder="Enter your name"
+            value={localName}
+            onChange={(e) => {
+              setLocalName(e.target.value);
+              setError('');
+            }}
+            autoFocus
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Required to create your avatar
+          </p>
+        </div>
+      ) : null}
 
       {/* Preview - Compact and Prominent */}
       {selectedColor && selectedAnimal && (
