@@ -1,8 +1,37 @@
 import { supabaseServer } from '@/lib/serverSupabase';
 import { BidSchema } from '@/lib/validation';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { verifyCSRFToken } from '@/lib/csrf';
 
 export async function POST(req) {
   try {
+    // Rate limiting: 20 bids per minute per IP
+    const rateLimitResult = await checkRateLimit(req, 20, 60 * 1000);
+    if (rateLimitResult) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Too many bid requests. Please slow down.',
+          retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
+        }),
+        { 
+          status: 429,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '20',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString()
+          }
+        }
+      );
+    }
+
+    // CSRF protection for state-changing operations
+    const csrfValid = await verifyCSRFToken(req);
+    if (!csrfValid) {
+      return new Response('Invalid or missing CSRF token', { status: 403 });
+    }
+
     const body = await req.json();
     const parsed = BidSchema.safeParse(body);
 

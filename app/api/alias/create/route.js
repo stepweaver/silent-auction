@@ -1,5 +1,7 @@
 import { supabaseServer } from '@/lib/serverSupabase';
 import { isValidEmailFormat, getEmailDomain, suggestEmailCorrection } from '@/lib/validation';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { verifyCSRFToken } from '@/lib/csrf';
 import dns from 'dns';
 import { promisify } from 'util';
 
@@ -8,6 +10,35 @@ const resolve4 = promisify(dns.resolve4);
 
 export async function POST(req) {
   try {
+    // Rate limiting: 5 alias creations per hour per IP
+    const rateLimitResult = await checkRateLimit(req, 5, 60 * 60 * 1000);
+    if (rateLimitResult) {
+      return Response.json(
+        { 
+          error: 'Too many alias creation requests. Please try again later.',
+          retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
+        },
+        { 
+          status: 429,
+          headers: { 
+            'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString()
+          }
+        }
+      );
+    }
+
+    // CSRF protection for state-changing operations
+    const csrfValid = await verifyCSRFToken(req);
+    if (!csrfValid) {
+      return Response.json(
+        { error: 'Invalid or missing CSRF token' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const { email, alias, color, animal, icon, avatar_style, avatar_seed, name } = body;
 

@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { verifyEnrollmentToken } from '@/lib/enrollmentToken';
+import { generateVendorSessionToken, verifyVendorSessionToken } from '@/lib/jwt';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { z } from 'zod';
 
 const AuthSchema = z.object({
@@ -10,10 +12,31 @@ const AuthSchema = z.object({
   message: 'Either email or token must be provided',
 });
 
-// POST - Authenticate donor (returns session token)
+// POST - Authenticate donor (returns JWT session token)
 // Supports both email-based and token-based authentication
 export async function POST(req) {
   try {
+    // Rate limiting: 5 requests per 15 minutes per IP
+    const rateLimitResult = await checkRateLimit(req, 5, 15 * 60 * 1000);
+    if (rateLimitResult) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Too many requests. Please try again later.',
+          retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
+        }),
+        { 
+          status: 429,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString()
+          }
+        }
+      );
+    }
+
     const body = await req.json();
     const parsed = AuthSchema.safeParse(body);
 
@@ -79,12 +102,13 @@ export async function POST(req) {
       return new Response('Invalid request: provide either email or token', { status: 400 });
     }
 
-    // Generate a simple session token (in production, use JWT or similar)
-    // For now, we'll just return the vendor admin ID
-    // In a real app, you'd want proper session management
+    // Generate JWT session token
+    const sessionToken = generateVendorSessionToken(vendorAdmin.id, vendorAdmin.email);
+
     return Response.json({
       ok: true,
-      vendor_admin_id: vendorAdmin.id,
+      token: sessionToken,
+      vendor_admin_id: vendorAdmin.id, // Keep for backward compatibility
       email: vendorAdmin.email,
       name: vendorAdmin.name,
     });
@@ -97,25 +121,57 @@ export async function POST(req) {
   }
 }
 
-// GET - Verify donor session
-export async function GET() {
+// GET - Verify donor session (supports both JWT and legacy header-based auth)
+export async function GET(req) {
   const headersList = headers();
-  const vendorAdminId = headersList.get('x-vendor-admin-id');
+  
+  // Try JWT token first (new method)
+  const authHeader = headersList.get('authorization');
+  let tokenData = null;
 
-  if (!vendorAdminId) {
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    tokenData = verifyVendorSessionToken(token);
+  }
+
+  // Fallback to legacy header-based auth for backward compatibility
+  const vendorAdminId = headersList.get('x-vendor-admin-id');
+  
+  if (!tokenData && !vendorAdminId) {
     return new Response('Unauthorized', { status: 401 });
   }
 
   try {
     const s = supabaseServer();
-    const { data: vendorAdmin, error } = await s
-      .from('vendor_admin_users')
-      .select('*')
-      .eq('id', vendorAdminId)
-      .maybeSingle();
+    let vendorAdmin;
 
-    if (error || !vendorAdmin) {
-      return new Response('Unauthorized', { status: 401 });
+    if (tokenData) {
+      // Use JWT token data
+      const { data, error } = await s
+        .from('vendor_admin_users')
+        .select('*')
+        .eq('id', tokenData.vendorAdminId)
+        .eq('email', tokenData.email)
+        .maybeSingle();
+
+      if (error || !data) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+
+      vendorAdmin = data;
+    } else {
+      // Legacy header-based auth
+      const { data, error } = await s
+        .from('vendor_admin_users')
+        .select('*')
+        .eq('id', vendorAdminId)
+        .maybeSingle();
+
+      if (error || !data) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+
+      vendorAdmin = data;
     }
 
     return Response.json({

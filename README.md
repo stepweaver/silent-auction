@@ -77,6 +77,13 @@ RESEND_FROM_EMAIL=noreply@yourdomain.com
 
 # Admin emails (comma-separated) - will receive winners list when auction closes
 ADMIN_EMAILS=admin1@example.org,admin2@example.org
+
+# Security Secrets (REQUIRED for production)
+# Generate strong random strings for these (at least 32 characters)
+VERIFICATION_SECRET=your-strong-random-secret-for-email-verification
+ENROLLMENT_SECRET=your-strong-random-secret-for-vendor-enrollment
+JWT_SECRET=your-strong-random-secret-for-jwt-sessions
+CSRF_SECRET=your-strong-random-secret-for-csrf-protection
 ```
 
 **Where to find Supabase keys:**
@@ -143,10 +150,34 @@ See `supabase-schema.sql` for full schema and RLS policies.
 
 ## Security
 
+### Authentication & Authorization
 - Admin routes protected with Basic Auth
+- Vendor admin authentication uses JWT-based sessions (secure token-based auth)
+- Email verification required before alias creation and bidding
 - Row Level Security (RLS) policies on all tables
-- Server-side validation of bids (minimum increment, deadline)
 - Service Role key only used server-side
+
+### Rate Limiting
+- Bid placement: 20 requests per minute per IP
+- Email verification: 3 requests per 10 minutes per IP
+- Alias creation: 5 requests per hour per IP
+- Vendor authentication: 5 requests per 15 minutes per IP
+
+### CSRF Protection
+- CSRF tokens required for all state-changing operations (bids, alias creation)
+- Tokens are signed and time-limited (1 hour expiration)
+- Prevents cross-site request forgery attacks
+
+### Input Validation
+- Server-side validation of bids (minimum increment, deadline)
+- Zod schema validation on all API routes
+- Email format and domain validation
+- File upload type and size validation
+
+### Error Handling
+- No sensitive error details exposed to clients
+- Errors logged server-side only in development mode
+- Secure error messages for production
 
 ## Realtime Updates
 

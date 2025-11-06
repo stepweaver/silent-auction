@@ -2,6 +2,7 @@ import { isValidEmailFormat, getEmailDomain, suggestEmailCorrection } from '@/li
 import { generateVerificationToken } from '@/lib/emailVerification';
 import { sendEmailVerification } from '@/lib/notifications';
 import { supabaseServer } from '@/lib/serverSupabase';
+import { checkRateLimit } from '@/lib/rateLimit';
 import dns from 'dns';
 import { promisify } from 'util';
 
@@ -14,6 +15,27 @@ const resolve4 = promisify(dns.resolve4);
  */
 export async function POST(req) {
   try {
+    // Rate limiting: 3 verification emails per 10 minutes per IP
+    // This prevents email spam/abuse
+    const rateLimitResult = await checkRateLimit(req, 3, 10 * 60 * 1000);
+    if (rateLimitResult) {
+      return Response.json(
+        { 
+          error: 'Too many verification email requests. Please wait before requesting another.',
+          retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
+        },
+        { 
+          status: 429,
+          headers: { 
+            'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '3',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString()
+          }
+        }
+      );
+    }
+
     const body = await req.json();
     const { email, name } = body;
 
