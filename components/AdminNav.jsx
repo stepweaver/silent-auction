@@ -44,7 +44,7 @@ export default function AdminNav() {
               : 'text-gray-700 hover:bg-gray-100'
           }`}
         >
-          Vendor Admins
+          Donors
         </Link>
       </div>
     </nav>

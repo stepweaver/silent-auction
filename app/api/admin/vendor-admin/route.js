@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { checkBasicAuth } from '@/lib/auth';
+import { generateEnrollmentToken } from '@/lib/enrollmentToken';
+import { sendVendorAdminEnrollmentEmail } from '@/lib/notifications';
 import { z } from 'zod';
 
 const VendorAdminSchema = z.object({
@@ -37,7 +39,7 @@ export async function POST(req) {
       .maybeSingle();
 
     if (existing) {
-      return new Response('Vendor admin with this email already exists', { status: 400 });
+      return new Response('Donor with this email already exists', { status: 400 });
     }
 
     // Generate a simple password (in production, you'd want to email this or use a secure method)
@@ -69,7 +71,7 @@ export async function POST(req) {
         );
       }
       return new Response(
-        JSON.stringify({ error: 'Failed to create vendor admin', details: error.message }),
+        JSON.stringify({ error: 'Failed to create donor', details: error.message }),
         { 
           status: 500,
           headers: { 'Content-Type': 'application/json' }
@@ -77,7 +79,59 @@ export async function POST(req) {
       );
     }
 
-    return Response.json({ ok: true, vendor_admin: vendorAdmin });
+    // Generate enrollment token and link
+    const enrollmentToken = generateEnrollmentToken(vendorAdmin.id, vendorAdmin.email);
+    
+    // Get site URL - use env var, or construct from request headers, or fallback
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (!siteUrl) {
+      // Try to construct from request headers
+      const host = headersList.get('host');
+      const protocol = headersList.get('x-forwarded-proto') || 'https';
+      if (host) {
+        siteUrl = `${protocol}://${host}`;
+      } else {
+        // Last resort fallback
+        siteUrl = 'http://localhost:3000';
+        console.warn('NEXT_PUBLIC_SITE_URL not set and could not determine from headers, using localhost fallback');
+      }
+    }
+    
+    // Ensure siteUrl doesn't end with a slash
+    siteUrl = siteUrl.replace(/\/$/, '');
+    
+    // URL encode the token to handle any special characters
+    const encodedToken = encodeURIComponent(enrollmentToken);
+    const enrollmentLink = `${siteUrl}/vendor-enroll?token=${encodedToken}`;
+
+    // Get contact email from settings
+    const { data: settings } = await s
+      .from('settings')
+      .select('contact_email')
+      .eq('id', 1)
+      .maybeSingle();
+
+    const contactEmail = settings?.contact_email || process.env.AUCTION_CONTACT_EMAIL || null;
+
+    // Send enrollment email (don't fail if email fails)
+    try {
+      await sendVendorAdminEnrollmentEmail({
+        email: vendorAdmin.email,
+        name: vendorAdmin.name,
+        enrollmentLink,
+        contactEmail,
+      });
+    } catch (emailError) {
+      console.error('Failed to send enrollment email:', emailError);
+      // Continue even if email fails - we'll still return success
+    }
+
+    return Response.json({ 
+      ok: true, 
+      vendor_admin: vendorAdmin,
+      enrollment_token: enrollmentToken,
+      email_sent: true,
+    });
   } catch (error) {
     console.error('Create vendor admin error:', error);
     return new Response(

@@ -10,13 +10,14 @@ export default function VendorAdminsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ email: '', name: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [enrollmentLink, setEnrollmentLink] = useState(null);
 
   async function load() {
     try {
       const res = await fetch('/api/admin/vendor-admin');
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: 'Error loading vendor admins' }));
-        setMsg(errorData.error || errorData.details || 'Error loading vendor admins');
+        const errorData = await res.json().catch(() => ({ error: 'Error loading donors' }));
+        setMsg(errorData.error || errorData.details || 'Error loading donors');
         return;
       }
 
@@ -24,7 +25,7 @@ export default function VendorAdminsPage() {
       setVendorAdmins(data.vendor_admins || []);
     } catch (err) {
       console.error('Error loading:', err);
-      setMsg('Error loading vendor admins: ' + err.message);
+      setMsg('Error loading donors: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -38,6 +39,7 @@ export default function VendorAdminsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setMsg('');
+    setEnrollmentLink(null);
 
     try {
       const res = await fetch('/api/admin/vendor-admin', {
@@ -47,20 +49,46 @@ export default function VendorAdminsPage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: 'Error creating vendor admin' }));
-        setMsg(errorData.error || errorData.details || 'Error creating vendor admin');
+        const errorData = await res.json().catch(() => ({ error: 'Error creating donor' }));
+        setMsg(errorData.error || errorData.details || 'Error creating donor');
         return;
       }
 
-      setMsg('Vendor admin created successfully!');
+      const data = await res.json();
+      
+      if (data.email_sent) {
+        setMsg('Donor created successfully! An enrollment email has been sent to ' + form.email + '.');
+      } else {
+        // Fallback: show link if email wasn't sent
+        const token = data.enrollment_token;
+        if (token) {
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+          const link = `${baseUrl}/vendor-enroll?token=${token}`;
+          setEnrollmentLink(link);
+          setMsg('Donor created successfully! Email could not be sent. Please send them the enrollment link below.');
+        } else {
+          setMsg('Donor created successfully!');
+        }
+      }
       setForm({ email: '', name: '' });
       setShowForm(false);
       await load();
     } catch (err) {
-      setMsg('Error creating vendor admin: ' + err.message);
+      setMsg('Error creating donor: ' + err.message);
       console.error(err);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  function copyEnrollmentLink() {
+    if (enrollmentLink) {
+      navigator.clipboard.writeText(enrollmentLink);
+      const originalMsg = msg;
+      setMsg('Enrollment link copied to clipboard!');
+      setTimeout(() => {
+        setMsg(originalMsg);
+      }, 2000);
     }
   }
 
@@ -78,7 +106,7 @@ export default function VendorAdminsPage() {
         <Link href="/admin" className="text-sm underline text-gray-700 hover:text-gray-900">
           ← Dashboard
         </Link>
-        <h1 className="text-xl sm:text-2xl font-semibold">Vendor Admins</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">Donors</h1>
       </div>
 
       {msg && (
@@ -91,18 +119,41 @@ export default function VendorAdminsPage() {
         </div>
       )}
 
+      {enrollmentLink && (
+        <div className="mb-3 sm:mb-4 p-3 sm:p-4 border rounded-xl bg-yellow-50 border-yellow-200">
+          <h3 className="font-semibold mb-2 text-sm sm:text-base">Enrollment Link (Fallback)</h3>
+          <p className="text-xs sm:text-sm text-gray-600 mb-2">
+            Email could not be sent automatically. Please send this link to the donor manually.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              readOnly
+              value={enrollmentLink}
+              className="flex-1 border rounded px-3 py-2 text-xs sm:text-sm bg-white font-mono break-all"
+            />
+            <button
+              onClick={copyEnrollmentLink}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm sm:text-base whitespace-nowrap"
+            >
+              Copy Link
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mb-3 sm:mb-4">
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm sm:text-base w-full sm:w-auto"
         >
-          {showForm ? 'Cancel' : '+ Add Vendor Admin'}
+          {showForm ? 'Cancel' : '+ Add Donor'}
         </button>
       </div>
 
       {showForm && (
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 border rounded-xl bg-gray-50">
-          <h2 className="font-semibold mb-3 text-base sm:text-lg">Add New Vendor Admin</h2>
+          <h2 className="font-semibold mb-3 text-base sm:text-lg">Add New Donor</h2>
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="block text-sm font-semibold mb-1">Name</label>
@@ -128,7 +179,7 @@ export default function VendorAdminsPage() {
                 placeholder="john@example.com"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Vendor admins will use this email to log in and manage their items.
+                An enrollment email with a login link will be sent to this address automatically.
               </p>
             </div>
             <button
@@ -136,14 +187,14 @@ export default function VendorAdminsPage() {
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Creating...' : 'Create Vendor Admin'}
+              {isSubmitting ? 'Creating...' : 'Create Donor'}
             </button>
           </form>
         </div>
       )}
 
       {vendorAdmins.length === 0 ? (
-        <p className="text-gray-600 text-sm sm:text-base">No vendor admins yet.</p>
+        <p className="text-gray-600 text-sm sm:text-base">No donors yet.</p>
       ) : (
         <>
           {/* Mobile: Card View */}
