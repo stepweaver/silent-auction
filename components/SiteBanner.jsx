@@ -1,43 +1,33 @@
- 'use client';
+export default function SiteBanner({ deadlineISO = null }) {
+  let message = "We're testing the site — the silent auction closing time will be announced soon.";
 
- import { useMemo } from 'react';
+  if (deadlineISO) {
+    const deadline = new Date(deadlineISO);
 
- export default function SiteBanner({ deadlineISO = null }) {
-   const message = useMemo(() => {
-     if (!deadlineISO) {
-       return "We're testing the site — the silent auction closing time will be announced soon.";
-     }
+    if (!Number.isNaN(deadline.getTime())) {
+      const now = new Date();
+      const timeFormatter = new Intl.DateTimeFormat(undefined, {
+        timeStyle: 'short',
+      });
+      const dateFormatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'full',
+      });
 
-     const deadline = new Date(deadlineISO);
-     if (Number.isNaN(deadline.getTime())) {
-       return "We're testing the site — the silent auction closing time will be announced soon.";
-     }
-
-     const now = new Date();
-     const timeFormatter = new Intl.DateTimeFormat(undefined, {
-       timeStyle: 'short',
-     });
-     const dateFormatter = new Intl.DateTimeFormat(undefined, {
-       dateStyle: 'full',
-     });
-
-     if (deadline <= now) {
-       return `We're testing the site — the silent auction closed on ${dateFormatter.format(
-         deadline,
-       )} at ${timeFormatter.format(deadline)}.`;
-     }
-
-     const sameDay = deadline.toDateString() === now.toDateString();
-     if (sameDay) {
-       return `We're testing the site — the silent auction closes tonight at ${timeFormatter.format(
-         deadline,
-       )}.`;
-     }
-
-     return `We're testing the site — the silent auction closes on ${dateFormatter.format(
-       deadline,
-     )} at ${timeFormatter.format(deadline)}.`;
-   }, [deadlineISO]);
+      if (deadline <= now) {
+        message = `We're testing the site — the silent auction closed on ${dateFormatter.format(
+          deadline,
+        )} at ${timeFormatter.format(deadline)}.`;
+      } else if (deadline.toDateString() === now.toDateString()) {
+        message = `We're testing the site — the silent auction closes tonight at ${timeFormatter.format(
+          deadline,
+        )}.`;
+      } else {
+        message = `We're testing the site — the silent auction closes on ${dateFormatter.format(
+          deadline,
+        )} at ${timeFormatter.format(deadline)}.`;
+      }
+    }
+  }
 
    return (
      <div className='bg-amber-50 border-b border-amber-200 text-amber-900 shadow-sm'>
