@@ -7,7 +7,7 @@ A real-time silent auction platform built with Next.js 15, Supabase, and Tailwin
 - **Real-time bidding**: Live updates when bids are placed
 - **QR code access**: Per-item QR codes for easy in-room access
 - **Admin dashboard**: Create/edit items, manage settings, extend deadlines
-- **Deadline enforcement**: Automatic bidding cutoff at auction deadline
+- **Manual closing**: Close all items from the admin dashboard and trigger winner notifications
 - **Winner display**: Shows winning bids and pickup/payment instructions after close
 
 ## Prerequisites
@@ -120,9 +120,17 @@ Access with the username/password from your `.env.local`:
 ### Admin Features
 
 - **Extend deadline**: Add 30 minutes to the auction deadline
-- **Close all items**: Immediately close bidding on all items
+- **Close all items**: Immediately close bidding on all items (required when the deadline passes)
 - **Edit items**: Update title, description, prices, photos, and status
 - **View QR codes**: See QR codes for each item in the admin dashboard
+
+### Closing the Auction
+
+1. Wait until the bidding deadline you configured.
+2. Log into `/admin` with the Basic Auth credentials.
+3. Click **Close all items now**.
+4. Confirm the prompt; the system will mark every item as closed, email winners, and send the admin summary.
+5. If any items remain open (for example, if new items were added later), resolve them and run **Close all items now** again.
 
 ## Deployment
 

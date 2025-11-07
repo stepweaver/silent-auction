@@ -256,15 +256,15 @@ export default function AdminDashboard() {
           {!closed && deadline && (
             <p className='text-xs text-gray-600'>
               {openCount === 1
-                ? '1 item still open. Auction will close automatically at the deadline.'
-                : `${openCount} items still open. Auction will close automatically at the deadline.`}
+                ? '1 item still open. Remember to use “Close all items now” when the deadline passes.'
+                : `${openCount} items still open. Remember to use “Close all items now” when the deadline passes.`}
             </p>
           )}
           {closed && (
             <p className='text-xs text-gray-600'>
               {openCount === 0
-                ? 'All catalog items are now closed.'
-                : `${openCount} items remain open; please review.`}
+                ? 'All catalog items are now closed and winner emails were sent to qualifying bidders.'
+                : `${openCount} items remain open; run “Close all items now” again after resolving them.`}
             </p>
           )}
           {settings?.contact_email && (
