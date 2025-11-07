@@ -105,6 +105,24 @@ export default function SiteHeader() {
             >
               How to Bid
             </Link>
+            <Link
+              href='/admin'
+              aria-current={isActive('/admin') ? 'page' : undefined}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/admin')
+                  ? 'text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              style={
+                isActive('/admin')
+                  ? {
+                      backgroundColor: 'var(--primary-500)',
+                    }
+                  : {}
+              }
+            >
+              Admin
+            </Link>
           </div>
 
           {/* Mobile Menu Button - Show on all screens except xl */}
@@ -228,6 +246,28 @@ export default function SiteHeader() {
                 }
               >
                 How to Bid
+              </Link>
+              <Link
+                href='/admin'
+                aria-current={isActive('/admin') ? 'page' : undefined}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors active:opacity-80 touch-manipulation ${
+                  isActive('/admin')
+                    ? 'text-white'
+                    : 'text-gray-700 active:bg-gray-100'
+                }`}
+                style={
+                  isActive('/admin')
+                    ? {
+                        backgroundColor: 'var(--primary-500)',
+                        minHeight: '48px',
+                      }
+                    : {
+                        minHeight: '48px',
+                      }
+                }
+              >
+                Admin
               </Link>
             </div>
           </div>
