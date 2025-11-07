@@ -69,7 +69,7 @@ export default async function PrintableQrCodesPage() {
           items.map((item) => {
             const itemUrl = `${siteUrl}/i/${item.slug}`;
             const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=900x900&data=${encodeURIComponent(
-              itemUrl,
+              itemUrl
             )}`;
 
             return (
@@ -78,8 +78,12 @@ export default async function PrintableQrCodesPage() {
                 className='qr-page flex min-h-[9.5in] flex-col items-center justify-center gap-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm'
               >
                 <div className='text-center'>
-                  <p className='text-sm font-semibold uppercase tracking-wide text-emerald-600'>Mary Frank Elementary PTO Silent Auction</p>
-                  <h2 className='mt-2 text-3xl font-bold text-gray-900 sm:text-4xl'>{item.title}</h2>
+                  <p className='text-sm font-semibold uppercase tracking-wide text-emerald-600'>
+                    Mary Frank Elementary PTO Silent Auction
+                  </p>
+                  <h2 className='mt-2 text-3xl font-bold text-gray-900 sm:text-4xl'>
+                    {item.title}
+                  </h2>
                 </div>
 
                 <img
@@ -89,13 +93,21 @@ export default async function PrintableQrCodesPage() {
                 />
 
                 <div className='w-full max-w-2xl text-center text-gray-700'>
-                  <p className='text-base font-semibold'>Scan to view item &amp; place bids</p>
-                  <p className='mt-1 break-all text-sm text-gray-500'>{itemUrl}</p>
+                  <p className='text-base font-semibold'>
+                    Scan to view item &amp; place bids
+                  </p>
+                  <p className='mt-1 break-all text-sm text-gray-500'>
+                    {itemUrl}
+                  </p>
                   {item.start_price && (
-                    <p className='mt-3 text-sm text-gray-600'>Starting bid: ${Number(item.start_price).toFixed(2)}</p>
+                    <p className='mt-3 text-sm text-gray-600'>
+                      Starting bid: ${Number(item.start_price).toFixed(2)}
+                    </p>
                   )}
                   {item.description && (
-                    <p className='mt-2 text-sm leading-relaxed text-gray-600'>{item.description}</p>
+                    <p className='mt-2 text-sm leading-relaxed text-gray-600'>
+                      {item.description}
+                    </p>
                   )}
                 </div>
               </section>
@@ -103,12 +115,16 @@ export default async function PrintableQrCodesPage() {
           })
         ) : (
           <div className='rounded-xl border border-dashed border-gray-300 bg-gray-50 p-12 text-center'>
-            <h2 className='text-xl font-semibold text-gray-800'>No items found</h2>
-            <p className='mt-2 text-sm text-gray-600'>Add items in the admin dashboard and then reload this page to generate QR codes.</p>
+            <h2 className='text-xl font-semibold text-gray-800'>
+              No items found
+            </h2>
+            <p className='mt-2 text-sm text-gray-600'>
+              Add items in the admin dashboard and then reload this page to
+              generate QR codes.
+            </p>
           </div>
         )}
       </div>
     </div>
   );
 }
-

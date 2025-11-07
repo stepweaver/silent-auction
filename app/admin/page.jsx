@@ -208,8 +208,12 @@ export default function AdminDashboard() {
   const deadline = settings?.auction_deadline
     ? new Date(settings.auction_deadline)
     : null;
-  const allClosed = items && items.length > 0 ? items.every((item) => item.is_closed) : false;
-  const openCount = items && items.length > 0 ? items.filter((item) => !item.is_closed).length : 0;
+  const allClosed =
+    items && items.length > 0 ? items.every((item) => item.is_closed) : false;
+  const openCount =
+    items && items.length > 0
+      ? items.filter((item) => !item.is_closed).length
+      : 0;
   const now = new Date();
   const closed = allClosed || (deadline ? now >= deadline : false);
 
@@ -353,7 +357,7 @@ export default function AdminDashboard() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Card Content */}
                     <div className='flex-1 min-w-0'>
                       <div className='flex justify-between items-start mb-2'>
@@ -463,7 +467,11 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td className='border p-2'>
-                        <img alt='QR' src={qrUrl} className='w-16 h-16 rounded border border-gray-200' />
+                        <img
+                          alt='QR'
+                          src={qrUrl}
+                          className='w-16 h-16 rounded border border-gray-200'
+                        />
                       </td>
                     </tr>
                   );
