@@ -29,11 +29,6 @@ export default function AvatarGenerator({ email, name, onAvatarSelected, initial
       return;
     }
 
-    if (!name || name.trim() === '') {
-      setError('Name is required to create an avatar');
-      return;
-    }
-
     setIsCreating(true);
     setError('');
 
@@ -46,16 +41,22 @@ export default function AvatarGenerator({ email, name, onAvatarSelected, initial
         ? seed.split('@')[0].charAt(0).toUpperCase() + seed.split('@')[0].slice(1)
         : `User ${avatarSeed.substring(0, 6)}`;
       
+      const payload = {
+        email,
+        alias: alias,
+        avatar_style: selectedStyle,
+        avatar_seed: avatarSeed,
+      };
+
+      const trimmedName = typeof name === 'string' ? name.trim() : '';
+      if (trimmedName) {
+        payload.name = trimmedName;
+      }
+
       const response = await fetch('/api/alias/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          alias: alias,
-          avatar_style: selectedStyle,
-          avatar_seed: avatarSeed,
-          name: name.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -177,7 +178,7 @@ export default function AvatarGenerator({ email, name, onAvatarSelected, initial
       <button
         type="button"
         onClick={handleCreate}
-        disabled={isCreating || !email || !name || name.trim() === ''}
+        disabled={isCreating || !email}
         className="btn btn-primary btn-lg w-full shadow-lg"
       >
         {isCreating ? (

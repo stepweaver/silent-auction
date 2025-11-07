@@ -131,6 +131,51 @@ export async function POST(req) {
       }, { status: 400 });
     }
 
+    // Persist the registrant's name so we can associate it with their avatar after verification
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    if (trimmedName) {
+      try {
+        const { data: existingVerification } = await s
+          .from('verified_emails')
+          .select('verified_at, name')
+          .eq('email', trimmedEmail)
+          .maybeSingle();
+
+        if (existingVerification) {
+          // Only update pending verifications or add missing name metadata
+          if (!existingVerification.verified_at || !existingVerification.name) {
+            await s
+              .from('verified_emails')
+              .update({ name: trimmedName })
+              .eq('email', trimmedEmail);
+          }
+        } else {
+          await s
+            .from('verified_emails')
+            .insert({
+              email: trimmedEmail,
+              name: trimmedName,
+            });
+        }
+      } catch (nameStoreError) {
+        if (nameStoreError?.code === '23505') {
+          try {
+            await s
+              .from('verified_emails')
+              .update({ name: trimmedName })
+              .eq('email', trimmedEmail);
+          } catch (retryError) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Retry failed while persisting verification name metadata:', retryError);
+            }
+          }
+        } else if (process.env.NODE_ENV === 'development') {
+          // Failing to persist the name should not block verification email delivery
+          console.error('Failed to persist verification name metadata:', nameStoreError);
+        }
+      }
+    }
+
     // Step 4: Generate verification token and send email
     const verificationToken = generateVerificationToken(trimmedEmail);
     

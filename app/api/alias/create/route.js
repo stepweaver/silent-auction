@@ -40,7 +40,16 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { email, alias, color, animal, icon, avatar_style, avatar_seed, name } = body;
+    const {
+      email,
+      alias,
+      color,
+      animal,
+      icon,
+      avatar_style,
+      avatar_seed,
+      name: requestName,
+    } = body;
 
     // Support old system (color/animal), new system (color/icon), and avatar system (avatar_style/avatar_seed)
     if (!email || !alias) {
@@ -124,14 +133,6 @@ export async function POST(req) {
       );
     }
 
-    // Name is required for bidding
-    if (!name || name.trim() === '') {
-      return Response.json(
-        { error: 'Name is required. You must provide your name to create an avatar and place bids.' },
-        { status: 400 }
-      );
-    }
-
     // If using avatar system, don't require color/animal/icon
     if (!avatar_style && !color) {
       return Response.json(
@@ -208,7 +209,7 @@ export async function POST(req) {
     // This ensures we only create aliases for verified emails
     const { data: verifiedEmail } = await s
       .from('verified_emails')
-      .select('*')
+      .select('email, name, verified_at')
       .eq('email', trimmedEmail)
       .maybeSingle();
 
@@ -220,12 +221,43 @@ export async function POST(req) {
       );
     }
 
+    if (!verifiedEmail.verified_at) {
+      return Response.json(
+        { error: 'Please verify your email address before creating an alias. Check your email for the verification link.' },
+        { status: 400 }
+      );
+    }
+
+    const verifiedName = typeof verifiedEmail.name === 'string' ? verifiedEmail.name.trim() : '';
+    const fallbackName = typeof requestName === 'string' ? requestName.trim() : '';
+    const finalName = verifiedName || fallbackName;
+
+    if (!finalName) {
+      return Response.json(
+        { error: 'We could not find your name for this email. Please restart the registration flow so we can capture it.' },
+        { status: 400 }
+      );
+    }
+
+    if (!verifiedName && finalName) {
+      try {
+        await s
+          .from('verified_emails')
+          .update({ name: finalName })
+          .eq('email', trimmedEmail);
+      } catch (namePersistError) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to persist verified name metadata:', namePersistError);
+        }
+      }
+    }
+
     // Email is verified and no alias exists (we already checked existingUserAlias above) - create the alias
     // This is the FIRST and ONLY time we write to user_aliases
     const insertData = {
       email: trimmedEmail,
       alias,
-      name: name.trim(),
+      name: finalName,
       email_verified: true, // Mark as verified since we checked verified_emails
     };
 

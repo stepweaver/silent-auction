@@ -278,27 +278,28 @@ export default function AliasSelector({
       return; // BLOCK on validation failure
     }
 
-    if (!name || name.trim() === '') {
-      setError('Name is required to create an avatar');
-      return;
-    }
-
     setIsCreating(true);
     setError('');
     setSuccess('');
 
     try {
       const alias = formatAlias(selectedColor, selectedAnimal);
+      const requestPayload = {
+        email: email.trim(), // Use trimmed email
+        alias,
+        color: selectedColor,
+        animal: selectedAnimal,
+      };
+
+      const trimmedName = typeof name === 'string' ? name.trim() : '';
+      if (trimmedName) {
+        requestPayload.name = trimmedName;
+      }
+
       const response = await fetch('/api/alias/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.trim(), // Use trimmed email
-          alias,
-          color: selectedColor,
-          animal: selectedAnimal,
-          name: name.trim(),
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
       const data = await response.json();

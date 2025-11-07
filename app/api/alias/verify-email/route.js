@@ -28,8 +28,9 @@ export async function POST(req) {
 
     // BEST PRACTICE: Only write to verified_emails table, NOT user_aliases
     // This ensures we never create user records until they actually create an alias
-    
-    // Check if already verified
+    const nowIso = new Date().toISOString();
+
+    // Check if already verified or pending verification metadata exists
     const { data: existingVerification } = await s
       .from('verified_emails')
       .select('*')
@@ -37,15 +38,46 @@ export async function POST(req) {
       .maybeSingle();
 
     if (existingVerification) {
-      // Already verified - update timestamp to extend validity
-      const { error: updateError } = await s
-        .from('verified_emails')
-        .update({ verified_at: new Date().toISOString() })
-        .eq('email', trimmedEmail);
+      let verificationMessage;
 
-      if (updateError) {
-        console.error('Error updating verification timestamp:', updateError);
-        // Continue anyway - verification still valid
+      if (existingVerification.verified_at) {
+        // Already verified previously - refresh timestamp for auditing purposes
+        const { error: refreshError } = await s
+          .from('verified_emails')
+          .update({ verified_at: nowIso })
+          .eq('email', trimmedEmail);
+
+        if (refreshError) {
+          console.error('Error refreshing verification timestamp:', refreshError);
+          // Continue anyway - verification still valid
+        }
+
+        verificationMessage = 'Email already verified. You can now create your alias.';
+      } else {
+        // First-time verification - mark as verified now
+        const { data: updatedVerification, error: updateError } = await s
+          .from('verified_emails')
+          .update({ verified_at: nowIso })
+          .eq('email', trimmedEmail)
+          .select()
+          .maybeSingle();
+
+        if (updateError) {
+          console.error('Error updating verification record:', updateError);
+          return Response.json(
+            { verified: false, error: 'Error recording verification' },
+            { status: 500 }
+          );
+        }
+
+        if (updatedVerification) {
+          existingVerification.name = updatedVerification.name;
+          existingVerification.verified_at = updatedVerification.verified_at;
+        } else {
+          existingVerification.verified_at = nowIso;
+        }
+
+        verificationMessage = 'Email verified successfully. You can now create your alias.';
       }
 
       // Check if user already has an alias
@@ -55,11 +87,13 @@ export async function POST(req) {
         .eq('email', trimmedEmail)
         .maybeSingle();
 
+      if (existingAlias) {
+        verificationMessage = 'Email already verified. You can use your existing alias.';
+      }
+
       return Response.json({
         verified: true,
-        message: existingAlias 
-          ? 'Email already verified. You can use your existing alias.'
-          : 'Email already verified. You can now create your alias.',
+        message: verificationMessage,
         alias: existingAlias || null,
       });
     }
