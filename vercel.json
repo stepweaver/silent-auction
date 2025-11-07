@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/admin/close-check",
+      "path": "/api/admin/close-check?token=AUCTION_CRON_SECRET",
       "schedule": "*/5 * * * *"
     }
   ]
