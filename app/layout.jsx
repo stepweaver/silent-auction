@@ -100,7 +100,7 @@ export const metadata = {
     icon: '/logo-with-glow.png',
     apple: '/logo-with-glow.png',
   },
-  manifest: '/manifest.json',
+  manifest: '/manifest.webmanifest',
 };
 
 export const viewport = {
