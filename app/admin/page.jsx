@@ -298,14 +298,22 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className='mb-3 sm:mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3'>
+      <div className='mb-3 sm:mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <h2 className='text-lg sm:text-xl font-semibold'>Items</h2>
-        <Link
-          href='/admin/items/new'
-          className='px-4 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm sm:text-base text-center'
-        >
-          New Item
-        </Link>
+        <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
+          <Link
+            href='/admin/qr-codes'
+            className='rounded bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 sm:text-base'
+          >
+            Printable QR Codes
+          </Link>
+          <Link
+            href='/admin/items/new'
+            className='rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 sm:text-base'
+          >
+            New Item
+          </Link>
+        </div>
       </div>
 
       {items.length === 0 ? (
