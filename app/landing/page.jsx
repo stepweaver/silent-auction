@@ -16,10 +16,12 @@ export default function LandingPage() {
   const [error, setError] = useState('');
   const [step, setStep] = useState('intro'); // 'intro', 'verify', 'enroll'
   const [checkingExisting, setCheckingExisting] = useState(false);
-const [verificationSent, setVerificationSent] = useState(false);
-const [verifiedEmail, setVerifiedEmail] = useState('');
-const nameInputId = useId();
-const emailInputId = useId();
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [hasSentRecoveryNotification, setHasSentRecoveryNotification] =
+    useState(false);
+  const nameInputId = useId();
+  const emailInputId = useId();
 
   useEffect(() => {
     // Check if email was just verified
@@ -122,13 +124,16 @@ const emailInputId = useId();
             );
 
             // Send security notification only for recovery (localStorage was missing)
-            fetch('/api/alias/security-notify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email }),
-            }).catch((err) =>
-              console.error('Security notification error:', err)
-            );
+            if (!hasSentRecoveryNotification) {
+              setHasSentRecoveryNotification(true);
+              fetch('/api/alias/security-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+              }).catch((err) =>
+                console.error('Security notification error:', err)
+              );
+            }
 
             // Redirect to catalog or intended destination
             const redirect = localStorage.getItem('auction_redirect');
@@ -247,13 +252,16 @@ const emailInputId = useId();
             );
 
             // Send security notification only for recovery (localStorage was missing)
-            fetch('/api/alias/security-notify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email }),
-            }).catch((err) =>
-              console.error('Security notification error:', err)
-            );
+            if (!hasSentRecoveryNotification) {
+              setHasSentRecoveryNotification(true);
+              fetch('/api/alias/security-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+              }).catch((err) =>
+                console.error('Security notification error:', err)
+              );
+            }
 
             // Redirect to catalog or intended destination
             const redirect = localStorage.getItem('auction_redirect');
@@ -513,8 +521,8 @@ const emailInputId = useId();
                 Mary Frank Elementary Silent Auction
               </h1>
               <p className='text-white/90 text-xs leading-snug max-w-md mx-auto'>
-                Join the fun, bid on items, and support our PTO! Create your
-                unique alias to get started.
+                Enter your name and email so we can look up your bidder profile.
+                New here? We’ll help you create one after we verify your email.
               </p>
             </div>
 
@@ -537,10 +545,10 @@ const emailInputId = useId();
                   </div>
                   <div className='flex-1 min-w-0'>
                     <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
-                      Create Identity
+                      Tell Us Who You Are
                     </h3>
                     <p className='text-sm text-gray-600 leading-snug'>
-                      Choose a fun color and emoji
+                      Share the name and email you use for bidding
                     </p>
                   </div>
                 </div>
@@ -560,10 +568,10 @@ const emailInputId = useId();
                   </div>
                   <div className='flex-1 min-w-0'>
                     <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
-                      Browse & Bid
+                      We Check For An Account
                     </h3>
                     <p className='text-sm text-gray-600 leading-snug'>
-                      Explore and place bids
+                      We’ll let you know if you already have an alias
                     </p>
                   </div>
                 </div>
@@ -583,10 +591,10 @@ const emailInputId = useId();
                   </div>
                   <div className='flex-1 min-w-0'>
                     <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
-                      Stay Anonymous
+                      Verify & Start Bidding
                     </h3>
                     <p className='text-sm text-gray-600 leading-snug'>
-                      Bid with your alias
+                      Confirm your email, personalize your alias, and join in
                     </p>
                   </div>
                 </div>
@@ -594,6 +602,10 @@ const emailInputId = useId();
 
               {/* Form */}
               <form onSubmit={handleEmailSubmit} className='space-y-3'>
+                <p className='text-sm text-gray-700'>
+                  Enter the email you’ll use to bid. We’ll look up your bidder
+                  alias or help you set one up in a few quick steps.
+                </p>
                 <div>
                   <label
                     htmlFor={nameInputId}
@@ -615,7 +627,9 @@ const emailInputId = useId();
                     aria-required='true'
                     aria-describedby={`${nameInputId}-helper`}
                   />
-                  <p id={`${nameInputId}-helper`} className='sr-only'>Enter your full name</p>
+                  <p id={`${nameInputId}-helper`} className='sr-only'>
+                    Enter your full name
+                  </p>
                 </div>
 
                 <div>
@@ -637,12 +651,27 @@ const emailInputId = useId();
                     }}
                     required
                     aria-required='true'
-                    aria-describedby={[`${emailInputId}-helper`, error ? `${emailInputId}-error` : null].filter(Boolean).join(' ') || undefined}
+                    aria-describedby={
+                      [
+                        `${emailInputId}-helper`,
+                        error ? `${emailInputId}-error` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' ') || undefined
+                    }
                     aria-invalid={Boolean(error)}
                   />
-                  <p id={`${emailInputId}-helper`} className='sr-only'>Enter the email address that will receive verification and bid updates.</p>
+                  <p id={`${emailInputId}-helper`} className='sr-only'>
+                    Enter the email address that will receive verification and
+                    bid updates.
+                  </p>
                   {error && (
-                    <p id={`${emailInputId}-error`} className='mt-1 text-sm text-red-600 flex items-center gap-1.5' role='alert' aria-live='assertive'>
+                    <p
+                      id={`${emailInputId}-error`}
+                      className='mt-1 text-sm text-red-600 flex items-center gap-1.5'
+                      role='alert'
+                      aria-live='assertive'
+                    >
                       <svg
                         className='w-4 h-4'
                         fill='currentColor'
@@ -663,7 +692,10 @@ const emailInputId = useId();
                   type='submit'
                   disabled={checkingExisting || enrolling}
                   className='w-full text-white font-semibold py-3.5 px-4 rounded-lg shadow-md active:shadow-lg transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
-                  style={{ backgroundColor: 'var(--primary-500)', minHeight: '48px' }}
+                  style={{
+                    backgroundColor: 'var(--primary-500)',
+                    minHeight: '48px',
+                  }}
                 >
                   {checkingExisting || enrolling ? (
                     <>
@@ -688,11 +720,11 @@ const emailInputId = useId();
                         ></path>
                       </svg>
                       {checkingExisting
-                        ? 'Checking...'
+                        ? 'Checking for your account...'
                         : 'Sending verification email...'}
                     </>
                   ) : (
-                    'Get Started →'
+                    'Check My Account'
                   )}
                 </button>
               </form>

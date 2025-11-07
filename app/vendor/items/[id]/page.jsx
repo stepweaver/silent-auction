@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import Image from 'next/image';
 import Field from '@/components/Field';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
@@ -383,13 +384,28 @@ export default function VendorEditItemPage({ params }) {
                       />
                       {photoPreview && (
                         <div className="mt-2">
-                          <img src={photoPreview} alt="Preview" className="max-w-xs rounded-lg border border-gray-200" />
+                          <Image
+                            src={photoPreview}
+                            alt="Preview"
+                            width={320}
+                            height={240}
+                            className="w-full max-w-xs rounded-lg border border-gray-200"
+                            style={{ height: 'auto' }}
+                            unoptimized
+                          />
                           <p className="text-xs text-gray-500 mt-1">Preview (will upload on save)</p>
                         </div>
                       )}
                       {form.photo_url && !photoFile && !photoPreview && (
                         <div className="mt-2">
-                          <img src={form.photo_url} alt="Current" className="max-w-xs rounded-lg border border-gray-200" />
+                          <Image
+                            src={form.photo_url}
+                            alt="Current"
+                            width={320}
+                            height={240}
+                            className="w-full max-w-xs rounded-lg border border-gray-200"
+                            style={{ height: 'auto' }}
+                          />
                           <p className="text-xs text-gray-500 mt-1">Current photo</p>
                         </div>
                       )}
@@ -499,7 +515,14 @@ export default function VendorEditItemPage({ params }) {
                 <h3 className="text-sm font-bold text-gray-900 mb-3">Preview</h3>
                 <div className="border border-gray-200 rounded-lg p-3">
                   {form.photo_url && (
-                    <img src={form.photo_url} alt="" className="w-full rounded-lg mb-2 max-h-32 object-contain" />
+                    <Image
+                      src={form.photo_url}
+                      alt=""
+                      width={320}
+                      height={256}
+                      className="w-full rounded-lg mb-2 object-contain"
+                      style={{ height: 'auto', maxHeight: '8rem' }}
+                    />
                   )}
                   <h4 className="font-medium text-sm text-gray-900">{form.title || 'Item title'}</h4>
                   <p className="mt-1 text-xs text-gray-600">
@@ -552,7 +575,7 @@ export default function VendorEditItemPage({ params }) {
             <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
               <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
                 <h3 className="text-sm font-bold text-gray-900 mb-3">QR Code</h3>
-                <img alt="QR Code" src={qrUrl} className="border border-gray-200 rounded-lg w-full max-w-[120px]" />
+                <Image alt="QR Code" src={qrUrl} width={120} height={120} className="border border-gray-200 rounded-lg w-full max-w-[120px]" />
               </div>
             </div>
           </div>

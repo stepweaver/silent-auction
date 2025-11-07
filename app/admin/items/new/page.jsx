@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import Field from '@/components/Field';
 
 export default function NewItemPage() {
@@ -181,13 +182,28 @@ export default function NewItemPage() {
             />
             {photoPreview && (
               <div className="mt-2">
-                <img src={photoPreview} alt="Preview" className="max-w-xs rounded border" />
+                <Image
+                  src={photoPreview}
+                  alt="Preview"
+                  width={320}
+                  height={240}
+                  className="w-full max-w-xs rounded border"
+                  style={{ height: 'auto' }}
+                  unoptimized
+                />
                 <p className="text-xs text-gray-500 mt-1">Preview (will upload on save)</p>
               </div>
             )}
             {form.photo_url && !photoFile && !photoPreview && (
               <div className="mt-2">
-                <img src={form.photo_url} alt="Current" className="max-w-xs rounded border" />
+                <Image
+                  src={form.photo_url}
+                  alt="Current"
+                  width={320}
+                  height={240}
+                  className="w-full max-w-xs rounded border"
+                  style={{ height: 'auto' }}
+                />
               </div>
             )}
             {uploadingPhoto && <p className="text-xs text-blue-600">Uploading photo...</p>}

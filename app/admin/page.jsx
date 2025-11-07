@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import Image from 'next/image';
 import { formatDollar } from '@/lib/money';
 
 function SetDeadline({ onSet, currentDeadline }) {
@@ -344,11 +345,13 @@ export default function AdminDashboard() {
                     {/* Small Preview Image */}
                     <div className='shrink-0'>
                       {item.photo_url ? (
-                        <div className='w-16 h-16 bg-gray-100 rounded overflow-hidden'>
-                          <img
+                        <div className='w-16 h-16 bg-gray-100 rounded overflow-hidden relative'>
+                          <Image
                             src={item.photo_url}
                             alt={item.title}
-                            className='w-full h-full object-contain'
+                            fill
+                            sizes='64px'
+                            className='object-contain'
                           />
                         </div>
                       ) : (
@@ -369,10 +372,12 @@ export default function AdminDashboard() {
                             {item.slug}
                           </p>
                         </div>
-                        <img
+                        <Image
                           alt='QR'
                           src={qrUrl}
-                          className='w-12 h-12 shrink-0 ml-2 rounded border border-gray-200'
+                          width={48}
+                          height={48}
+                          className='shrink-0 ml-2 rounded border border-gray-200'
                         />
                       </div>
                       <div className='grid grid-cols-2 gap-2 text-xs'>
@@ -433,11 +438,13 @@ export default function AdminDashboard() {
                     >
                       <td className='border p-2'>
                         {item.photo_url ? (
-                          <div className='w-20 h-20 bg-gray-100 rounded overflow-hidden'>
-                            <img
+                          <div className='w-20 h-20 bg-gray-100 rounded overflow-hidden relative'>
+                            <Image
                               src={item.photo_url}
                               alt={item.title}
-                              className='w-full h-full object-contain'
+                              fill
+                              sizes='80px'
+                              className='object-contain'
                             />
                           </div>
                         ) : (
@@ -467,10 +474,12 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td className='border p-2'>
-                        <img
+                        <Image
                           alt='QR'
                           src={qrUrl}
-                          className='w-16 h-16 rounded border border-gray-200'
+                          width={64}
+                          height={64}
+                          className='rounded border border-gray-200'
                         />
                       </td>
                     </tr>

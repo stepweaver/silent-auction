@@ -31,8 +31,8 @@ export default function TermsPage() {
               <h3 className='font-semibold text-gray-900 mb-2'>Payment Obligation</h3>
               <p>
                 Winning bidders are legally obligated to pay the full amount of their winning bid. 
-                Payment must be made according to the instructions provided in the winner notification email. 
-                Failure to pay may result in legal action to recover the bid amount.
+                Payment must be made in person at the close of the auction, using cash or check, at the main organizer&apos;s table in the hallway. 
+                Payment is expected promptly at the conclusion of the event; if it is not received within a reasonable timeframe determined by the auction administrator, the item may be awarded to the next highest bidder and the original winning bid considered forfeited.
               </p>
             </div>
             <div>

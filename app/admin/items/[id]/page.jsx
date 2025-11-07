@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import Image from 'next/image';
 import Field from '@/components/Field';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
@@ -299,13 +300,28 @@ export default function EditItemPage({ params }) {
               />
               {photoPreview && (
                 <div className="mt-2">
-                  <img src={photoPreview} alt="Preview" className="max-w-xs rounded border" />
+                  <Image
+                    src={photoPreview}
+                    alt="Preview"
+                    width={320}
+                    height={240}
+                    className="w-full max-w-xs rounded border"
+                    style={{ height: 'auto' }}
+                    unoptimized
+                  />
                   <p className="text-xs text-gray-500 mt-1">Preview (will upload on save)</p>
                 </div>
               )}
               {form.photo_url && !photoFile && !photoPreview && (
                 <div className="mt-2">
-                  <img src={form.photo_url} alt="Current" className="max-w-xs rounded border" />
+                  <Image
+                    src={form.photo_url}
+                    alt="Current"
+                    width={320}
+                    height={240}
+                    className="w-full max-w-xs rounded border"
+                    style={{ height: 'auto' }}
+                  />
                   <p className="text-xs text-gray-500 mt-1">Current photo</p>
                 </div>
               )}
@@ -368,7 +384,14 @@ export default function EditItemPage({ params }) {
             <h3 className="font-semibold mb-2 text-sm">Preview</h3>
             <div className="border rounded-lg p-3">
               {form.photo_url && (
-                <img src={form.photo_url} alt="" className="w-full rounded mb-2 max-h-32 object-contain" />
+                <Image
+                  src={form.photo_url}
+                  alt=""
+                  width={320}
+                  height={256}
+                  className="w-full rounded mb-2 object-contain"
+                  style={{ height: 'auto', maxHeight: '8rem' }}
+                />
               )}
               <h4 className="font-medium text-sm">{form.title || 'Item title'}</h4>
               <p className="mt-1 text-xs text-gray-600">
@@ -411,7 +434,7 @@ export default function EditItemPage({ params }) {
 
           <div>
             <h3 className="font-semibold mb-2 text-sm">QR Code</h3>
-            <img alt="QR Code" src={qrUrl} className="border rounded w-full max-w-[120px] sm:max-w-[150px]" />
+            <Image alt="QR Code" src={qrUrl} width={150} height={150} className="border rounded w-full max-w-[120px] sm:max-w-[150px]" />
           </div>
         </div>
       </div>

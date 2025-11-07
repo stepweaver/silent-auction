@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import Image from 'next/image';
 import { formatDollar } from '@/lib/money';
 
 export default function VendorDashboard() {
@@ -185,7 +186,7 @@ export default function VendorDashboard() {
                         >
                           Edit →
                         </Link>
-                        <img alt="QR" src={qrUrl} className="w-12 h-12 rounded border border-gray-300" />
+                        <Image alt="QR" src={qrUrl} width={48} height={48} className="rounded border border-gray-300" />
                       </div>
                     </div>
                   </div>
@@ -248,7 +249,7 @@ export default function VendorDashboard() {
                             </Link>
                           </td>
                           <td className="px-4 py-3">
-                            <img alt="QR" src={qrUrl} className="w-12 h-12 rounded border border-gray-300" />
+                            <Image alt="QR" src={qrUrl} width={48} height={48} className="rounded border border-gray-300" />
                           </td>
                         </tr>
                       );

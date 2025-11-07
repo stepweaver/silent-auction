@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 export default function BackgroundLogo() {
@@ -20,9 +21,12 @@ export default function BackgroundLogo() {
         overflow: 'hidden',
       }}
     >
-      <img
+      <Image
         src='/logo-with-glow.png'
         alt=''
+        width={1800}
+        height={1400}
+        sizes='100vw'
         className='opacity-30 object-contain'
         style={{
           width: 'min(98vw, 1800px)',

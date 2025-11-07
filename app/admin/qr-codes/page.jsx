@@ -1,4 +1,5 @@
 import { supabaseServer } from '@/lib/serverSupabase';
+import Image from 'next/image';
 import PrintToolbar from './PrintToolbar';
 
 export const metadata = {
@@ -86,9 +87,11 @@ export default async function PrintableQrCodesPage() {
                   </h2>
                 </div>
 
-                <img
+                <Image
                   src={qrSrc}
                   alt={`QR code for ${item.title}`}
+                  width={900}
+                  height={900}
                   className='w-full max-w-[6.5in] rounded-xl border border-gray-100 shadow-lg'
                 />
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import AliasAvatar from '@/components/AliasAvatar';
 import DashboardBidForm from '@/components/DashboardBidForm';
 import { formatDollar } from '@/lib/money';
@@ -383,11 +384,15 @@ export default function DashboardPage() {
                           <div className="flex-1">
                             <div className="flex items-start gap-2 sm:gap-3">
                               {item.photo_url && (
-                                <img
-                                  src={item.photo_url}
-                                  alt={item.title}
-                                  className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
-                                />
+                                <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
+                                  <Image
+                                    src={item.photo_url}
+                                    alt={item.title}
+                                    fill
+                                    sizes="64px"
+                                    className="rounded-lg object-cover"
+                                  />
+                                </div>
                               )}
                               <div className="flex-1 min-w-0">
                                 <Link

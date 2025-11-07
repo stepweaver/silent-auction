@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 
@@ -42,11 +43,13 @@ export default function ItemCard({ item }) {
         )}
         {item.photo_url ? (
           <div className="w-full bg-gray-100">
-            <div className="aspect-[4/3] w-full p-2">
-              <img
+            <div className="relative aspect-[4/3] w-full p-2">
+              <Image
                 src={item.photo_url}
                 alt={item.title}
-                className={`w-full h-full object-contain rounded-lg ${isClosed ? 'opacity-60' : ''}`}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className={`object-contain rounded-lg ${isClosed ? 'opacity-60' : ''}`}
               />
             </div>
           </div>
@@ -113,7 +116,13 @@ export default function ItemCard({ item }) {
             </span>
           )}
           <div className='flex flex-col items-center gap-1'>
-            <img alt={`QR code linking to ${item.title}`} src={qrUrl} className='w-12 h-12 rounded border border-gray-300' />
+            <Image
+              alt={`QR code linking to ${item.title}`}
+              src={qrUrl}
+              width={48}
+              height={48}
+              className='rounded border border-gray-300'
+            />
             <span className='text-[11px] text-gray-500'>Scan to view</span>
           </div>
         </div>
