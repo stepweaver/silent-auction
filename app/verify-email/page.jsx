@@ -112,7 +112,7 @@ function VerifyEmailContent() {
           <div className='px-4 sm:px-5 md:px-6 py-4 sm:py-5'>
             {status === 'verifying' && (
               <div className='text-center'>
-                <div className='inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4' style={{ borderColor: '#00b140' }}></div>
+                <div className='inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4' style={{ borderColor: 'var(--primary-500)' }}></div>
                 <p className='text-gray-700'>{message}</p>
               </div>
             )}
@@ -162,7 +162,7 @@ function VerifyEmailContent() {
                 <button
                   onClick={() => router.push('/landing')}
                   className='px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors'
-                  style={{ backgroundColor: '#00b140' }}
+                  style={{ backgroundColor: 'var(--primary-500)' }}
                 >
                   Go to Registration
                 </button>
@@ -180,7 +180,7 @@ export default function VerifyEmailPage() {
     <Suspense fallback={
       <div className='w-full min-h-screen px-4 py-8 flex items-center justify-center'>
         <div className='text-center'>
-          <div className='inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4' style={{ borderColor: '#00b140' }}></div>
+          <div className='inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4' style={{ borderColor: 'var(--primary-500)' }}></div>
           <p className='text-gray-700'>Loading...</p>
         </div>
       </div>

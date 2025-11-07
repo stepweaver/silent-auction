@@ -153,7 +153,7 @@ export default function TermsPage() {
           <Link
             href="/"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-base font-semibold text-white hover:opacity-90 transition-opacity shadow-lg"
-            style={{ backgroundColor: '#00b140' }}
+            style={{ backgroundColor: 'var(--primary-500)' }}
           >
             <span>←</span>
             <span>Back to Catalog</span>

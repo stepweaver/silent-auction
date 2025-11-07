@@ -25,7 +25,7 @@ export default function ItemCard({ item }) {
         <div className="absolute top-2 right-2 z-10">
           <span 
             className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-white shadow-md"
-            style={{ backgroundColor: '#f59e0b' }}
+            style={{ backgroundColor: 'var(--accent-warm-500)' }}
           >
             <span className="text-xs">🔒</span>
             Closed
@@ -71,7 +71,7 @@ export default function ItemCard({ item }) {
               <span className="font-semibold text-gray-700">Final bid:</span>
               <span 
                 className="px-2 py-0.5 rounded text-xs font-bold text-white"
-                style={{ backgroundColor: '#f59e0b' }}
+                style={{ backgroundColor: 'var(--accent-warm-500)' }}
               >
                 {formatDollar(current)}
               </span>
@@ -82,7 +82,7 @@ export default function ItemCard({ item }) {
                 <span className="font-semibold text-gray-700">Current:</span>
                 <span 
                   className="px-2 py-0.5 rounded text-xs font-bold text-white"
-                  style={{ backgroundColor: '#00b140' }}
+                  style={{ backgroundColor: 'var(--primary-500)', color: 'var(--primary-contrast)' }}
                 >
                   {formatDollar(current)}
                 </span>
@@ -107,13 +107,14 @@ export default function ItemCard({ item }) {
           ) : (
             <span 
               className="text-sm font-semibold text-white px-4 py-2 rounded-lg"
-              style={{ backgroundColor: '#00b140', minHeight: '44px', display: 'inline-flex', alignItems: 'center' }}
+              style={{ backgroundColor: 'var(--primary-500)', minHeight: '44px', display: 'inline-flex', alignItems: 'center' }}
             >
               Place Bid
             </span>
           )}
-          <div className="tooltip tooltip-top" data-tip="Scan to view item">
-            <img alt="QR Code" src={qrUrl} className="w-12 h-12 rounded border border-gray-300" />
+          <div className='flex flex-col items-center gap-1'>
+            <img alt={`QR code linking to ${item.title}`} src={qrUrl} className='w-12 h-12 rounded border border-gray-300' />
+            <span className='text-[11px] text-gray-500'>Scan to view</span>
           </div>
         </div>
       </div>

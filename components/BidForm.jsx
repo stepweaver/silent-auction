@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
@@ -16,6 +16,13 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
   const [savedEmail, setSavedEmail] = useState('');
   const [msg, setMsg] = useState(message || '');
   const [loading, setLoading] = useState(true);
+
+  const statusMessage = (message && message.length ? message : msg);
+  const hasStatusMessage = Boolean(statusMessage);
+  const isErrorMessage = hasStatusMessage && statusMessage.toLowerCase().includes('error');
+  const amountInputId = useId();
+  const helperTextId = `${amountInputId}-helper`;
+  const statusMessageId = `${amountInputId}-status`;
 
   // Load alias from localStorage on mount
   useEffect(() => {
@@ -116,7 +123,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
       <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
         <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-center py-8">
-            <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
+            <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: 'var(--primary-500)' }}></div>
           </div>
         </div>
       </div>
@@ -142,7 +149,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
               type="button"
               onClick={() => router.push('/landing')}
               className="px-4 py-2 text-white font-semibold rounded-lg text-sm transition-all duration-200"
-              style={{ backgroundColor: '#00b140' }}
+              style={{ backgroundColor: 'var(--primary-500)' }}
             >
               Create Alias →
             </button>
@@ -190,12 +197,16 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-gray-900 mb-1">
+              <label
+                htmlFor={amountInputId}
+                className="block text-xs sm:text-sm font-semibold text-gray-900 mb-1"
+              >
                 Your bid amount
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-sm">$</span>
                 <input
+                  id={amountInputId}
                   type="number"
                   step="0.01"
                   min={nextMin}
@@ -204,8 +215,8 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
                     borderColor: 'rgb(229 231 235)'
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#00b140';
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
+                    e.currentTarget.style.borderColor = 'var(--primary-500)';
+                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(4, 120, 87, 0.25)';
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = 'rgb(229 231 235)';
@@ -216,10 +227,12 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
                   onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                   required
                   disabled={isSubmitting}
+                  aria-describedby={[helperTextId, hasStatusMessage ? statusMessageId : null].filter(Boolean).join(' ') || undefined}
+                  aria-invalid={isErrorMessage}
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Minimum bid: <span className="font-semibold" style={{ color: '#00b140' }}>{formatDollar(nextMin)}</span>
+              <p id={helperTextId} className='mt-1 text-xs text-gray-500'>
+                Minimum bid: <span className="font-semibold" style={{ color: 'var(--primary-500)' }}>{formatDollar(nextMin)}</span>
               </p>
             </div>
             {deadline && (
@@ -239,29 +252,30 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
                 Confirmation email will be sent to: <span className="font-medium text-gray-700">{savedEmail}</span>
               </div>
             )}
-            {(message || msg) && (
-              <div 
+            {hasStatusMessage && (
+              <div
+                id={statusMessageId}
+                role='status'
+                aria-live='polite'
                 className={`rounded-lg p-3 border text-xs sm:text-sm ${
-                  (message || msg).includes('Error') 
-                    ? 'text-red-700' 
-                    : 'text-green-700'
+                  isErrorMessage ? 'text-red-700' : 'text-green-700'
                 }`}
-                style={(message || msg).includes('Error') ? {
+                style={isErrorMessage ? {
                   backgroundColor: 'rgba(239, 68, 68, 0.05)',
                   borderColor: 'rgba(239, 68, 68, 0.2)'
                 } : {
-                  backgroundColor: 'rgba(0, 177, 64, 0.05)',
-                  borderColor: 'rgba(0, 177, 64, 0.2)'
+                  backgroundColor: 'rgba(4, 122, 44, 0.08)',
+                  borderColor: 'rgba(4, 122, 44, 0.3)'
                 }}
               >
-                <span className="font-semibold">{message || msg}</span>
+                <span className='font-semibold'>{statusMessage}</span>
               </div>
             )}
             <div className="pt-4 border-t border-gray-200">
               <button
                 type="submit"
                   className="w-full px-4 py-3.5 text-white font-semibold rounded-lg text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  style={{ backgroundColor: '#00b140', minHeight: '48px' }}
+                  style={{ backgroundColor: 'var(--primary-500)', minHeight: '48px' }}
                   disabled={isSubmitting || !userAlias}
                 >
                 {isSubmitting ? (

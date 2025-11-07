@@ -80,7 +80,7 @@ export default function CatalogPage() {
     return (
       <main className="w-full px-4 py-4 sm:py-6">
         <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: 'var(--primary-500)' }}></div>
         </div>
       </main>
     );
@@ -91,7 +91,7 @@ export default function CatalogPage() {
       <section className="mb-4">
         <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-4">
-            <h1 className="text-2xl font-bold mb-1" style={{ color: '#00b140' }}>
+            <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--primary-500)' }}>
               Silent Auction
             </h1>
             <p className="text-sm text-gray-600">Browse items and place your bids.</p>

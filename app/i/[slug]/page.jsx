@@ -181,7 +181,7 @@ export default function ItemPage({ params }) {
     return (
       <main className="w-full px-4 py-4 sm:py-6">
         <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: 'var(--primary-500)' }}></div>
         </div>
       </main>
     );
@@ -196,7 +196,7 @@ export default function ItemPage({ params }) {
             <Link 
               href="/" 
               className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white"
-              style={{ backgroundColor: '#00b140' }}
+              style={{ backgroundColor: 'var(--primary-500)' }}
             >
               ← Back to catalog
             </Link>
@@ -252,7 +252,7 @@ export default function ItemPage({ params }) {
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                         <div className="text-xs font-semibold text-gray-600 mb-1">Current Bid</div>
-                        <div className="text-2xl font-bold" style={{ color: '#00b140' }}>{formatDollar(current)}</div>
+                        <div className="text-2xl font-bold" style={{ color: 'var(--primary-500)' }}>{formatDollar(current)}</div>
                       </div>
                       <div 
                         className="rounded-lg p-3 border"
@@ -352,7 +352,7 @@ export default function ItemPage({ params }) {
                             </span>
                           )}
                         </div>
-                        <span className="font-bold text-sm sm:text-base" style={{ color: '#00b140' }}>{formatDollar(b.amount)}</span>
+                        <span className="font-bold text-sm sm:text-base" style={{ color: 'var(--primary-500)' }}>{formatDollar(b.amount)}</span>
                       </div>
                     ))}
                   </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AliasSelector from '@/components/AliasSelector';
@@ -16,8 +16,10 @@ export default function LandingPage() {
   const [error, setError] = useState('');
   const [step, setStep] = useState('intro'); // 'intro', 'verify', 'enroll'
   const [checkingExisting, setCheckingExisting] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
-  const [verifiedEmail, setVerifiedEmail] = useState('');
+const [verificationSent, setVerificationSent] = useState(false);
+const [verifiedEmail, setVerifiedEmail] = useState('');
+const nameInputId = useId();
+const emailInputId = useId();
 
   useEffect(() => {
     // Check if email was just verified
@@ -424,7 +426,7 @@ export default function LandingPage() {
                     fill='none'
                     stroke='currentColor'
                     viewBox='0 0 24 24'
-                    style={{ color: '#00b140' }}
+                    style={{ color: 'var(--primary-500)' }}
                   >
                     <path
                       strokeLinecap='round'
@@ -442,7 +444,7 @@ export default function LandingPage() {
                 </p>
                 <p
                   className='text-lg font-semibold text-primary mb-4 break-all'
-                  style={{ color: '#00b140' }}
+                  style={{ color: 'var(--primary-500)' }}
                 >
                   {verifiedEmail}
                 </p>
@@ -523,13 +525,13 @@ export default function LandingPage() {
                 <div
                   className='flex items-start gap-2 p-3 rounded-lg border'
                   style={{
-                    backgroundColor: 'rgba(0, 177, 64, 0.05)',
-                    borderColor: 'rgba(0, 177, 64, 0.2)',
+                    backgroundColor: 'rgba(4, 106, 56, 0.08)',
+                    borderColor: 'rgba(4, 106, 56, 0.25)',
                   }}
                 >
                   <div
                     className='flex-shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
-                    style={{ backgroundColor: '#00b140' }}
+                    style={{ backgroundColor: 'var(--primary-500)' }}
                   >
                     1
                   </div>
@@ -537,7 +539,7 @@ export default function LandingPage() {
                     <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
                       Create Identity
                     </h3>
-                    <p className='text-xs text-gray-600 leading-tight'>
+                    <p className='text-sm text-gray-600 leading-snug'>
                       Choose a fun color and emoji
                     </p>
                   </div>
@@ -546,8 +548,8 @@ export default function LandingPage() {
                 <div
                   className='flex items-start gap-2 p-3 rounded-lg border'
                   style={{
-                    backgroundColor: 'rgba(5, 150, 105, 0.05)',
-                    borderColor: 'rgba(5, 150, 105, 0.2)',
+                    backgroundColor: 'rgba(5, 150, 105, 0.08)',
+                    borderColor: 'rgba(5, 150, 105, 0.25)',
                   }}
                 >
                   <div
@@ -560,7 +562,7 @@ export default function LandingPage() {
                     <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
                       Browse & Bid
                     </h3>
-                    <p className='text-xs text-gray-600 leading-tight'>
+                    <p className='text-sm text-gray-600 leading-snug'>
                       Explore and place bids
                     </p>
                   </div>
@@ -569,8 +571,8 @@ export default function LandingPage() {
                 <div
                   className='flex items-start gap-2 p-3 rounded-lg border'
                   style={{
-                    backgroundColor: 'rgba(74, 222, 128, 0.05)',
-                    borderColor: 'rgba(74, 222, 128, 0.2)',
+                    backgroundColor: 'rgba(74, 222, 128, 0.12)',
+                    borderColor: 'rgba(74, 222, 128, 0.3)',
                   }}
                 >
                   <div
@@ -583,7 +585,7 @@ export default function LandingPage() {
                     <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
                       Stay Anonymous
                     </h3>
-                    <p className='text-xs text-gray-600 leading-tight'>
+                    <p className='text-sm text-gray-600 leading-snug'>
                       Bid with your alias
                     </p>
                   </div>
@@ -594,13 +596,13 @@ export default function LandingPage() {
               <form onSubmit={handleEmailSubmit} className='space-y-3'>
                 <div>
                   <label
-                    htmlFor='name'
+                    htmlFor={nameInputId}
                     className='block text-sm font-semibold text-gray-900 mb-1'
                   >
                     Your Name
                   </label>
                   <input
-                    id='name'
+                    id={nameInputId}
                     type='text'
                     className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
                     placeholder='Jane Doe'
@@ -610,18 +612,21 @@ export default function LandingPage() {
                       setError('');
                     }}
                     required
+                    aria-required='true'
+                    aria-describedby={`${nameInputId}-helper`}
                   />
+                  <p id={`${nameInputId}-helper`} className='sr-only'>Enter your full name</p>
                 </div>
 
                 <div>
                   <label
-                    htmlFor='email'
+                    htmlFor={emailInputId}
                     className='block text-sm font-semibold text-gray-900 mb-1'
                   >
                     Your Email
                   </label>
                   <input
-                    id='email'
+                    id={emailInputId}
                     type='email'
                     className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
                     placeholder='your@email.com'
@@ -631,9 +636,13 @@ export default function LandingPage() {
                       setError('');
                     }}
                     required
+                    aria-required='true'
+                    aria-describedby={[`${emailInputId}-helper`, error ? `${emailInputId}-error` : null].filter(Boolean).join(' ') || undefined}
+                    aria-invalid={Boolean(error)}
                   />
+                  <p id={`${emailInputId}-helper`} className='sr-only'>Enter the email address that will receive verification and bid updates.</p>
                   {error && (
-                    <p className='mt-1 text-sm text-red-600 flex items-center gap-1.5'>
+                    <p id={`${emailInputId}-error`} className='mt-1 text-sm text-red-600 flex items-center gap-1.5' role='alert' aria-live='assertive'>
                       <svg
                         className='w-4 h-4'
                         fill='currentColor'
@@ -653,8 +662,8 @@ export default function LandingPage() {
                 <button
                   type='submit'
                   disabled={checkingExisting || enrolling}
-                  className='w-full bg-primary active:bg-primary/90 text-white font-semibold py-3.5 px-4 rounded-lg shadow-md active:shadow-lg transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
-                  style={{ backgroundColor: '#00b140', minHeight: '48px' }}
+                  className='w-full text-white font-semibold py-3.5 px-4 rounded-lg shadow-md active:shadow-lg transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+                  style={{ backgroundColor: 'var(--primary-500)', minHeight: '48px' }}
                 >
                   {checkingExisting || enrolling ? (
                     <>

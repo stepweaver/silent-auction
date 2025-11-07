@@ -2,9 +2,11 @@
 
 /* Theme Variables - mary-frank-pto color scheme */
 :root {
-  --primary-500: #00b140;
-  --primary-600: #059669;
-  --primary-700: #047857;
+  --primary-500: #047857;
+  --primary-600: #036149;
+  --primary-700: #024434;
+  --primary-contrast: #ffffff;
+  --accent-warm-500: #b45309;
 }
 
 /* Light, subtle background pattern (no dark theme) */
@@ -55,7 +57,7 @@
 
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 25px -5px rgba(0, 177, 64, 0.2);
+  box-shadow: 0 10px 25px -5px rgba(4, 120, 87, 0.25);
 }
 
 /* Subtle pulse animation for avatar preview */
@@ -92,6 +94,32 @@ button, [role="button"] {
 /* Ensure inputs are readable on mobile */
 input, textarea, select {
   font-size: 16px; /* Prevents zoom on iOS */
+}
+
+/* Global focus styles */
+:focus-visible {
+  outline: 3px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--primary-500);
+  color: var(--primary-contrast);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transform: translateY(-200%);
+  transition: transform 0.2s ease;
+  z-index: 1000;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
 }
 
 /* Smooth scrolling for mobile */

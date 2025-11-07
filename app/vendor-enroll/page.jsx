@@ -97,7 +97,7 @@ function VendorEnrollContent() {
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl">
             <div className="px-4 sm:px-6 py-12 text-center">
-              <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: '#00b140' }}></div>
+              <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: 'var(--primary-500)' }}></div>
               <p className="text-xs sm:text-sm text-gray-600">Authenticating...</p>
             </div>
           </div>
@@ -111,7 +111,7 @@ function VendorEnrollContent() {
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
           <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1.5" style={{ color: '#00b140' }}>Donor Login</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1.5" style={{ color: 'var(--primary-500)' }}>Donor Login</h1>
             <p className="text-xs sm:text-sm text-gray-600 mb-4">
               Enter your registered email to access your donor dashboard and manage your items.
             </p>
@@ -145,7 +145,7 @@ function VendorEnrollContent() {
                     borderColor: 'rgb(229 231 235)'
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#00b140';
+                    e.currentTarget.style.borderColor = 'var(--primary-500)';
                     e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
                   }}
                   onBlur={(e) => {
@@ -163,7 +163,7 @@ function VendorEnrollContent() {
               <button
                 type="submit"
                 className="w-full px-4 py-2.5 text-white font-semibold rounded-lg text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                style={{ backgroundColor: '#00b140' }}
+                style={{ backgroundColor: 'var(--primary-500)' }}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -190,12 +190,12 @@ function VendorEnrollContent() {
               <Link 
                 href="/" 
                 className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-                style={{ color: '#00b140' }}
+                style={{ color: 'var(--primary-500)' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = '#059669';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#00b140';
+                  e.currentTarget.style.color = 'var(--primary-500)';
                 }}
               >
                 Back to Catalog
@@ -215,7 +215,7 @@ export default function VendorEnrollPage() {
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-xl">
             <div className="px-4 sm:px-6 py-12 text-center">
-              <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: '#00b140' }}></div>
+              <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: 'var(--primary-500)' }}></div>
               <p className="text-xs sm:text-sm text-gray-600">Loading...</p>
             </div>
           </div>

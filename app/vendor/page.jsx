@@ -72,7 +72,7 @@ export default function VendorDashboard() {
     return (
       <main className="w-full px-4 py-4 sm:py-6">
         <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: 'var(--primary-500)' }}></div>
         </div>
       </main>
     );
@@ -83,7 +83,7 @@ export default function VendorDashboard() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: '#00b140' }}>Donor Dashboard</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: 'var(--primary-500)' }}>Donor Dashboard</h1>
             <p className="text-xs sm:text-sm text-gray-600">
               Welcome, {vendorAdmin.name} ({vendorAdmin.email})
             </p>
@@ -118,7 +118,7 @@ export default function VendorDashboard() {
           <Link
             href="/vendor/items/new"
             className="inline-block px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white"
-            style={{ backgroundColor: '#00b140' }}
+            style={{ backgroundColor: 'var(--primary-500)' }}
           >
             + New Item
           </Link>
@@ -134,7 +134,7 @@ export default function VendorDashboard() {
               <Link 
                 href="/vendor/items/new" 
                 className="inline-block px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white"
-                style={{ backgroundColor: '#00b140' }}
+                style={{ backgroundColor: 'var(--primary-500)' }}
               >
                 Create Your First Item
               </Link>
@@ -160,14 +160,14 @@ export default function VendorDashboard() {
                         {item.is_closed ? (
                           <span 
                             className="px-2 py-0.5 rounded-full text-xs font-bold text-white ml-2"
-                            style={{ backgroundColor: '#f59e0b' }}
+                            style={{ backgroundColor: 'var(--accent-warm-500)' }}
                           >
                             Closed
                           </span>
                         ) : (
                           <span 
                             className="px-2 py-0.5 rounded-full text-xs font-bold text-white ml-2"
-                            style={{ backgroundColor: '#00b140' }}
+                            style={{ backgroundColor: 'var(--primary-500)' }}
                           >
                             Open
                           </span>
@@ -181,7 +181,7 @@ export default function VendorDashboard() {
                         <Link
                           href={`/vendor/items/${item.id}`}
                           className="text-xs font-medium"
-                          style={{ color: '#00b140' }}
+                          style={{ color: 'var(--primary-500)' }}
                         >
                           Edit →
                         </Link>
@@ -225,14 +225,14 @@ export default function VendorDashboard() {
                             {item.is_closed ? (
                               <span 
                                 className="px-2 py-0.5 rounded-full text-xs font-bold text-white"
-                                style={{ backgroundColor: '#f59e0b' }}
+                                style={{ backgroundColor: 'var(--accent-warm-500)' }}
                               >
                                 Closed
                               </span>
                             ) : (
                               <span 
                                 className="px-2 py-0.5 rounded-full text-xs font-bold text-white"
-                                style={{ backgroundColor: '#00b140' }}
+                                style={{ backgroundColor: 'var(--primary-500)' }}
                               >
                                 Open
                               </span>
@@ -242,7 +242,7 @@ export default function VendorDashboard() {
                             <Link
                               href={`/vendor/items/${item.id}`}
                               className="text-xs sm:text-sm font-medium hover:underline"
-                              style={{ color: '#00b140' }}
+                              style={{ color: 'var(--primary-500)' }}
                             >
                               Edit
                             </Link>

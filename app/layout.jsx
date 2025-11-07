@@ -121,10 +121,14 @@ export default async function RootLayout({ children }) {
       className='h-full'
     >
       <body className='bg-gray-50 min-h-screen flex flex-col relative h-full'>
+        <a href='#main-content' className='skip-link'>Skip to main content</a>
         <BackgroundLogo />
         <SiteHeader />
         <SiteBanner deadlineISO={auctionDeadline} />
-        <div className='flex-1 relative z-0 min-w-0 min-h-0 overflow-auto'>
+        <div
+          id='main-content'
+          className='flex-1 relative z-0 min-w-0 min-h-0 overflow-auto'
+        >
           {children}
         </div>
         <SiteFooter />

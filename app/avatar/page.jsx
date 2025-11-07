@@ -163,7 +163,7 @@ export default function DashboardPage() {
     return (
       <main className="w-full px-4 py-4 sm:py-6">
         <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: 'var(--primary-500)' }}></div>
         </div>
       </main>
     );
@@ -174,7 +174,7 @@ export default function DashboardPage() {
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: '#00b140' }}>Your Dashboard</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style={{ color: 'var(--primary-500)' }}>Your Dashboard</h1>
             <p className="text-xs sm:text-sm text-gray-600">
               Manage your avatar and track your bids
             </p>
@@ -183,7 +183,7 @@ export default function DashboardPage() {
             <Link
               href="/"
               className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
-              style={{ backgroundColor: '#00b140' }}
+              style={{ backgroundColor: 'var(--primary-500)' }}
             >
               <span>🛍️</span>
               <span>Browse Catalog</span>
@@ -193,8 +193,8 @@ export default function DashboardPage() {
               className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border-2 hover:opacity-90 transition-opacity"
               style={{ 
                 backgroundColor: 'white',
-                borderColor: '#00b140',
-                color: '#00b140'
+                borderColor: 'var(--primary-500)',
+                color: 'var(--primary-500)'
               }}
             >
               <span>📖</span>
@@ -262,7 +262,7 @@ export default function DashboardPage() {
                   <Link 
                     href="/landing" 
                     className="inline-block px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white"
-                    style={{ backgroundColor: '#00b140' }}
+                    style={{ backgroundColor: 'var(--primary-500)' }}
                   >
                     Create Avatar
                   </Link>
@@ -291,7 +291,7 @@ export default function DashboardPage() {
                     title="Refresh bids"
                   >
                     {bidsLoading ? (
-                      <svg className="animate-spin h-4 w-4" style={{ color: '#00b140' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-4 w-4" style={{ color: 'var(--primary-500)' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -304,7 +304,7 @@ export default function DashboardPage() {
               
               {bidsLoading && bids.length === 0 ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 border-3 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: '#00b140' }}></div>
+                  <div className="w-6 h-6 border-3 border-gray-200 border-t-primary rounded-full animate-spin" style={{ borderTopColor: 'var(--primary-500)' }}></div>
                 </div>
               ) : bids.length === 0 ? (
                 <div className="text-center py-12">
@@ -315,7 +315,7 @@ export default function DashboardPage() {
                   <Link 
                     href="/" 
                     className="inline-block px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white"
-                    style={{ backgroundColor: '#00b140' }}
+                    style={{ backgroundColor: 'var(--primary-500)' }}
                   >
                     Browse Catalog
                   </Link>
@@ -393,14 +393,14 @@ export default function DashboardPage() {
                                 <Link
                                   href={`/i/${item.slug}`}
                                   className="font-bold text-sm sm:text-base text-gray-900 hover:underline transition-colors block mb-1"
-                                  style={{ color: '#00b140' }}
+                                  style={{ color: 'var(--primary-500)' }}
                                 >
                                   {item.title}
                                 </Link>
                                 <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                   <span 
                                     className="px-2 py-0.5 rounded text-xs font-bold text-white"
-                                    style={{ backgroundColor: '#00b140' }}
+                                    style={{ backgroundColor: 'var(--primary-500)' }}
                                   >
                                     Your bid: {formatDollar(bid.amount)}
                                   </span>
@@ -432,7 +432,7 @@ export default function DashboardPage() {
                                   {!isWinner && !isOutbid && !isWinning && isClosed && (
                                     <span 
                                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold text-white"
-                                      style={{ backgroundColor: '#f59e0b' }}
+                                      style={{ backgroundColor: 'var(--accent-warm-500)' }}
                                     >
                                       <span className="text-xs">🔒</span>
                                       Closed
@@ -504,7 +504,7 @@ export default function DashboardPage() {
                                   <button
                                     type="button"
                                     className="w-full px-3 py-2 rounded-lg text-xs font-semibold text-white opacity-50 cursor-not-allowed"
-                                    style={{ backgroundColor: '#00b140' }}
+                                    style={{ backgroundColor: 'var(--primary-500)' }}
                                     disabled
                                   >
                                     Place Bid

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useId } from 'react';
 import Image from 'next/image';
 import { COLORS, ANIMALS, generateRandomAlias, formatAlias } from '@/lib/alias';
 
@@ -64,6 +64,8 @@ export default function AliasSelector({
   const [checkingExistingEmail, setCheckingExistingEmail] = useState(false);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerId = useId();
+  const modalTitleId = useId();
 
   // Use the name from verification token generation
   const name = propName;
@@ -385,7 +387,7 @@ export default function AliasSelector({
               sizes='(max-width: 640px) 48px, 56px'
             />
           </div>
-          <h2 className='text-base sm:text-lg md:text-xl font-bold text-white flex-1'>
+          <h2 id={modalTitleId} className='text-base sm:text-lg md:text-xl font-bold text-white flex-1'>
             Create Your Avatar
           </h2>
           {isModal && onClose && (
@@ -478,11 +480,13 @@ export default function AliasSelector({
                       : '1px solid rgba(0,0,0,0.1)',
                   boxShadow:
                     selectedColor === color.value
-                      ? '0 0 0 2px #00b140, 0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      ? '0 0 0 2px var(--primary-500), 0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                       : undefined,
                 }}
-                title={color.name}
+                aria-pressed={selectedColor === color.value}
+                aria-label={color.name}
               >
+                <span className='sr-only'>{color.name}</span>
                 {selectedColor === color.value && (
                   <div className='absolute inset-0 flex items-center justify-center'>
                     <svg
@@ -515,7 +519,9 @@ export default function AliasSelector({
               type='button'
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
               className='text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors'
-              style={{ color: showEmojiPicker ? '#00b140' : undefined }}
+              aria-expanded={showEmojiPicker}
+              aria-controls={emojiPickerId}
+              style={{ color: showEmojiPicker ? 'var(--primary-500)' : undefined }}
             >
               {showEmojiPicker ? 'Hide' : 'Show'} Picker
             </button>
@@ -528,6 +534,9 @@ export default function AliasSelector({
                 type='button'
                 onClick={() => setShowEmojiPicker(true)}
                 className='w-full h-10 rounded-lg border-2 border-gray-200 hover:border-primary transition-all flex items-center justify-center gap-2 bg-gray-50'
+                aria-haspopup='listbox'
+                aria-expanded={showEmojiPicker}
+                aria-controls={emojiPickerId}
               >
                 <span className='text-xl'>{selectedAnimalObj.emoji}</span>
                 <span className='text-xs text-gray-600'>
@@ -562,7 +571,7 @@ export default function AliasSelector({
                   borderColor: 'rgb(229 231 235)',
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#00b140';
+                  e.currentTarget.style.borderColor = 'var(--primary-500)';
                   e.currentTarget.style.boxShadow =
                     '0 0 0 2px rgba(0, 177, 64, 0.2)';
                 }}
@@ -589,7 +598,7 @@ export default function AliasSelector({
                   }`}
                   style={
                     emojiCategory === 'animals'
-                      ? { backgroundColor: '#00b140' }
+                      ? { backgroundColor: 'var(--primary-500)' }
                       : {}
                   }
                 >
@@ -608,7 +617,7 @@ export default function AliasSelector({
                   }`}
                   style={
                     emojiCategory === 'people'
-                      ? { backgroundColor: '#00b140' }
+                      ? { backgroundColor: 'var(--primary-500)' }
                       : {}
                   }
                 >
@@ -627,7 +636,7 @@ export default function AliasSelector({
                   }`}
                   style={
                     emojiCategory === 'vehicles'
-                      ? { backgroundColor: '#00b140' }
+                      ? { backgroundColor: 'var(--primary-500)' }
                       : {}
                   }
                 >
@@ -636,7 +645,7 @@ export default function AliasSelector({
               </div>
 
               {/* Emoji Grid */}
-              <div className='bg-gray-50 rounded-lg p-2 border border-gray-200'>
+              <div id={emojiPickerId} className='bg-gray-50 rounded-lg p-2 border border-gray-200' role='listbox'>
                 <div className='grid grid-cols-8 sm:grid-cols-10 gap-1.5 max-h-48 overflow-y-auto'>
                   {filteredEmojis.length > 0 ? (
                     filteredEmojis.map((animal) => (
@@ -656,12 +665,14 @@ export default function AliasSelector({
                         style={
                           selectedAnimal === animal.value
                             ? {
-                                backgroundColor: '#00b140',
+                                backgroundColor: 'var(--primary-500)',
                                 boxShadow:
-                                  '0 0 0 2px #00b140, 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                  '0 0 0 2px var(--primary-500), 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                               }
                             : {}
                         }
+                        aria-pressed={selectedAnimal === animal.value}
+                        aria-label={animal.name}
                         title={animal.name}
                       >
                         <span className='text-base sm:text-lg'>
@@ -678,7 +689,7 @@ export default function AliasSelector({
                         type='button'
                         onClick={() => setEmojiSearch('')}
                         className='text-xs hover:underline font-medium'
-                        style={{ color: '#00b140' }}
+                        style={{ color: 'var(--primary-500)' }}
                       >
                         Clear search
                       </button>
@@ -696,14 +707,15 @@ export default function AliasSelector({
             type='button'
             onClick={handleRandomize}
             disabled={isRandomizing}
+            aria-busy={isRandomizing}
             className={`w-full px-3 py-2 border-2 font-semibold rounded-lg transition-all duration-200 text-xs flex items-center justify-center gap-2 ${
               isRandomizing ? 'cursor-wait' : ''
             }`}
             style={{
-              borderColor: '#00b140',
-              color: isRandomizing ? '#059669' : '#00b140',
+              borderColor: 'var(--primary-500)',
+              color: isRandomizing ? '#059669' : 'var(--primary-500)',
               backgroundColor: isRandomizing
-                ? 'rgba(0, 177, 64, 0.1)'
+                ? 'rgba(4, 106, 56, 0.12)'
                 : 'transparent',
               animation: isRandomizing
                 ? 'randomizeShake 0.5s ease-in-out'
@@ -711,14 +723,14 @@ export default function AliasSelector({
             }}
             onMouseEnter={(e) => {
               if (!isRandomizing) {
-                e.currentTarget.style.backgroundColor = '#00b140';
+                e.currentTarget.style.backgroundColor = 'var(--primary-500)';
                 e.currentTarget.style.color = 'white';
               }
             }}
             onMouseLeave={(e) => {
               if (!isRandomizing) {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#00b140';
+                e.currentTarget.style.color = 'var(--primary-500)';
               }
             }}
           >
@@ -816,7 +828,7 @@ export default function AliasSelector({
               !selectedColor || !selectedAnimal || isCreating || !!error
             }
             className='flex-1 px-3 py-2 text-white font-semibold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-xs flex items-center justify-center gap-1.5'
-            style={{ backgroundColor: '#00b140' }}
+            style={{ backgroundColor: 'var(--primary-500)' }}
           >
             {isCreating ? (
               <>
@@ -859,6 +871,7 @@ export default function AliasSelector({
         <div
           className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm'
           style={{ animation: 'fadeIn 0.2s ease-out' }}
+          role='presentation'
           onClick={(e) => {
             if (e.target === e.currentTarget && onClose) {
               onClose();
@@ -866,6 +879,9 @@ export default function AliasSelector({
           }}
         >
           <div
+            role='dialog'
+            aria-modal='true'
+            aria-labelledby={modalTitleId}
             className='w-full max-w-md'
             style={{ animation: 'slideUp 0.3s ease-out' }}
             onClick={(e) => e.stopPropagation()}

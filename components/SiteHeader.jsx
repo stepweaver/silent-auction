@@ -49,6 +49,7 @@ export default function SiteHeader() {
           <div className='hidden xl:flex items-center space-x-1 flex-shrink-0'>
             <Link
               href='/'
+              aria-current={isActive('/') && pathname !== '/avatar' && pathname !== '/how-to-bid' ? 'page' : undefined}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/') &&
                 pathname !== '/avatar' &&
@@ -61,7 +62,7 @@ export default function SiteHeader() {
                 pathname !== '/avatar' &&
                 pathname !== '/how-to-bid'
                   ? {
-                      backgroundColor: '#00b140',
+                      backgroundColor: 'var(--primary-500)',
                     }
                   : {}
               }
@@ -70,6 +71,7 @@ export default function SiteHeader() {
             </Link>
             <Link
               href='/avatar'
+              aria-current={isActive('/avatar') ? 'page' : undefined}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/avatar')
                   ? 'text-white'
@@ -78,7 +80,7 @@ export default function SiteHeader() {
               style={
                 isActive('/avatar')
                   ? {
-                      backgroundColor: '#00b140',
+                      backgroundColor: 'var(--primary-500)',
                     }
                   : {}
               }
@@ -87,6 +89,7 @@ export default function SiteHeader() {
             </Link>
             <Link
               href='/how-to-bid'
+              aria-current={isActive('/how-to-bid') ? 'page' : undefined}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/how-to-bid')
                   ? 'text-white'
@@ -95,7 +98,7 @@ export default function SiteHeader() {
               style={
                 isActive('/how-to-bid')
                   ? {
-                      backgroundColor: '#00b140',
+                      backgroundColor: 'var(--primary-500)',
                     }
                   : {}
               }
@@ -109,6 +112,8 @@ export default function SiteHeader() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className='xl:hidden flex-shrink-0 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 active:bg-gray-100 transition-colors touch-manipulation'
             aria-label='Toggle menu'
+            aria-expanded={mobileMenuOpen}
+            aria-controls='mobile-navigation'
             type='button'
             style={{
               minWidth: '48px',
@@ -149,10 +154,14 @@ export default function SiteHeader() {
 
         {/* Mobile Menu Dropdown - Show on all screens except xl */}
         {mobileMenuOpen && (
-          <div className='xl:hidden border-t border-gray-200 bg-white'>
+          <div
+            id='mobile-navigation'
+            className='xl:hidden border-t border-gray-200 bg-white'
+          >
             <div className='py-2 px-1'>
               <Link
                 href='/'
+                aria-current={isActive('/') && pathname !== '/avatar' && pathname !== '/how-to-bid' ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors mb-1 active:opacity-80 touch-manipulation ${
                   isActive('/') &&
@@ -166,7 +175,7 @@ export default function SiteHeader() {
                   pathname !== '/avatar' &&
                   pathname !== '/how-to-bid'
                     ? {
-                        backgroundColor: '#00b140',
+                        backgroundColor: 'var(--primary-500)',
                         minHeight: '48px',
                       }
                     : {
@@ -178,6 +187,7 @@ export default function SiteHeader() {
               </Link>
               <Link
                 href='/avatar'
+                aria-current={isActive('/avatar') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors mb-1 active:opacity-80 touch-manipulation ${
                   isActive('/avatar')
@@ -187,7 +197,7 @@ export default function SiteHeader() {
                 style={
                   isActive('/avatar')
                     ? {
-                        backgroundColor: '#00b140',
+                        backgroundColor: 'var(--primary-500)',
                         minHeight: '48px',
                       }
                     : {
@@ -199,6 +209,7 @@ export default function SiteHeader() {
               </Link>
               <Link
                 href='/how-to-bid'
+                aria-current={isActive('/how-to-bid') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors active:opacity-80 touch-manipulation ${
                   isActive('/how-to-bid')
@@ -208,7 +219,7 @@ export default function SiteHeader() {
                 style={
                   isActive('/how-to-bid')
                     ? {
-                        backgroundColor: '#00b140',
+                        backgroundColor: 'var(--primary-500)',
                         minHeight: '48px',
                       }
                     : {
