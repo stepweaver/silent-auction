@@ -2,6 +2,31 @@ import './globals.css';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import BackgroundLogo from '@/components/BackgroundLogo';
+import SiteBanner from '@/components/SiteBanner';
+import { supabaseServer } from '@/lib/serverSupabase';
+
+export const dynamic = 'force-dynamic';
+
+async function getAuctionDeadline() {
+  try {
+    const supabase = supabaseServer();
+    const { data, error } = await supabase
+      .from('settings')
+      .select('auction_deadline')
+      .eq('id', 1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Failed to load settings for banner:', error);
+      return null;
+    }
+
+    return data?.auction_deadline ?? null;
+  } catch (error) {
+    console.error('Unexpected error loading banner settings:', error);
+    return null;
+  }
+}
 
 const getMetadataBase = () => {
   try {
@@ -85,7 +110,9 @@ export const viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const auctionDeadline = await getAuctionDeadline();
+
   return (
     <html
       lang='en'
@@ -96,6 +123,7 @@ export default function RootLayout({ children }) {
       <body className='bg-gray-50 min-h-screen flex flex-col relative h-full'>
         <BackgroundLogo />
         <SiteHeader />
+        <SiteBanner deadlineISO={auctionDeadline} />
         <div className='flex-1 relative z-0 min-w-0 min-h-0 overflow-auto'>
           {children}
         </div>

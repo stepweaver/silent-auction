@@ -208,6 +208,10 @@ export default function AdminDashboard() {
   const deadline = settings?.auction_deadline
     ? new Date(settings.auction_deadline)
     : null;
+  const allClosed = items && items.length > 0 ? items.every((item) => item.is_closed) : false;
+  const openCount = items && items.length > 0 ? items.filter((item) => !item.is_closed).length : 0;
+  const now = new Date();
+  const closed = allClosed || (deadline ? now >= deadline : false);
 
   return (
     <div>
@@ -235,16 +239,28 @@ export default function AdminDashboard() {
           <p>
             <b>Deadline:</b> {deadline ? deadline.toLocaleString() : 'Not set'}
           </p>
-          {deadline && (
-            <p>
-              <b>Status:</b>{' '}
-              {new Date() >= deadline ? (
-                <span className='text-red-600 font-semibold'>
-                  CLOSED (deadline passed)
-                </span>
-              ) : (
-                <span className='text-green-600 font-semibold'>OPEN</span>
-              )}
+          <p>
+            <b>Status:</b>{' '}
+            {closed ? (
+              <span className='text-red-600 font-semibold'>
+                CLOSED ({allClosed ? 'all items closed' : 'deadline passed'})
+              </span>
+            ) : (
+              <span className='text-green-600 font-semibold'>OPEN</span>
+            )}
+          </p>
+          {!closed && deadline && (
+            <p className='text-xs text-gray-600'>
+              {openCount === 1
+                ? '1 item still open. Auction will close automatically at the deadline.'
+                : `${openCount} items still open. Auction will close automatically at the deadline.`}
+            </p>
+          )}
+          {closed && (
+            <p className='text-xs text-gray-600'>
+              {openCount === 0
+                ? 'All catalog items are now closed.'
+                : `${openCount} items remain open; please review.`}
             </p>
           )}
           {settings?.contact_email && (

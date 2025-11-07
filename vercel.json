@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/admin/close-check",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
+
