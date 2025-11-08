@@ -240,6 +240,8 @@ export default function ItemPage({ params }) {
                     fill
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-contain p-4"
+                    priority
+                    loading="eager"
                   />
                 </div>
               ) : (

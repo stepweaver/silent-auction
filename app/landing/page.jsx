@@ -417,6 +417,7 @@ export default function LandingPage() {
                     className='object-contain drop-shadow-lg'
                     priority
                     sizes='96px'
+                    loading='eager'
                   />
                 </div>
               </div>
@@ -514,6 +515,7 @@ export default function LandingPage() {
                     sizes='96px'
                     className='object-contain drop-shadow-lg'
                     priority
+                    loading='eager'
                   />
                 </div>
               </div>

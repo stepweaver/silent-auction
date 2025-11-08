@@ -33,6 +33,8 @@ export default function SiteHeader() {
                 height={36}
                 className='object-contain'
                 style={{ width: '36px', height: '36px' }}
+                priority
+                loading='eager'
               />
             </div>
             <div className='flex flex-col min-w-0'>

@@ -106,8 +106,8 @@ export default function CatalogPage() {
         </div>
       ) : (
         <div className="grid gap-3 xl:grid-cols-2 2xl:grid-cols-3">
-          {items.map((item) => (
-            <ItemCard key={item.id} item={item} />
+          {items.map((item, index) => (
+            <ItemCard key={item.id} item={item} priority={index === 0} />
           ))}
         </div>
       )}

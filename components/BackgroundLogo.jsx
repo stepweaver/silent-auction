@@ -35,6 +35,8 @@ export default function BackgroundLogo() {
           minHeight: 'min(75vh, 900px)',
           pointerEvents: 'none',
         }}
+        priority
+        loading='eager'
       />
     </div>
   );

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 
-export default function ItemCard({ item }) {
+export default function ItemCard({ item, priority = false }) {
   const current = Number(item.current_high_bid ?? item.start_price);
   const nextMin = current === Number(item.start_price)
     ? Number(item.start_price)
@@ -50,6 +50,8 @@ export default function ItemCard({ item }) {
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className={`object-contain rounded-lg ${isClosed ? 'opacity-60' : ''}`}
+                priority={priority}
+                loading={priority ? 'eager' : undefined}
               />
             </div>
           </div>
