@@ -17,7 +17,7 @@ export default function SiteHeader() {
   };
 
   return (
-    <header className='no-print border-b border-gray-200/70 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70'>
+    <header className='no-print border-b border-gray-200/70 bg-white/90 backdrop-blur supports-backdrop-filter:bg-white/70'>
       <nav className='max-w-7xl mx-auto px-3 sm:px-4'>
         <div className='flex items-center justify-between gap-2 py-2.5 sm:py-3'>
           <Link

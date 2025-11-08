@@ -540,7 +540,7 @@ export default function LandingPage() {
                   }}
                 >
                   <div
-                    className='flex-shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
+                    className='shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
                     style={{ backgroundColor: 'var(--primary-500)' }}
                   >
                     1
@@ -563,7 +563,7 @@ export default function LandingPage() {
                   }}
                 >
                   <div
-                    className='flex-shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
+                    className='shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
                     style={{ backgroundColor: '#059669' }}
                   >
                     2
@@ -586,7 +586,7 @@ export default function LandingPage() {
                   }}
                 >
                   <div
-                    className='flex-shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
+                    className='shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
                     style={{ backgroundColor: '#4ade80' }}
                   >
                     3
