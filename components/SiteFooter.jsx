@@ -1,18 +1,23 @@
 import Link from 'next/link';
 
 export default function SiteFooter() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className='no-print mt-auto border-t border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80'>
-      <div className='max-w-7xl mx-auto px-4 py-3 sm:py-4'>
+    <footer className='no-print mt-auto border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70'>
+      <div className='max-w-7xl mx-auto px-3 py-2 sm:px-4 sm:py-3'>
         <nav
-          className='flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-600'
+          className='flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600'
           aria-label='Footer'
         >
-          <p className='text-center sm:text-left'>
-            © {new Date().getFullYear()} Mary Frank Elementary PTO
+          <p className='w-full text-center sm:w-auto sm:text-left'>
+            © {currentYear} Mary Frank Elementary PTO
           </p>
-          <div className='flex items-center gap-4'>
-            <Link className='font-medium text-gray-600 hover:text-gray-900' href='/terms'>
+          <div className='flex flex-wrap items-center justify-center sm:justify-end gap-x-3 gap-y-1'>
+            <Link
+              className='font-medium text-gray-600 hover:text-gray-900'
+              href='/terms'
+            >
               Terms &amp; Privacy
             </Link>
             <a
