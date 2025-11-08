@@ -17,38 +17,34 @@ export default function SiteHeader() {
   };
 
   return (
-    <nav className='no-print bg-white/95 border-b border-gray-200 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/80'>
-      <div className='max-w-7xl mx-auto px-4'>
-        <div className='flex items-center justify-between gap-3 py-3 sm:py-4'>
-          {/* Logo and Title - Left Side */}
+    <header className='no-print border-b border-gray-200/70 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70'>
+      <nav className='max-w-7xl mx-auto px-3 sm:px-4'>
+        <div className='flex items-center justify-between gap-2 py-2.5 sm:py-3'>
           <Link
             href='/'
-            className='flex items-center space-x-2.5 hover:opacity-80 transition-opacity min-w-0 flex-1 pr-2 touch-manipulation'
+            className='flex items-center gap-2 hover:opacity-85 transition-opacity min-w-0 flex-1 pr-2 touch-manipulation'
           >
-            <div className='shrink-0'>
-              <Image
-                src='/logo-with-glow.png'
-                alt='Mary Frank Elementary'
-                width={36}
-                height={36}
-                className='object-contain'
-                style={{ width: '36px', height: '36px' }}
-                priority
-                loading='eager'
-              />
-            </div>
+            <Image
+              src='/logo-with-glow.png'
+              alt='Mary Frank Elementary'
+              width={32}
+              height={32}
+              className='object-contain shrink-0'
+              priority
+              loading='eager'
+              style={{ width: '32px', height: '32px' }}
+            />
             <div className='flex flex-col min-w-0'>
-              <span className='font-bold text-sm leading-tight text-gray-900'>
-                Mary Frank Elementary
+              <span className='font-semibold text-sm leading-tight text-gray-900'>
+                Mary Frank Silent Auction
               </span>
-              <span className='text-xs leading-tight text-gray-600'>
-                PTO Silent Auction Fundraiser
+              <span className='text-xs leading-tight text-gray-600 truncate'>
+                PTO Fundraiser
               </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links - Right Side - Only show on very large screens */}
-          <div className='hidden xl:flex items-center space-x-1 shrink-0'>
+          <div className='hidden xl:flex items-center gap-1'>
             <Link
               href='/'
               aria-current={
@@ -58,7 +54,7 @@ export default function SiteHeader() {
                   ? 'page'
                   : undefined
               }
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive('/') &&
                 pathname !== '/avatar' &&
                 pathname !== '/how-to-bid'
@@ -80,7 +76,7 @@ export default function SiteHeader() {
             <Link
               href='/avatar'
               aria-current={isActive('/avatar') ? 'page' : undefined}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive('/avatar')
                   ? 'text-white'
                   : 'text-gray-700 hover:bg-gray-100'
@@ -98,7 +94,7 @@ export default function SiteHeader() {
             <Link
               href='/how-to-bid'
               aria-current={isActive('/how-to-bid') ? 'page' : undefined}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive('/how-to-bid')
                   ? 'text-white'
                   : 'text-gray-700 hover:bg-gray-100'
@@ -116,7 +112,7 @@ export default function SiteHeader() {
             <Link
               href='/admin'
               aria-current={isActive('/admin') ? 'page' : undefined}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive('/admin')
                   ? 'text-white'
                   : 'text-gray-700 hover:bg-gray-100'
@@ -133,17 +129,16 @@ export default function SiteHeader() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button - Show on all screens except xl */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className='xl:hidden shrink-0 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 active:bg-gray-100 transition-colors touch-manipulation'
+            className='xl:hidden shrink-0 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 active:bg-gray-100 transition-colors touch-manipulation'
             aria-label='Toggle menu'
             aria-expanded={mobileMenuOpen}
             aria-controls='mobile-navigation'
             type='button'
             style={{
-              minWidth: '48px',
-              minHeight: '48px',
+              minWidth: '44px',
+              minHeight: '44px',
             }}
           >
             {mobileMenuOpen ? (
@@ -178,11 +173,10 @@ export default function SiteHeader() {
           </button>
         </div>
 
-        {/* Mobile Menu Dropdown - Show on all screens except xl */}
         {mobileMenuOpen && (
           <div
             id='mobile-navigation'
-            className='xl:hidden border-t border-gray-200 bg-white'
+            className='xl:hidden border-t border-gray-200 bg-white rounded-b-lg shadow-sm'
           >
             <div className='py-2 px-1'>
               <Link
@@ -195,7 +189,7 @@ export default function SiteHeader() {
                     : undefined
                 }
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors mb-1 active:opacity-80 touch-manipulation ${
+                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors mb-1 active:opacity-85 touch-manipulation ${
                   isActive('/') &&
                   pathname !== '/avatar' &&
                   pathname !== '/how-to-bid'
@@ -221,7 +215,7 @@ export default function SiteHeader() {
                 href='/avatar'
                 aria-current={isActive('/avatar') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors mb-1 active:opacity-80 touch-manipulation ${
+                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors mb-1 active:opacity-85 touch-manipulation ${
                   isActive('/avatar')
                     ? 'text-white'
                     : 'text-gray-700 active:bg-gray-100'
@@ -243,7 +237,7 @@ export default function SiteHeader() {
                 href='/how-to-bid'
                 aria-current={isActive('/how-to-bid') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors active:opacity-80 touch-manipulation ${
+                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors active:opacity-85 touch-manipulation ${
                   isActive('/how-to-bid')
                     ? 'text-white'
                     : 'text-gray-700 active:bg-gray-100'
@@ -265,7 +259,7 @@ export default function SiteHeader() {
                 href='/admin'
                 aria-current={isActive('/admin') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors active:opacity-80 touch-manipulation ${
+                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors active:opacity-85 touch-manipulation ${
                   isActive('/admin')
                     ? 'text-white'
                     : 'text-gray-700 active:bg-gray-100'
@@ -286,7 +280,7 @@ export default function SiteHeader() {
             </div>
           </div>
         )}
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }

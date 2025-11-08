@@ -124,11 +124,11 @@ export default async function RootLayout({ children }) {
         <a href='#main-content' className='skip-link'>Skip to main content</a>
         <BackgroundLogo />
         <SiteHeader />
-        <SiteBanner deadlineISO={auctionDeadline} />
         <div
           id='main-content'
           className='flex-1 relative z-0 min-w-0 min-h-0 overflow-auto'
         >
+          <SiteBanner deadlineISO={auctionDeadline} />
           {children}
         </div>
         <SiteFooter />

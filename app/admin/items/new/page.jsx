@@ -168,6 +168,14 @@ export default function NewItemPage() {
               disabled={isSubmitting || uploadingPhoto}
             />
             <p className="text-xs text-gray-500">Or enter URL below</p>
+            <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+              <p className="font-semibold text-gray-700">Photo tips for donors:</p>
+              <ul className="mt-1 list-disc space-y-1 pl-4">
+                <li>Turn your phone sideways so the picture is in landscape.</li>
+                <li>Fill the frame with the item and leave a little space around the edges.</li>
+                <li>Shoot in a bright room, avoid strong backlighting, and wipe the camera lens first.</li>
+              </ul>
+            </div>
             <input
               type="url"
               className="border rounded px-3 py-2 w-full"

@@ -18,114 +18,101 @@ export default function ItemCard({ item, priority = false }) {
   )}`;
 
   return (
-    <Link 
-      href={url} 
-      className={`relative bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden block transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${isClosed ? 'opacity-75' : ''}`}
+    <Link
+      href={url}
+      className={`group relative flex flex-col sm:flex-row bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md hover:border-gray-300 ${isClosed ? 'opacity-80' : ''}`}
     >
       {isClosed && (
-        <div className="absolute top-2 right-2 z-10">
-          <span 
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-white shadow-md"
+        <div className="absolute top-2 right-2 z-20">
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold text-white shadow-sm"
             style={{ backgroundColor: 'var(--accent-warm-500)' }}
           >
-            <span className="text-xs">🔒</span>
             Closed
           </span>
         </div>
       )}
-      <figure className="relative">
+      <div className="relative bg-gray-100 sm:w-44 md:w-48 shrink-0">
         {isClosed && (
-          <div className="absolute inset-0 bg-black/30 z-10 flex items-center justify-center">
-            <span className="text-white font-bold text-sm bg-black/50 px-3 py-1.5 rounded-lg">
-              Bidding Closed
-            </span>
-          </div>
+          <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-[1px]" />
         )}
         {item.photo_url ? (
-          <div className="w-full bg-gray-100">
-            <div className="relative aspect-[4/3] w-full p-2">
-              <Image
-                src={item.photo_url}
-                alt={item.title}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className={`object-contain rounded-lg ${isClosed ? 'opacity-60' : ''}`}
-                priority={priority}
-                loading={priority ? 'eager' : undefined}
-              />
-            </div>
+          <div className="relative h-48 sm:h-full w-full">
+            <Image
+              src={item.photo_url}
+              alt={item.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className={`object-cover sm:object-contain ${isClosed ? 'opacity-80' : ''}`}
+              priority={priority}
+              loading={priority ? 'eager' : undefined}
+            />
           </div>
         ) : (
-          <div className="w-full bg-gray-100 grid place-items-center aspect-[4/3] text-gray-400">
-            <span className="text-sm">No photo</span>
+          <div className="grid place-items-center h-48 text-xs text-gray-400">
+            No photo
           </div>
         )}
-      </figure>
-      <div className="p-4">
-        <h2 className="font-bold text-base mb-1 text-gray-900 line-clamp-2">
-          {item.title}
-        </h2>
-        {item.description && (
-          <p className="text-xs text-gray-600 line-clamp-2 mb-2">
-            {item.description}
-          </p>
-        )}
-        <div className="flex flex-col gap-1.5 mt-2">
+      </div>
+      <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+        <div className="flex-1 space-y-2">
+          <h2 className="font-semibold text-sm sm:text-base text-gray-900 line-clamp-2">
+            {item.title}
+          </h2>
+          {item.description && (
+            <p className="text-xs text-gray-600 line-clamp-2">
+              {item.description}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs">
           {isClosed ? (
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="font-semibold text-gray-700">Final bid:</span>
-              <span 
+            <>
+              <span className="font-semibold text-gray-700 uppercase tracking-wide">Final</span>
+              <span
                 className="px-2 py-0.5 rounded text-xs font-bold text-white"
                 style={{ backgroundColor: 'var(--accent-warm-500)' }}
               >
                 {formatDollar(current)}
               </span>
-            </div>
+            </>
           ) : (
             <>
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="font-semibold text-gray-700">Current:</span>
-                <span 
-                  className="px-2 py-0.5 rounded text-xs font-bold text-white"
-                  style={{ backgroundColor: 'var(--primary-500)', color: 'var(--primary-contrast)' }}
-                >
-                  {formatDollar(current)}
+              <span className="font-semibold text-gray-700 uppercase tracking-wide">Current</span>
+              <span
+                className="px-2 py-0.5 rounded text-xs font-bold text-white"
+                style={{ backgroundColor: 'var(--primary-500)', color: 'var(--primary-contrast)' }}
+              >
+                {formatDollar(current)}
+              </span>
+              <span className="h-3 w-px bg-gray-300" aria-hidden />
+              <span className="font-semibold text-gray-500 uppercase tracking-wide">Next min</span>
+              <span className="px-2 py-0.5 rounded border border-gray-300 text-xs font-semibold text-gray-700 bg-white">
+                {formatDollar(nextMin)}
+              </span>
+              {current === Number(item.start_price) && (
+                <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-medium text-gray-600 uppercase tracking-wide">
+                  first bid
                 </span>
-                {current === Number(item.start_price) && (
-                  <span className="px-1.5 py-0.5 rounded text-xs font-medium text-gray-600 bg-gray-100">
-                    first bid
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="font-semibold text-gray-700">Next min:</span>
-                <span className="px-2 py-0.5 rounded text-xs font-semibold text-gray-700 border border-gray-300">
-                  {formatDollar(nextMin)}
-                </span>
-              </div>
+              )}
             </>
           )}
         </div>
-        <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
-          {isClosed ? (
-            <span className="text-sm font-medium text-gray-600">View Details</span>
-          ) : (
-            <span 
-              className="text-sm font-semibold text-white px-4 py-2 rounded-lg"
-              style={{ backgroundColor: 'var(--primary-500)', minHeight: '44px', display: 'inline-flex', alignItems: 'center' }}
-            >
-              Place Bid
-            </span>
-          )}
-          <div className='flex flex-col items-center gap-1'>
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
+          <span
+            className={`text-sm font-semibold ${isClosed ? 'text-gray-600' : 'text-gray-800'} transition-colors group-hover:text-primary-600`}
+          >
+            {isClosed ? 'View details' : 'Preview & bid →'}
+          </span>
+          <div className="flex items-center gap-2">
             <Image
               alt={`QR code linking to ${item.title}`}
               src={qrUrl}
-              width={48}
-              height={48}
-              className='rounded border border-gray-300'
+              width={40}
+              height={40}
+              className="rounded border border-gray-200"
             />
-            <span className='text-[11px] text-gray-500'>Scan to view</span>
+            <span className="text-[10px] text-gray-500">Scan</span>
           </div>
         </div>
       </div>

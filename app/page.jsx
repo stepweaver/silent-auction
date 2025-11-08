@@ -92,7 +92,7 @@ export default function CatalogPage() {
         <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-4">
             <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--primary-500)' }}>
-              Silent Auction
+              Silent Auction Catalog
             </h1>
             <p className="text-sm text-gray-600">Browse items and place your bids.</p>
           </div>
