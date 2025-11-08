@@ -1,6 +1,6 @@
 import { supabaseServer } from '@/lib/serverSupabase';
-import Image from 'next/image';
 import PrintToolbar from './PrintToolbar';
+import QrCodeCard from './QrCodeCard';
 
 export const metadata = {
   title: 'Printable QR Codes',
@@ -74,46 +74,12 @@ export default async function PrintableQrCodesPage() {
             )}`;
 
             return (
-              <section
+              <QrCodeCard
                 key={item.id}
-                className='qr-page flex min-h-[9.5in] flex-col items-center justify-center gap-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm'
-              >
-                <div className='text-center'>
-                  <p className='text-sm font-semibold uppercase tracking-wide text-emerald-600'>
-                    Mary Frank Elementary PTO Silent Auction
-                  </p>
-                  <h2 className='mt-2 text-3xl font-bold text-gray-900 sm:text-4xl'>
-                    {item.title}
-                  </h2>
-                </div>
-
-                <Image
-                  src={qrSrc}
-                  alt={`QR code for ${item.title}`}
-                  width={900}
-                  height={900}
-                  className='w-full max-w-[6.5in] rounded-xl border border-gray-100 shadow-lg'
-                />
-
-                <div className='w-full max-w-2xl text-center text-gray-700'>
-                  <p className='text-base font-semibold'>
-                    Scan to view item &amp; place bids
-                  </p>
-                  <p className='mt-1 break-all text-sm text-gray-500'>
-                    {itemUrl}
-                  </p>
-                  {item.start_price && (
-                    <p className='mt-3 text-sm text-gray-600'>
-                      Starting bid: ${Number(item.start_price).toFixed(2)}
-                    </p>
-                  )}
-                  {item.description && (
-                    <p className='mt-2 text-sm leading-relaxed text-gray-600'>
-                      {item.description}
-                    </p>
-                  )}
-                </div>
-              </section>
+                item={item}
+                itemUrl={itemUrl}
+                qrSrc={qrSrc}
+              />
             );
           })
         ) : (

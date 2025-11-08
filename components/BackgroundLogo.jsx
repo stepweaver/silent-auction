@@ -14,7 +14,7 @@ export default function BackgroundLogo() {
   return (
     <div
       aria-hidden='true'
-      className='pointer-events-none fixed inset-0 -z-10 flex items-center justify-center'
+      className='no-print pointer-events-none fixed inset-0 -z-10 flex items-center justify-center'
       style={{
         width: '100vw',
         height: '100vh',

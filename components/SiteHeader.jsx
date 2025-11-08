@@ -17,15 +17,15 @@ export default function SiteHeader() {
   };
 
   return (
-    <nav className='bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50'>
+    <nav className='no-print bg-white/95 border-b border-gray-200 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/80'>
       <div className='max-w-7xl mx-auto px-4'>
-        <div className='flex items-center h-16'>
+        <div className='flex items-center justify-between gap-3 py-3 sm:py-4'>
           {/* Logo and Title - Left Side */}
           <Link
             href='/'
             className='flex items-center space-x-2.5 hover:opacity-80 transition-opacity min-w-0 flex-1 pr-2 touch-manipulation'
           >
-            <div className='flex-shrink-0'>
+            <div className='shrink-0'>
               <Image
                 src='/logo-with-glow.png'
                 alt='Mary Frank Elementary'
@@ -48,10 +48,16 @@ export default function SiteHeader() {
           </Link>
 
           {/* Desktop Navigation Links - Right Side - Only show on very large screens */}
-          <div className='hidden xl:flex items-center space-x-1 flex-shrink-0'>
+          <div className='hidden xl:flex items-center space-x-1 shrink-0'>
             <Link
               href='/'
-              aria-current={isActive('/') && pathname !== '/avatar' && pathname !== '/how-to-bid' ? 'page' : undefined}
+              aria-current={
+                isActive('/') &&
+                pathname !== '/avatar' &&
+                pathname !== '/how-to-bid'
+                  ? 'page'
+                  : undefined
+              }
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/') &&
                 pathname !== '/avatar' &&
@@ -130,7 +136,7 @@ export default function SiteHeader() {
           {/* Mobile Menu Button - Show on all screens except xl */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className='xl:hidden flex-shrink-0 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 active:bg-gray-100 transition-colors touch-manipulation'
+            className='xl:hidden shrink-0 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 active:bg-gray-100 transition-colors touch-manipulation'
             aria-label='Toggle menu'
             aria-expanded={mobileMenuOpen}
             aria-controls='mobile-navigation'
@@ -181,7 +187,13 @@ export default function SiteHeader() {
             <div className='py-2 px-1'>
               <Link
                 href='/'
-                aria-current={isActive('/') && pathname !== '/avatar' && pathname !== '/how-to-bid' ? 'page' : undefined}
+                aria-current={
+                  isActive('/') &&
+                  pathname !== '/avatar' &&
+                  pathname !== '/how-to-bid'
+                    ? 'page'
+                    : undefined
+                }
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-3.5 rounded-lg text-base font-medium transition-colors mb-1 active:opacity-80 touch-manipulation ${
                   isActive('/') &&

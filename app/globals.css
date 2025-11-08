@@ -135,3 +135,9 @@ html {
     min-width: 44px;
   }
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

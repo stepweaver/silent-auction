@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 export default function SiteFooter() {
   return (
-    <footer className='mt-auto border-t border-gray-200 bg-white'>
-      <div className='max-w-7xl mx-auto px-4 py-4'>
+    <footer className='no-print mt-auto border-t border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80'>
+      <div className='max-w-7xl mx-auto px-4 py-3 sm:py-4'>
         <nav
           className='flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-600'
           aria-label='Footer'

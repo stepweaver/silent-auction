@@ -53,7 +53,7 @@ export default function PrintToolbar() {
             disabled={downloading}
             className='rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:cursor-not-allowed disabled:opacity-70'
           >
-            {downloading ? 'Generating…' : 'Download PDF'}
+            {downloading ? 'Generating…' : 'Download ALL QR Codes'}
           </button>
           <Link
             href='/admin'

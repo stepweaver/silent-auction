@@ -28,7 +28,7 @@ export default function SiteBanner({ deadlineISO = null }) {
 
   return (
     <div
-      className='border-b shadow-sm'
+      className='no-print border-b shadow-sm'
       style={{
         background:
           'linear-gradient(135deg, var(--primary-600), var(--primary-500))',
