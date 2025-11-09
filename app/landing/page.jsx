@@ -520,94 +520,18 @@ export default function LandingPage() {
                 </div>
               </div>
               <h1 className='text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-1.5'>
-                Mary Frank Elementary Silent Auction
+                Bidder Check-In
               </h1>
-              <p className='text-white/90 text-xs leading-snug max-w-md mx-auto'>
-                Enter your name and email so we can look up your bidder profile.
-                New here? We’ll help you create one after we verify your email.
+              <p className='text-white/90 text-sm leading-snug max-w-md mx-auto'>
+                Enter your name and email to pull up your bidder profile or
+                create one.
               </p>
             </div>
 
             {/* Content Section */}
             <div className='px-4 sm:px-5 md:px-6 py-4 sm:py-5'>
-              {/* Quick Steps */}
-              <div className='grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-5'>
-                <div
-                  className='flex items-start gap-2 p-3 rounded-lg border'
-                  style={{
-                    backgroundColor: 'rgba(4, 106, 56, 0.08)',
-                    borderColor: 'rgba(4, 106, 56, 0.25)',
-                  }}
-                >
-                  <div
-                    className='shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
-                    style={{ backgroundColor: 'var(--primary-500)' }}
-                  >
-                    1
-                  </div>
-                  <div className='flex-1 min-w-0'>
-                    <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
-                      Tell Us Who You Are
-                    </h3>
-                    <p className='text-sm text-gray-600 leading-snug'>
-                      Share the name and email you use for bidding
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  className='flex items-start gap-2 p-3 rounded-lg border'
-                  style={{
-                    backgroundColor: 'rgba(5, 150, 105, 0.08)',
-                    borderColor: 'rgba(5, 150, 105, 0.25)',
-                  }}
-                >
-                  <div
-                    className='shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
-                    style={{ backgroundColor: '#059669' }}
-                  >
-                    2
-                  </div>
-                  <div className='flex-1 min-w-0'>
-                    <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
-                      We Check For An Account
-                    </h3>
-                    <p className='text-sm text-gray-600 leading-snug'>
-                      We’ll let you know if you already have an alias
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  className='flex items-start gap-2 p-3 rounded-lg border'
-                  style={{
-                    backgroundColor: 'rgba(74, 222, 128, 0.12)',
-                    borderColor: 'rgba(74, 222, 128, 0.3)',
-                  }}
-                >
-                  <div
-                    className='shrink-0 w-8 h-8 rounded-lg text-white font-bold text-sm flex items-center justify-center'
-                    style={{ backgroundColor: '#4ade80' }}
-                  >
-                    3
-                  </div>
-                  <div className='flex-1 min-w-0'>
-                    <h3 className='font-semibold text-sm text-gray-900 mb-0.5'>
-                      Verify & Start Bidding
-                    </h3>
-                    <p className='text-sm text-gray-600 leading-snug'>
-                      Confirm your email, personalize your alias, and join in
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {/* Form */}
               <form onSubmit={handleEmailSubmit} className='space-y-3'>
-                <p className='text-sm text-gray-700'>
-                  Enter the email you’ll use to bid. We’ll look up your bidder
-                  alias or help you set one up in a few quick steps.
-                </p>
                 <div>
                   <label
                     htmlFor={nameInputId}
