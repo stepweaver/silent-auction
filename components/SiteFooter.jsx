@@ -22,7 +22,7 @@ export default function SiteFooter() {
             </Link>
             <a
               className='font-medium text-gray-600 hover:text-gray-900'
-              href='mailto:pto@maryfrankpto.org'
+              href='mailto:auction@stepweaver.dev'
             >
               Contact
             </a>
