@@ -68,9 +68,9 @@ function SetDeadline({ onSet, currentDeadline }) {
   }
 
   return (
-    <form onSubmit={handleSetDeadline} className='space-y-2'>
-      <div className='flex flex-col sm:flex-row gap-2 sm:items-end'>
-        <div className='flex-1 min-w-0'>
+    <form onSubmit={handleSetDeadline} className='space-y-2 w-full'>
+      <div className='flex flex-col sm:flex-row gap-2 sm:items-end w-full'>
+        <div className='flex-1 min-w-0' style={{ flexBasis: 0 }}>
           <label className='block text-xs font-semibold text-yellow-900 mb-1'>
             Date
           </label>
@@ -78,13 +78,18 @@ function SetDeadline({ onSet, currentDeadline }) {
             type='date'
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className='border rounded pl-2 pr-10 py-1.5 text-sm w-full box-border max-w-full'
-            style={{ boxSizing: 'border-box' }}
+            className='border rounded pl-2 pr-9 py-1.5 text-sm w-full'
+            style={{ 
+              boxSizing: 'border-box', 
+              width: '100%', 
+              maxWidth: '100%', 
+              minWidth: 0 
+            }}
             required
             disabled={isSubmitting}
           />
         </div>
-        <div className='flex-1 min-w-0'>
+        <div className='flex-1 min-w-0' style={{ flexBasis: 0 }}>
           <label className='block text-xs font-semibold text-yellow-900 mb-1'>
             Time
           </label>
@@ -92,8 +97,13 @@ function SetDeadline({ onSet, currentDeadline }) {
             type='time'
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className='border rounded pl-2 pr-10 py-1.5 text-sm w-full box-border max-w-full'
-            style={{ boxSizing: 'border-box' }}
+            className='border rounded pl-2 pr-9 py-1.5 text-sm w-full'
+            style={{ 
+              boxSizing: 'border-box', 
+              width: '100%', 
+              maxWidth: '100%', 
+              minWidth: 0 
+            }}
             required
             disabled={isSubmitting}
           />
@@ -277,7 +287,7 @@ export default function AdminDashboard() {
           )}
         </div>
         <div className='mt-3 space-y-2'>
-          <div className='p-2 sm:p-3 bg-white border rounded overflow-hidden'>
+          <div className='p-2 sm:p-3 bg-white border rounded w-full' style={{ overflowX: 'hidden', maxWidth: '100%' }}>
             <p className='text-sm font-semibold mb-2'>
               {deadline ? 'Update Deadline' : 'Set Deadline'}
             </p>
