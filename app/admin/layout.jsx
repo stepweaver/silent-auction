@@ -1,3 +1,5 @@
+import AdminNav from '@/components/AdminNav';
+
 export const metadata = {
   title: 'Admin Dashboard',
   description:
@@ -19,7 +21,10 @@ export const metadata = {
 export default function AdminLayout({ children }) {
   return (
     <div className='px-4 py-5 sm:px-6 lg:px-8'>
-      <div className='mx-auto w-full max-w-5xl'>{children}</div>
+      <div className='mx-auto w-full max-w-5xl'>
+        <AdminNav />
+        {children}
+      </div>
     </div>
   );
 }
