@@ -96,6 +96,33 @@ input, textarea, select {
   font-size: 16px; /* Prevents zoom on iOS */
 }
 
+/* Ensure date/time input icons are visible */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  position: relative;
+  padding-right: 2.5rem; /* Make room for native icons */
+}
+
+/* Ensure native date/time picker icons are visible */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0.5rem;
+  cursor: pointer;
+  opacity: 1;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Firefox date/time input styling */
+input[type="date"]::-moz-calendar-picker-indicator,
+input[type="time"]::-moz-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+}
+
 /* Global focus styles */
 :focus-visible {
   outline: 3px solid var(--primary-500);

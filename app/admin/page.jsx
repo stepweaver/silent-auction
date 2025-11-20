@@ -70,7 +70,7 @@ function SetDeadline({ onSet, currentDeadline }) {
   return (
     <form onSubmit={handleSetDeadline} className='space-y-2'>
       <div className='flex flex-col sm:flex-row gap-2 sm:items-end'>
-        <div className='flex-1'>
+        <div className='flex-1 min-w-0'>
           <label className='block text-xs font-semibold text-yellow-900 mb-1'>
             Date
           </label>
@@ -78,12 +78,13 @@ function SetDeadline({ onSet, currentDeadline }) {
             type='date'
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className='border rounded px-2 py-1.5 text-sm w-full'
+            className='border rounded pl-2 pr-10 py-1.5 text-sm w-full box-border max-w-full'
+            style={{ boxSizing: 'border-box' }}
             required
             disabled={isSubmitting}
           />
         </div>
-        <div className='flex-1'>
+        <div className='flex-1 min-w-0'>
           <label className='block text-xs font-semibold text-yellow-900 mb-1'>
             Time
           </label>
@@ -91,14 +92,15 @@ function SetDeadline({ onSet, currentDeadline }) {
             type='time'
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className='border rounded px-2 py-1.5 text-sm w-full'
+            className='border rounded pl-2 pr-10 py-1.5 text-sm w-full box-border max-w-full'
+            style={{ boxSizing: 'border-box' }}
             required
             disabled={isSubmitting}
           />
         </div>
         <button
           type='submit'
-          className='px-3 py-1.5 sm:py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50 whitespace-nowrap'
+          className='px-3 py-1.5 sm:py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50 whitespace-nowrap shrink-0'
           disabled={isSubmitting}
         >
           Set
@@ -275,7 +277,7 @@ export default function AdminDashboard() {
           )}
         </div>
         <div className='mt-3 space-y-2'>
-          <div className='p-2 sm:p-3 bg-white border rounded'>
+          <div className='p-2 sm:p-3 bg-white border rounded overflow-hidden'>
             <p className='text-sm font-semibold mb-2'>
               {deadline ? 'Update Deadline' : 'Set Deadline'}
             </p>
