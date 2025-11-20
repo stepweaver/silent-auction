@@ -111,6 +111,7 @@ export default function SiteHeader() {
             </Link>
             <Link
               href='/admin'
+              prefetch={false}
               aria-current={isActive('/admin') ? 'page' : undefined}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive('/admin')
@@ -255,28 +256,29 @@ export default function SiteHeader() {
               >
                 How to Bid
               </Link>
-              <Link
-                href='/admin'
-                aria-current={isActive('/admin') ? 'page' : undefined}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors active:opacity-85 touch-manipulation ${
-                  isActive('/admin')
-                    ? 'text-white'
-                    : 'text-gray-700 active:bg-gray-100'
-                }`}
-                style={
-                  isActive('/admin')
-                    ? {
-                        backgroundColor: 'var(--primary-500)',
-                        minHeight: '48px',
-                      }
-                    : {
-                        minHeight: '48px',
-                      }
-                }
-              >
-                Admin
-              </Link>
+            <Link
+              href='/admin'
+              prefetch={false}
+              aria-current={isActive('/admin') ? 'page' : undefined}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-4 py-3 rounded-md text-base font-medium transition-colors active:opacity-85 touch-manipulation ${
+                isActive('/admin')
+                  ? 'text-white'
+                  : 'text-gray-700 active:bg-gray-100'
+              }`}
+              style={
+                isActive('/admin')
+                  ? {
+                      backgroundColor: 'var(--primary-500)',
+                      minHeight: '48px',
+                    }
+                  : {
+                      minHeight: '48px',
+                    }
+              }
+            >
+              Admin
+            </Link>
             </div>
           </div>
         )}
