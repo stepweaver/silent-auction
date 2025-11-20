@@ -241,7 +241,28 @@ export async function GET() {
       );
     }
 
-    return Response.json({ ok: true, vendor_admins: vendorAdmins || [] });
+    // Fetch items for each vendor admin
+    const vendorAdminsWithItems = await Promise.all(
+      (vendorAdmins || []).map(async (admin) => {
+        const { data: items, error: itemsError } = await s
+          .from('item_leaders')
+          .select('id, title, slug, current_high_bid, start_price, is_closed')
+          .eq('created_by', admin.id)
+          .order('title', { ascending: true });
+
+        if (itemsError && process.env.NODE_ENV === 'development') {
+          console.error('Error fetching items for vendor admin:', itemsError);
+        }
+
+        return {
+          ...admin,
+          items: items || [],
+          item_count: items?.length || 0,
+        };
+      })
+    );
+
+    return Response.json({ ok: true, vendor_admins: vendorAdminsWithItems });
   } catch (error) {
     // Log error server-side only, don't expose details to client
     if (process.env.NODE_ENV === 'development') {

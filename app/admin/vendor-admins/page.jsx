@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { formatDollar } from '@/lib/money';
 
 export default function VendorAdminsPage() {
   const [vendorAdmins, setVendorAdmins] = useState([]);
@@ -11,6 +12,7 @@ export default function VendorAdminsPage() {
   const [form, setForm] = useState({ email: '', name: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [enrollmentLink, setEnrollmentLink] = useState(null);
+  const [expandedDonors, setExpandedDonors] = useState(new Set());
 
   async function load() {
     try {
@@ -100,6 +102,18 @@ export default function VendorAdminsPage() {
         setMsg(originalMsg);
       }, 2000);
     }
+  }
+
+  function toggleDonorItems(donorId) {
+    setExpandedDonors(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(donorId)) {
+        newSet.delete(donorId);
+      } else {
+        newSet.add(donorId);
+      }
+      return newSet;
+    });
   }
 
   if (loading) {
@@ -213,39 +227,175 @@ export default function VendorAdminsPage() {
         <>
           {/* Mobile: Card View */}
           <div className="block md:hidden space-y-3">
-            {vendorAdmins.map((admin) => (
-              <div key={admin.id} className="border rounded-lg p-3 bg-white">
-                <h3 className="font-semibold text-sm mb-1">{admin.name}</h3>
-                <p className="text-xs text-gray-600 break-all mb-1">{admin.email}</p>
-                <p className="text-xs text-gray-500">
-                  Created: {new Date(admin.created_at).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+            {vendorAdmins.map((admin) => {
+              const isExpanded = expandedDonors.has(admin.id);
+              const items = admin.items || [];
+              const itemCount = admin.item_count || 0;
+              
+              return (
+                <div key={admin.id} className="border rounded-lg bg-white overflow-hidden">
+                  <div className="p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-sm mb-1">{admin.name}</h3>
+                        <p className="text-xs text-gray-600 break-all mb-1">{admin.email}</p>
+                        <p className="text-xs text-gray-500">
+                          Created: {new Date(admin.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {itemCount > 0 && (
+                        <button
+                          onClick={() => toggleDonorItems(admin.id)}
+                          className="ml-2 px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          {isExpanded ? 'Hide' : `Show ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
+                        </button>
+                      )}
+                    </div>
+                    {itemCount === 0 && (
+                      <p className="text-xs text-gray-500 italic">No items yet</p>
+                    )}
+                  </div>
+                  
+                  {isExpanded && items.length > 0 && (
+                    <div className="border-t bg-gray-50 p-3 space-y-2">
+                      <h4 className="text-xs font-semibold text-gray-700 mb-2">Items ({itemCount}):</h4>
+                      {items.map((item) => {
+                        const current = Number(item.current_high_bid ?? item.start_price);
+                        return (
+                          <div key={item.id} className="bg-white border rounded p-2">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <Link
+                                  href={`/admin/items/${item.id}`}
+                                  className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline block truncate"
+                                >
+                                  {item.title}
+                                </Link>
+                                <p className="text-xs text-gray-500 font-mono truncate mt-0.5">{item.slug}</p>
+                                <p className="text-xs text-gray-600 mt-1">
+                                  Current: <span className="font-semibold text-green-600">{formatDollar(current)}</span>
+                                </p>
+                              </div>
+                              <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-semibold ${
+                                item.is_closed 
+                                  ? 'bg-red-100 text-red-700' 
+                                  : 'bg-green-100 text-green-700'
+                              }`}>
+                                {item.is_closed ? 'Closed' : 'Open'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Desktop: Table View */}
-          <div className="hidden md:block overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
-            <table className="w-full border-collapse border">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2 text-left text-sm">Name</th>
-                  <th className="border p-2 text-left text-sm">Email</th>
-                  <th className="border p-2 text-left text-sm">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vendorAdmins.map((admin) => (
-                  <tr key={admin.id}>
-                    <td className="border p-2 text-sm">{admin.name}</td>
-                    <td className="border p-2 text-sm break-all">{admin.email}</td>
-                    <td className="border p-2 text-sm">
-                      {new Date(admin.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="hidden md:block space-y-4">
+            {vendorAdmins.map((admin) => {
+              const isExpanded = expandedDonors.has(admin.id);
+              const items = admin.items || [];
+              const itemCount = admin.item_count || 0;
+              
+              return (
+                <div key={admin.id} className="border rounded-lg bg-white overflow-hidden">
+                  <div className="border-b">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="p-3 text-left text-sm font-semibold">Name</th>
+                          <th className="p-3 text-left text-sm font-semibold">Email</th>
+                          <th className="p-3 text-left text-sm font-semibold">Created</th>
+                          <th className="p-3 text-left text-sm font-semibold">Items</th>
+                          <th className="p-3 text-left text-sm font-semibold w-24"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="p-3 text-sm font-medium">{admin.name}</td>
+                          <td className="p-3 text-sm break-all">{admin.email}</td>
+                          <td className="p-3 text-sm">
+                            {new Date(admin.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="p-3 text-sm">
+                            {itemCount > 0 ? (
+                              <span className="font-semibold">{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+                            ) : (
+                              <span className="text-gray-400 italic">No items</span>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            {itemCount > 0 && (
+                              <button
+                                onClick={() => toggleDonorItems(admin.id)}
+                                className="text-xs font-medium text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+                              >
+                                {isExpanded ? 'Hide Items' : 'Show Items'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {isExpanded && items.length > 0 && (
+                    <div className="p-4 bg-gray-50">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3">Items ({itemCount}):</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className="bg-white border-b">
+                              <th className="p-2 text-left text-xs font-semibold text-gray-600">Title</th>
+                              <th className="p-2 text-left text-xs font-semibold text-gray-600">Slug</th>
+                              <th className="p-2 text-left text-xs font-semibold text-gray-600">Current High</th>
+                              <th className="p-2 text-left text-xs font-semibold text-gray-600">Status</th>
+                              <th className="p-2 text-left text-xs font-semibold text-gray-600">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {items.map((item) => {
+                              const current = Number(item.current_high_bid ?? item.start_price);
+                              return (
+                                <tr key={item.id} className="bg-white border-b hover:bg-gray-50">
+                                  <td className="p-2 text-sm">{item.title}</td>
+                                  <td className="p-2 text-xs font-mono text-gray-600">{item.slug}</td>
+                                  <td className="p-2 text-sm">
+                                    <span className="font-semibold text-green-600">{formatDollar(current)}</span>
+                                  </td>
+                                  <td className="p-2">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                      item.is_closed 
+                                        ? 'bg-red-100 text-red-700' 
+                                        : 'bg-green-100 text-green-700'
+                                    }`}>
+                                      {item.is_closed ? 'Closed' : 'Open'}
+                                    </span>
+                                  </td>
+                                  <td className="p-2">
+                                    <Link
+                                      href={`/admin/items/${item.id}`}
+                                      className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                    >
+                                      Edit
+                                    </Link>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </>
       )}
