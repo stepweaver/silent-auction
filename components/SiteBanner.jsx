@@ -1,18 +1,76 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { supabaseBrowser } from '@/lib/supabaseClient';
 
 export default function SiteBanner({ deadlineISO = null }) {
   const [now, setNow] = useState(null);
+  const [deadlineISOState, setDeadlineISOState] = useState(deadlineISO);
+
+  // Fetch deadline from database on mount and subscribe to real-time updates
+  useEffect(() => {
+    const s = supabaseBrowser();
+
+    // Initial fetch
+    async function fetchDeadline() {
+      try {
+        const { data, error } = await s
+          .from('settings')
+          .select('auction_deadline')
+          .eq('id', 1)
+          .maybeSingle();
+
+        if (!error && data?.auction_deadline) {
+          setDeadlineISOState(data.auction_deadline);
+        }
+      } catch (err) {
+        console.error('Error fetching deadline:', err);
+      }
+    }
+
+    fetchDeadline();
+
+    // Subscribe to real-time updates on settings table
+    // Note: Real-time must be enabled for the 'settings' table in Supabase
+    // (Database → Tables → settings → Enable Realtime toggle)
+    const channel = s
+      .channel('rt-settings')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'settings',
+          filter: 'id=eq.1',
+        },
+        (payload) => {
+          if (payload.new?.auction_deadline) {
+            setDeadlineISOState(payload.new.auction_deadline);
+          }
+        }
+      )
+      .subscribe();
+
+    // Fallback: Poll every 30 seconds as backup if real-time isn't enabled
+    // This ensures the banner updates even without real-time subscriptions
+    const pollInterval = setInterval(() => {
+      fetchDeadline();
+    }, 30000);
+
+    return () => {
+      s.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
+  }, []);
 
   const deadline = useMemo(() => {
-    if (!deadlineISO) {
+    if (!deadlineISOState) {
       return null;
     }
 
-    const parsed = new Date(deadlineISO);
+    const parsed = new Date(deadlineISOState);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }, [deadlineISO]);
+  }, [deadlineISOState]);
 
   useEffect(() => {
     if (!deadline) {
