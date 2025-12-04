@@ -22,6 +22,7 @@ export default function CatalogPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const s = supabaseBrowser();
 
   // Check enrollment status
@@ -113,6 +114,62 @@ export default function CatalogPage() {
           </div>
         </div>
       </section>
+
+      {/* Category Filters */}
+      {items.length > 0 && (() => {
+        // Get all unique categories from items
+        const allCategories = Array.from(new Set(items.map(item => item.category || 'Other')));
+        const availableCategories = CATEGORIES.filter(cat => allCategories.includes(cat))
+          .concat(allCategories.filter(cat => !CATEGORIES.includes(cat)).sort());
+
+        if (availableCategories.length <= 1) return null;
+
+        return (
+          <section className="mb-4">
+            <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="px-4 py-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span className="text-sm font-semibold text-gray-700 mr-1">Filter by category:</span>
+                  <button
+                    onClick={() => setSelectedCategories([])}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      selectedCategories.length === 0
+                        ? 'text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    style={selectedCategories.length === 0 ? { backgroundColor: 'var(--primary-500)' } : {}}
+                  >
+                    All
+                  </button>
+                  {availableCategories.map((category) => {
+                    const isSelected = selectedCategories.includes(category);
+                    return (
+                      <button
+                        key={category}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedCategories(selectedCategories.filter(c => c !== category));
+                          } else {
+                            setSelectedCategories([...selectedCategories, category]);
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                          isSelected
+                            ? 'text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                        style={isSelected ? { backgroundColor: 'var(--primary-500)' } : {}}
+                      >
+                        {category}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
       {items.length === 0 ? (
         <div className="bg-white rounded-xl shadow-xl border border-gray-200">
           <div className="px-4 py-12 text-center">
@@ -133,12 +190,17 @@ export default function CatalogPage() {
             });
 
             // Sort categories: defined categories first, then others alphabetically
-            const sortedCategories = [
+            let sortedCategories = [
               ...CATEGORIES.filter((cat) => groupedItems[cat]?.length > 0),
               ...Object.keys(groupedItems)
                 .filter((cat) => !CATEGORIES.includes(cat))
                 .sort(),
             ];
+
+            // Filter categories based on selected filters
+            if (selectedCategories.length > 0) {
+              sortedCategories = sortedCategories.filter(cat => selectedCategories.includes(cat));
+            }
 
             return sortedCategories.map((category) => (
               <div key={category} className="space-y-4">
