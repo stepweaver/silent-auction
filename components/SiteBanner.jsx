@@ -6,6 +6,7 @@ import { supabaseBrowser } from '@/lib/supabaseClient';
 export default function SiteBanner({ deadlineISO = null }) {
   const [now, setNow] = useState(null);
   const [deadlineISOState, setDeadlineISOState] = useState(deadlineISO);
+  const [auctionClosed, setAuctionClosed] = useState(false);
 
   // Fetch deadline from database on mount and subscribe to real-time updates
   useEffect(() => {
@@ -16,12 +17,15 @@ export default function SiteBanner({ deadlineISO = null }) {
       try {
         const { data, error } = await s
           .from('settings')
-          .select('auction_deadline')
+          .select('auction_deadline, auction_closed')
           .eq('id', 1)
           .maybeSingle();
 
-        if (!error && data?.auction_deadline) {
-          setDeadlineISOState(data.auction_deadline);
+        if (!error) {
+          if (data?.auction_deadline) {
+            setDeadlineISOState(data.auction_deadline);
+          }
+          setAuctionClosed(data?.auction_closed || false);
         }
       } catch (err) {
         console.error('Error fetching deadline:', err);
@@ -46,6 +50,9 @@ export default function SiteBanner({ deadlineISO = null }) {
         (payload) => {
           if (payload.new?.auction_deadline) {
             setDeadlineISOState(payload.new.auction_deadline);
+          }
+          if (payload.new?.auction_closed !== undefined) {
+            setAuctionClosed(payload.new.auction_closed);
           }
         }
       )
@@ -95,6 +102,25 @@ export default function SiteBanner({ deadlineISO = null }) {
 
     return () => window.clearInterval(intervalId);
   }, [deadline]);
+
+  // If auction is manually closed, show closed message
+  if (auctionClosed) {
+    return (
+      <section className='no-print px-3 sm:px-4 mt-3 sm:mt-4' aria-live='polite'>
+        <div className='max-w-5xl mx-auto'>
+          <div
+            className='flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium shadow-sm border-amber-200/70 bg-amber-50 text-amber-900'
+            role='status'
+          >
+            <span className='inline-flex items-center rounded-full px-2 py-0.5 text-[11px] sm:text-xs font-semibold tracking-wide bg-amber-100 text-amber-900'>
+              Auction Closed
+            </span>
+            <span className='flex-1 min-w-0 whitespace-nowrap'>The auction has been closed.</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!deadline) {
     return null;

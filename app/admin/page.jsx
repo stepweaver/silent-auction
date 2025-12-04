@@ -210,6 +210,42 @@ export default function AdminDashboard() {
     }
   }
 
+  async function toggleAuctionStatus() {
+    const newStatus = !settings?.auction_closed;
+    const action = newStatus ? 'close' : 'open';
+    
+    const confirmMessage = newStatus 
+      ? 'Close the auction? This will close all items and send winner emails.'
+      : 'Open the auction? This will allow bidding to resume.';
+    
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      const res = await fetch('/api/admin/toggle-auction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auction_closed: newStatus,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (newStatus && data.closeResult) {
+          const { emailsSent, adminEmailsSent } = data.closeResult;
+          setMsg(`Auction closed successfully. ${emailsSent} winner email(s) and ${adminEmailsSent} admin email(s) sent.`);
+        } else {
+          setMsg(`Auction ${newStatus ? 'closed' : 'opened'} successfully`);
+        }
+        await load();
+      } else {
+        setMsg(`Error ${action === 'close' ? 'closing' : 'opening'} auction`);
+      }
+    } catch (err) {
+      setMsg(`Error ${action === 'close' ? 'closing' : 'opening'} auction`);
+    }
+  }
+
   if (loading) {
     return (
       <div className='flex items-center justify-center py-12'>
@@ -228,7 +264,9 @@ export default function AdminDashboard() {
       ? items.filter((item) => !item.is_closed).length
       : 0;
   const now = new Date();
-  const closed = allClosed || (deadline ? now >= deadline : false);
+  const deadlinePassed = deadline ? now >= deadline : false;
+  // auction_closed is the primary control - if it's false, auction is open
+  const closed = settings?.auction_closed || deadlinePassed;
 
   return (
     <div>
@@ -260,7 +298,10 @@ export default function AdminDashboard() {
             <b>Status:</b>{' '}
             {closed ? (
               <span className='text-red-600 font-semibold'>
-                CLOSED ({allClosed ? 'all items closed' : 'deadline passed'})
+                CLOSED{' '}
+                {settings?.auction_closed
+                  ? '(manually closed)'
+                  : '(deadline passed)'}
               </span>
             ) : (
               <span className='text-green-600 font-semibold'>OPEN</span>
@@ -297,6 +338,18 @@ export default function AdminDashboard() {
             />
           </div>
           <div className='flex flex-col sm:flex-row gap-2'>
+            <button
+              onClick={toggleAuctionStatus}
+              className={`px-3 py-2 sm:py-1.5 rounded text-sm font-semibold ${
+                settings?.auction_closed
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              }`}
+            >
+              {settings?.auction_closed
+                ? 'Open Auction'
+                : 'Close Auction'}
+            </button>
             {deadline && (
               <button
                 onClick={extendDeadline}

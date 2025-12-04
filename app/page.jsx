@@ -28,16 +28,17 @@ export default function CatalogPage() {
 
   async function load() {
     try {
-      // Get settings to check deadline
+      // Get settings to check deadline and auction_closed
       const { data: settings } = await s
         .from('settings')
-        .select('auction_deadline')
+        .select('auction_deadline, auction_closed')
         .eq('id', 1)
         .maybeSingle();
       
       const deadline = settings?.auction_deadline ? new Date(settings.auction_deadline) : null;
       const now = new Date();
       const deadlinePassed = deadline && now >= deadline;
+      const auctionManuallyClosed = settings?.auction_closed || false;
 
       const { data, error } = await s
         .from('item_leaders')
@@ -45,10 +46,11 @@ export default function CatalogPage() {
         .order('title', { ascending: true });
       if (error) throw error;
       
-      // Mark items as closed if deadline passed
+      // Mark items as closed if auction is manually closed or deadline passed
+      // If auction is open, show items based on their actual status
       const itemsWithDeadline = (data || []).map(item => ({
         ...item,
-        is_closed: item.is_closed || deadlinePassed,
+        is_closed: auctionManuallyClosed || deadlinePassed || item.is_closed,
       }));
       
       setItems(itemsWithDeadline);

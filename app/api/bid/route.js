@@ -85,6 +85,11 @@ export async function POST(req) {
     const now = new Date();
     const deadline = settings?.auction_deadline ? new Date(settings.auction_deadline) : null;
 
+    // Check if auction is manually closed
+    if (settings?.auction_closed) {
+      return new Response('Bidding closed - auction is manually closed', { status: 400 });
+    }
+
     if (deadline && now >= deadline) {
       return new Response('Bidding closed - deadline passed', { status: 400 });
     }

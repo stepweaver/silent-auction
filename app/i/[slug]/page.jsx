@@ -209,7 +209,9 @@ export default function ItemPage({ params }) {
 
   const now = new Date();
   const deadline = settings?.auction_deadline ? new Date(settings.auction_deadline) : null;
-  const closed = item.is_closed || (deadline && now >= deadline);
+  const deadlinePassed = deadline && now >= deadline;
+  // auction_closed is the primary control - if auction is open, check item status
+  const closed = settings?.auction_closed || deadlinePassed || item.is_closed;
 
   const current = Number(item.current_high_bid ?? item.start_price);
   const hasBids = Array.isArray(bids) && bids.length > 0;
