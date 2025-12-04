@@ -80,6 +80,11 @@ export async function POST(req) {
       min_increment: 1, // Fixed at $1 for all items
       is_closed: data.is_closed || false,
     };
+    
+    // Only include category if it's provided and not empty
+    if (data.category && data.category.trim()) {
+      insertData.category = data.category.trim();
+    }
 
     // If vendor admin, set created_by
     if (vendorAdminId && !isSuperAdmin) {

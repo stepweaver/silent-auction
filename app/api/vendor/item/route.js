@@ -64,18 +64,25 @@ export async function POST(req) {
       }
     }
 
+    const insertData = {
+      title: data.title,
+      slug,
+      description: data.description || null,
+      photo_url: data.photo_url || null,
+      start_price: Number(data.start_price),
+      min_increment: 1, // Fixed at $1 for all items
+      is_closed: data.is_closed || false,
+      created_by: vendorAdminId,
+    };
+    
+    // Only include category if it's provided and not empty
+    if (data.category && data.category.trim()) {
+      insertData.category = data.category.trim();
+    }
+
     const { data: item, error } = await s
       .from('items')
-      .insert({
-        title: data.title,
-        slug,
-        description: data.description || null,
-        photo_url: data.photo_url || null,
-        start_price: Number(data.start_price),
-        min_increment: 1, // Fixed at $1 for all items
-        is_closed: data.is_closed || false,
-        created_by: vendorAdminId,
-      })
+      .insert(insertData)
       .select()
       .single();
 

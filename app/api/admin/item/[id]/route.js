@@ -39,6 +39,10 @@ export async function PATCH(req, { params }) {
     if (body.start_price !== undefined) updateData.start_price = Number(body.start_price);
     // min_increment is fixed at $1, not editable
     if (body.is_closed !== undefined) updateData.is_closed = Boolean(body.is_closed);
+    // Only include category if it's a non-empty string (skip if empty to avoid errors if column doesn't exist yet)
+    if (body.category !== undefined && body.category && body.category.trim()) {
+      updateData.category = body.category.trim();
+    }
 
     // Validate with partial schema
     const partialSchema = ItemSchema.partial();
@@ -72,12 +76,31 @@ export async function PATCH(req, { params }) {
       }
     }
 
-    const { data: item, error } = await s
+    let { data: item, error } = await s
       .from('items')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
+
+    // If error is about missing column (category), retry without it
+    if (error && error.message && error.message.includes('column') && error.message.includes('category')) {
+      // Remove category from update and retry
+      const { category, ...updateDataWithoutCategory } = updateData;
+      const retryResult = await s
+        .from('items')
+        .update(updateDataWithoutCategory)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (retryResult.error) {
+        error = retryResult.error;
+      } else {
+        item = retryResult.data;
+        error = null;
+      }
+    }
 
     if (error) {
       // Log error server-side only, don't expose details to client

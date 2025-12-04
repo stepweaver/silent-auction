@@ -9,6 +9,15 @@ import Field from '@/components/Field';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
 
+const CATEGORIES = [
+  'Sports',
+  'Restaurants',
+  'Family Fun',
+  'Services',
+  'Memberships',
+  'Other',
+];
+
 export default function EditItemPage({ params }) {
   const router = useRouter();
   const s = supabaseBrowser();
@@ -21,6 +30,7 @@ export default function EditItemPage({ params }) {
     photo_url: '',
     start_price: '0',
     is_closed: false,
+    category: '',
   });
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
@@ -48,6 +58,7 @@ export default function EditItemPage({ params }) {
         photo_url: data.photo_url || '',
         start_price: String(data.start_price || 0),
         is_closed: data.is_closed || false,
+        category: data.category || '',
       });
       setPhotoFile(null);
       setPhotoPreview('');
@@ -274,6 +285,22 @@ export default function EditItemPage({ params }) {
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               disabled={isSubmitting}
             />
+          </Field>
+
+          <Field label="Category">
+            <select
+              className="border rounded px-3 py-2 w-full"
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+              disabled={isSubmitting}
+            >
+              <option value="">Select a category...</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
           </Field>
 
           <Field label="Photo">

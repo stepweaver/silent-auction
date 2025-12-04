@@ -9,6 +9,15 @@ import Field from '@/components/Field';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
 
+const CATEGORIES = [
+  'Sports',
+  'Restaurants',
+  'Family Fun',
+  'Services',
+  'Memberships',
+  'Other',
+];
+
 export default function VendorEditItemPage({ params }) {
   const router = useRouter();
   const s = supabaseBrowser();
@@ -22,6 +31,7 @@ export default function VendorEditItemPage({ params }) {
     photo_url: '',
     start_price: '0',
     is_closed: false,
+    category: '',
   });
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
@@ -70,6 +80,7 @@ export default function VendorEditItemPage({ params }) {
         photo_url: data.photo_url || '',
         start_price: String(data.start_price || 0),
         is_closed: data.is_closed || false,
+        category: data.category || '',
       });
       setPhotoFile(null);
       setPhotoPreview('');
@@ -347,6 +358,33 @@ export default function VendorEditItemPage({ params }) {
                       onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                       disabled={isSubmitting}
                     />
+                  </Field>
+
+                  <Field label="Category">
+                    <select
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm sm:text-base"
+                      style={{
+                        borderColor: 'rgb(229 231 235)'
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--primary-500)';
+                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = 'rgb(229 231 235)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                      value={form.category}
+                      onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                      disabled={isSubmitting}
+                    >
+                      <option value="">Select a category...</option>
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
                   </Field>
 
                   <Field label="Photo">

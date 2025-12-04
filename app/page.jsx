@@ -7,6 +7,16 @@ import ItemCard from '@/components/ItemCard';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 
+// Placeholder categories - can be updated later
+const CATEGORIES = [
+  'Sports',
+  'Restaurants',
+  'Family Fun',
+  'Services',
+  'Memberships',
+  'Other',
+];
+
 export default function CatalogPage() {
   const router = useRouter();
   const [items, setItems] = useState([]);
@@ -67,8 +77,11 @@ export default function CatalogPage() {
     load();
 
     const channel = s
-      .channel('rt-bids')
+      .channel('rt-catalog')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bids' }, () => {
+        load();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, () => {
         load();
       })
       .subscribe();
@@ -107,10 +120,50 @@ export default function CatalogPage() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-3 xl:grid-cols-2 2xl:grid-cols-3">
-          {items.map((item, index) => (
-            <ItemCard key={item.id} item={item} priority={index === 0} />
-          ))}
+        <div className="space-y-8">
+          {(() => {
+            // Group items by category
+            const groupedItems = {};
+            items.forEach((item) => {
+              const category = item.category || 'Other';
+              if (!groupedItems[category]) {
+                groupedItems[category] = [];
+              }
+              groupedItems[category].push(item);
+            });
+
+            // Sort categories: defined categories first, then others alphabetically
+            const sortedCategories = [
+              ...CATEGORIES.filter((cat) => groupedItems[cat]?.length > 0),
+              ...Object.keys(groupedItems)
+                .filter((cat) => !CATEGORIES.includes(cat))
+                .sort(),
+            ];
+
+            return sortedCategories.map((category) => (
+              <div key={category} className="space-y-4">
+                <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+                  <div className="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 whitespace-nowrap overflow-hidden" style={{ color: 'var(--primary-500)' }}>
+                      {category}
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-600">
+                      {groupedItems[category].length} {groupedItems[category].length === 1 ? 'item' : 'items'}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-3 xl:grid-cols-2 2xl:grid-cols-3">
+                  {groupedItems[category].map((item, index) => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      priority={index === 0 && category === sortedCategories[0]}
+                    />
+                  ))}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       )}
     </main>
