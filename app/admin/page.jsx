@@ -191,25 +191,6 @@ export default function AdminDashboard() {
     }
   }
 
-  async function closeAll() {
-    if (!confirm('Close all items? This cannot be undone.')) return;
-
-    try {
-      const res = await fetch('/api/admin/close-all', {
-        method: 'POST',
-      });
-
-      if (res.ok) {
-        setMsg('All items closed');
-        await load();
-      } else {
-        setMsg('Error closing items');
-      }
-    } catch (err) {
-      setMsg('Error closing items');
-    }
-  }
-
   async function toggleAuctionStatus() {
     const newStatus = !settings?.auction_closed;
     const action = newStatus ? 'close' : 'open';
@@ -310,15 +291,15 @@ export default function AdminDashboard() {
           {!closed && deadline && (
             <p className='text-xs text-gray-600'>
               {openCount === 1
-                ? '1 item still open. Remember to use “Close all items now” when the deadline passes.'
-                : `${openCount} items still open. Remember to use “Close all items now” when the deadline passes.`}
+                ? '1 item still open. Use "Close Auction" when the deadline passes.'
+                : `${openCount} items still open. Use "Close Auction" when the deadline passes.`}
             </p>
           )}
           {closed && (
             <p className='text-xs text-gray-600'>
               {openCount === 0
                 ? 'All catalog items are now closed and winner emails were sent to qualifying bidders.'
-                : `${openCount} items remain open; run “Close all items now” again after resolving them.`}
+                : `${openCount} items remain open.`}
             </p>
           )}
           {settings?.contact_email && (
@@ -358,12 +339,6 @@ export default function AdminDashboard() {
                 Extend deadline +15m
               </button>
             )}
-            <button
-              onClick={closeAll}
-              className='px-3 py-2 sm:py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm'
-            >
-              Close all items now
-            </button>
           </div>
         </div>
       </div>
