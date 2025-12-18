@@ -123,7 +123,7 @@ export async function POST(req) {
     // Require existing user alias with email and name
     const { data: existingAlias, error: aliasError } = await s
       .from('user_aliases')
-      .select('id, email, name')
+      .select('id, email, name, email_bid_confirmations')
       .eq('email', email)
       .maybeSingle();
 
@@ -158,6 +158,16 @@ export async function POST(req) {
 
     const aliasId = existingAlias.id;
 
+    // Check if this is user's first bid on this item (before inserting)
+    const { data: previousBids } = await s
+      .from('bids')
+      .select('id')
+      .eq('item_id', item.id)
+      .eq('email', email)
+      .limit(1);
+
+    const isInitialBid = !previousBids || previousBids.length === 0;
+
     // Insert bid
     const { error: insertError } = await s.from('bids').insert({
       item_id: item.id,
@@ -175,28 +185,27 @@ export async function POST(req) {
       return new Response('Failed to place bid', { status: 500 });
     }
 
-    const itemUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/i/${item.slug}`;
-
-    // Send bid confirmation email (await to ensure it fires reliably)
-    const { sendBidConfirmation } = await import('@/lib/notifications');
-    try {
-      await sendBidConfirmation({
-        email,
-        bidderName: bidder_name,
-        itemTitle: item.title,
-        bidAmount: Number(amount),
-        itemUrl,
-        contactEmail: settings?.contact_email || process.env.AUCTION_CONTACT_EMAIL || null,
-      });
-    } catch (e) {
-      // Log error server-side only, don't expose details to client
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Confirmation email error:', e);
+    // Send email only if user opted in AND this is their initial bid on this item
+    if (existingAlias?.email_bid_confirmations === true && isInitialBid) {
+      const itemUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/i/${item.slug}`;
+      const { sendBidConfirmation } = await import('@/lib/notifications');
+      try {
+        await sendBidConfirmation({
+          email,
+          bidderName: bidder_name,
+          itemTitle: item.title,
+          bidAmount: Number(amount),
+          itemUrl,
+          contactEmail: settings?.contact_email || process.env.AUCTION_CONTACT_EMAIL || null,
+        });
+      } catch (e) {
+        // Log error server-side only, don't expose details to client
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Initial bid confirmation email error:', e);
+        }
+        // Continue even if email fails - bid was already placed
       }
-      // Continue even if email fails - bid was already placed
     }
-
-    // Outbid SMS notifications removed for free tier (email-only)
 
     const nextMinAfterBid = Number(amount) + minIncrement;
     return Response.json({

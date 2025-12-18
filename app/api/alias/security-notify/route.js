@@ -1,5 +1,6 @@
 import { sendAliasAccessNotification } from '@/lib/notifications';
 import { supabaseServer } from '@/lib/serverSupabase';
+import { extractIPFromRequest, isSignificantlyDifferentIP } from '@/lib/ipUtils';
 
 export async function POST(req) {
   try {
@@ -14,6 +15,9 @@ export async function POST(req) {
     }
 
     const s = supabaseServer();
+
+    // Extract current IP from request
+    const currentIP = extractIPFromRequest(req);
 
     // Get user's alias
     const { data: alias, error } = await s
@@ -35,6 +39,25 @@ export async function POST(req) {
       return Response.json({ sent: false });
     }
 
+    // Check if IP is significantly different
+    const lastKnownIP = alias.last_known_ip;
+    if (!isSignificantlyDifferentIP(lastKnownIP, currentIP)) {
+      // Same location, no need to alert
+      return Response.json({ sent: false, reason: 'same_location' });
+    }
+
+    // Check cooldown: max 1 security notification per week per user
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    if (alias.last_security_notification_sent) {
+      const lastSent = new Date(alias.last_security_notification_sent);
+      if (lastSent > oneWeekAgo) {
+        // Within cooldown period, skip sending
+        return Response.json({ sent: false, reason: 'cooldown' });
+      }
+    }
+
     // Get settings for contact email and site URL
     const { data: settings } = await s
       .from('settings')
@@ -51,6 +74,15 @@ export async function POST(req) {
         contactEmail: settings?.contact_email || process.env.AUCTION_CONTACT_EMAIL || null,
         siteUrl,
       });
+
+      // Update last_security_notification_sent timestamp and store current IP
+      await s
+        .from('user_aliases')
+        .update({ 
+          last_security_notification_sent: new Date().toISOString(),
+          last_known_ip: currentIP 
+        })
+        .eq('email', email);
 
       return Response.json({ sent: true });
     } catch (emailError) {

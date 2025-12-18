@@ -20,6 +20,8 @@ export default function DashboardPage() {
   const [bidsLoading, setBidsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [bidsHash, setBidsHash] = useState(null); // Store hash of bids to detect changes
+  const [emailPreference, setEmailPreference] = useState(false);
+  const [updatingPreference, setUpdatingPreference] = useState(false);
 
   useEffect(() => {
     // Check enrollment
@@ -64,6 +66,7 @@ export default function DashboardPage() {
       const data = await response.json();
       if (data.alias) {
         setUserAlias(data.alias);
+        setEmailPreference(data.alias.email_bid_confirmations || false);
       }
     } catch (err) {
       console.error('Error checking alias:', err);
@@ -120,6 +123,37 @@ export default function DashboardPage() {
     // Reload bids after placing a bid
     if (email) {
       loadUserBids(email);
+    }
+  };
+
+  const handleEmailPreferenceChange = async (newValue) => {
+    if (!email) return;
+    
+    setUpdatingPreference(true);
+    try {
+      const response = await fetch('/api/alias/update-email-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          email_bid_confirmations: newValue,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setEmailPreference(data.email_bid_confirmations);
+        // Update userAlias state to reflect the change
+        if (userAlias) {
+          setUserAlias({ ...userAlias, email_bid_confirmations: data.email_bid_confirmations });
+        }
+      } else {
+        console.error('Failed to update email preference:', data.error);
+      }
+    } catch (err) {
+      console.error('Error updating email preference:', err);
+    } finally {
+      setUpdatingPreference(false);
     }
   };
 
@@ -251,6 +285,40 @@ export default function DashboardPage() {
                         <li>Color: <span className="font-semibold">{userAlias.color || 'N/A'}</span></li>
                         <li>Emoji: <span className="font-semibold">{userAlias.animal || 'N/A'}</span></li>
                       </ul>
+                    </div>
+                  </div>
+
+                  {/* Email Preferences */}
+                  <div 
+                    className="rounded-lg p-3 border"
+                    style={{ 
+                      backgroundColor: 'rgba(251, 191, 36, 0.05)',
+                      borderColor: 'rgba(251, 191, 36, 0.2)'
+                    }}
+                  >
+                    <div className="text-xs text-gray-700">
+                      <p className="font-semibold mb-2 text-sm">Email Preferences:</p>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={emailPreference}
+                          onChange={(e) => handleEmailPreferenceChange(e.target.checked)}
+                          disabled={updatingPreference}
+                          className="w-4 h-4 rounded border-gray-300"
+                          style={{ 
+                            accentColor: 'var(--primary-500)',
+                            cursor: updatingPreference ? 'not-allowed' : 'pointer'
+                          }}
+                        />
+                        <span className="text-xs text-gray-700">
+                          {updatingPreference ? 'Updating...' : 'Email me bid confirmations'}
+                        </span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1.5">
+                        {emailPreference 
+                          ? 'You will receive an email after each bid you place.'
+                          : 'Bid confirmations are disabled. You can view your bids in the dashboard.'}
+                      </p>
                     </div>
                   </div>
                 </div>

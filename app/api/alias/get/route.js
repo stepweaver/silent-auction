@@ -1,4 +1,5 @@
 import { supabaseServer } from '@/lib/serverSupabase';
+import { extractIPFromRequest } from '@/lib/ipUtils';
 
 export async function POST(req) {
   try {
@@ -13,6 +14,9 @@ export async function POST(req) {
     }
 
     const s = supabaseServer();
+
+    // Extract current IP from request
+    const currentIP = extractIPFromRequest(req);
 
     // Get user's alias
     const { data: alias, error } = await s
@@ -38,6 +42,23 @@ export async function POST(req) {
 
     if (!alias) {
       return Response.json({ alias: null });
+    }
+
+    // Update last_known_ip if IP is available and different
+    if (currentIP && currentIP !== alias.last_known_ip) {
+      // Update IP asynchronously (don't wait for it)
+      s.from('user_aliases')
+        .update({ last_known_ip: currentIP })
+        .eq('email', email)
+        .then(() => {
+          // Silently succeed
+        })
+        .catch((err) => {
+          // Log but don't fail the request
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Error updating last_known_ip:', err);
+          }
+        });
     }
 
     return Response.json({ alias });
