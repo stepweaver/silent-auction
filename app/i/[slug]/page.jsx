@@ -213,9 +213,11 @@ export default function ItemPage({ params }) {
   // auction_closed is the primary control - if auction is open, check item status
   const closed = settings?.auction_closed || deadlinePassed || item.is_closed;
 
-  const current = Number(item.current_high_bid ?? item.start_price);
   const hasBids = Array.isArray(bids) && bids.length > 0;
-  const nextMin = hasBids ? (current + 1) : Number(item.start_price); // Fixed $1 increment
+  const topBidAmount = hasBids && bids[0] ? Number(bids[0].amount) : null;
+  const current = hasBids && topBidAmount ? topBidAmount : Number(item.start_price);
+  const minIncrement = Number(item.min_increment ?? 1);
+  const nextMin = hasBids ? (current + minIncrement) : Number(item.start_price);
   const winner = bids?.[0];
 
   return (
@@ -262,32 +264,29 @@ export default function ItemPage({ params }) {
 
                 {!closed ? (
                   <>
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                        <div className="text-xs font-semibold text-gray-600 mb-1">Current Bid</div>
-                        <div className="text-2xl font-bold" style={{ color: 'var(--primary-500)' }}>{formatDollar(current)}</div>
+                    {hasBids ? (
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                          <div className="text-xs font-semibold text-gray-600 mb-1">Current Bid</div>
+                          <div className="text-2xl font-bold" style={{ color: 'var(--primary-500)' }}>{formatDollar(current)}</div>
+                        </div>
+                        <div 
+                          className="rounded-lg p-3 border"
+                          style={{ 
+                            backgroundColor: 'rgba(0, 177, 64, 0.05)',
+                            borderColor: 'rgba(0, 177, 64, 0.2)'
+                          }}
+                        >
+                          <div className="text-xs font-semibold text-gray-600 mb-1">Next Minimum</div>
+                          <div className="text-2xl font-bold text-gray-900">{formatDollar(nextMin)}</div>
+                        </div>
                       </div>
-                      <div 
-                        className="rounded-lg p-3 border"
-                        style={{ 
-                          backgroundColor: 'rgba(0, 177, 64, 0.05)',
-                          borderColor: 'rgba(0, 177, 64, 0.2)'
-                        }}
-                      >
-                        <div className="text-xs font-semibold text-gray-600 mb-1">Next Minimum</div>
-                        <div className="text-2xl font-bold text-gray-900">{formatDollar(nextMin)}</div>
-                      </div>
-                    </div>
-                    {!hasBids && (
-                      <div 
-                        className="mt-3 rounded-lg p-3 border text-xs"
-                        style={{ 
-                          backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                          borderColor: 'rgba(59, 130, 246, 0.2)',
-                          color: '#1e40af'
-                        }}
-                      >
-                        Starting bid
+                    ) : (
+                      <div className="mt-4">
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                          <div className="text-xs font-semibold text-gray-600 mb-1">Starting Bid</div>
+                          <div className="text-2xl font-bold" style={{ color: 'var(--primary-500)' }}>{formatDollar(current)}</div>
+                        </div>
                       </div>
                     )}
                     <div className="mt-4">

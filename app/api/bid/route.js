@@ -113,7 +113,8 @@ export async function POST(req) {
 
     const hasBids = topBid && typeof topBid.amount !== 'undefined';
     const current = hasBids ? Number(topBid.amount) : Number(item.start_price);
-    const needed = hasBids ? (Number(current) + 1) : Number(item.start_price); // Fixed $1 increment
+    const minIncrement = Number(item.min_increment ?? 1);
+    const needed = hasBids ? (Number(current) + minIncrement) : Number(item.start_price);
 
     if (Number(amount) < needed) {
       return new Response(`Minimum allowed bid: ${needed.toFixed(2)}`, { status: 400 });
@@ -197,9 +198,10 @@ export async function POST(req) {
 
     // Outbid SMS notifications removed for free tier (email-only)
 
+    const nextMinAfterBid = Number(amount) + minIncrement;
     return Response.json({
       ok: true,
-      next_min: needed + 1, // Fixed $1 increment
+      next_min: nextMinAfterBid,
     });
   } catch (error) {
     // Log error server-side only, don't expose details to client

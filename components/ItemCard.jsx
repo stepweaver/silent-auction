@@ -6,9 +6,9 @@ import { formatDollar } from '@/lib/money';
 
 export default function ItemCard({ item, priority = false }) {
   const current = Number(item.current_high_bid ?? item.start_price);
-  const nextMin = current === Number(item.start_price)
-    ? Number(item.start_price)
-    : current + 1; // Fixed $1 increment
+  const hasBids = item.current_high_bid != null && Number(item.current_high_bid) > Number(item.start_price);
+  const minIncrement = Number(item.min_increment ?? 1);
+  const nextMin = hasBids ? (current + minIncrement) : Number(item.start_price);
   const url = `/i/${item.slug}`;
   
   // Check if item is closed (either manually closed or deadline passed)
@@ -78,22 +78,31 @@ export default function ItemCard({ item, priority = false }) {
             </>
           ) : (
             <>
-              <span className="font-semibold text-gray-700 uppercase tracking-wide">Current</span>
-              <span
-                className="px-2 py-0.5 rounded text-xs font-bold text-white"
-                style={{ backgroundColor: 'var(--primary-500)', color: 'var(--primary-contrast)' }}
-              >
-                {formatDollar(current)}
-              </span>
-              <span className="h-3 w-px bg-gray-300" aria-hidden />
-              <span className="font-semibold text-gray-500 uppercase tracking-wide">Next min</span>
-              <span className="px-2 py-0.5 rounded border border-gray-300 text-xs font-semibold text-gray-700 bg-white">
-                {formatDollar(nextMin)}
-              </span>
-              {current === Number(item.start_price) && (
-                <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-medium text-gray-600 uppercase tracking-wide">
-                  first bid
-                </span>
+              {hasBids ? (
+                <>
+                  <span className="font-semibold text-gray-700 uppercase tracking-wide">Current</span>
+                  <span
+                    className="px-2 py-0.5 rounded text-xs font-bold text-white"
+                    style={{ backgroundColor: 'var(--primary-500)', color: 'var(--primary-contrast)' }}
+                  >
+                    {formatDollar(current)}
+                  </span>
+                  <span className="h-3 w-px bg-gray-300" aria-hidden />
+                  <span className="font-semibold text-gray-500 uppercase tracking-wide">Next min</span>
+                  <span className="px-2 py-0.5 rounded border border-gray-300 text-xs font-semibold text-gray-700 bg-white">
+                    {formatDollar(nextMin)}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold text-gray-700 uppercase tracking-wide">Starting</span>
+                  <span
+                    className="px-2 py-0.5 rounded text-xs font-bold text-white"
+                    style={{ backgroundColor: 'var(--primary-500)', color: 'var(--primary-contrast)' }}
+                  >
+                    {formatDollar(current)}
+                  </span>
+                </>
               )}
             </>
           )}

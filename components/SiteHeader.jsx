@@ -50,21 +50,24 @@ export default function SiteHeader() {
               aria-current={
                 isActive('/') &&
                 pathname !== '/avatar' &&
-                pathname !== '/how-to-bid'
+                pathname !== '/how-to-bid' &&
+                pathname !== '/leaderboard'
                   ? 'page'
                   : undefined
               }
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive('/') &&
                 pathname !== '/avatar' &&
-                pathname !== '/how-to-bid'
+                pathname !== '/how-to-bid' &&
+                pathname !== '/leaderboard'
                   ? 'text-white'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
               style={
                 isActive('/') &&
                 pathname !== '/avatar' &&
-                pathname !== '/how-to-bid'
+                pathname !== '/how-to-bid' &&
+                pathname !== '/leaderboard'
                   ? {
                       backgroundColor: 'var(--primary-500)',
                     }
@@ -108,6 +111,24 @@ export default function SiteHeader() {
               }
             >
               How to Bid
+            </Link>
+            <Link
+              href='/leaderboard'
+              aria-current={isActive('/leaderboard') ? 'page' : undefined}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                isActive('/leaderboard')
+                  ? 'text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              style={
+                isActive('/leaderboard')
+                  ? {
+                      backgroundColor: 'var(--primary-500)',
+                    }
+                  : {}
+              }
+            >
+              Leaderboard
             </Link>
             <Link
               href='/admin'
@@ -185,7 +206,8 @@ export default function SiteHeader() {
                 aria-current={
                   isActive('/') &&
                   pathname !== '/avatar' &&
-                  pathname !== '/how-to-bid'
+                  pathname !== '/how-to-bid' &&
+                  pathname !== '/leaderboard'
                     ? 'page'
                     : undefined
                 }
@@ -193,14 +215,16 @@ export default function SiteHeader() {
                 className={`block px-4 py-3 rounded-md text-base font-medium transition-colors mb-1 active:opacity-85 touch-manipulation ${
                   isActive('/') &&
                   pathname !== '/avatar' &&
-                  pathname !== '/how-to-bid'
+                  pathname !== '/how-to-bid' &&
+                  pathname !== '/leaderboard'
                     ? 'text-white'
                     : 'text-gray-700 active:bg-gray-100'
                 }`}
                 style={
                   isActive('/') &&
                   pathname !== '/avatar' &&
-                  pathname !== '/how-to-bid'
+                  pathname !== '/how-to-bid' &&
+                  pathname !== '/leaderboard'
                     ? {
                         backgroundColor: 'var(--primary-500)',
                         minHeight: '48px',
@@ -238,7 +262,7 @@ export default function SiteHeader() {
                 href='/how-to-bid'
                 aria-current={isActive('/how-to-bid') ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors active:opacity-85 touch-manipulation ${
+                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors mb-1 active:opacity-85 touch-manipulation ${
                   isActive('/how-to-bid')
                     ? 'text-white'
                     : 'text-gray-700 active:bg-gray-100'
@@ -255,6 +279,28 @@ export default function SiteHeader() {
                 }
               >
                 How to Bid
+              </Link>
+              <Link
+                href='/leaderboard'
+                aria-current={isActive('/leaderboard') ? 'page' : undefined}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors mb-1 active:opacity-85 touch-manipulation ${
+                  isActive('/leaderboard')
+                    ? 'text-white'
+                    : 'text-gray-700 active:bg-gray-100'
+                }`}
+                style={
+                  isActive('/leaderboard')
+                    ? {
+                        backgroundColor: 'var(--primary-500)',
+                        minHeight: '48px',
+                      }
+                    : {
+                        minHeight: '48px',
+                      }
+                }
+              >
+                Leaderboard
               </Link>
             <Link
               href='/admin'

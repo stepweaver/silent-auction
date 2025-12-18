@@ -20,6 +20,8 @@ export default function LandingPage() {
   const [verifiedEmail, setVerifiedEmail] = useState('');
   const [hasSentRecoveryNotification, setHasSentRecoveryNotification] =
     useState(false);
+  const [hasExistingAlias, setHasExistingAlias] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(true);
   const nameInputId = useId();
   const emailInputId = useId();
 
@@ -76,7 +78,6 @@ export default function LandingPage() {
   }, [router]);
 
   // Check for existing alias when email is entered and valid
-  // Only triggers if localStorage is missing (recovery scenario)
   useEffect(() => {
     let isMounted = true;
     let timeoutId;
@@ -85,15 +86,19 @@ export default function LandingPage() {
       // Basic format check - don't do expensive validation on every keystroke
       if (!email || !email.includes('@') || email.split('@').length !== 2) {
         setCheckingExisting(false);
+        setHasExistingAlias(false);
+        setIsNewUser(true);
         return;
       }
 
-      // Only check if localStorage is missing (recovery scenario)
+      // Check if already enrolled (recovery scenario)
       if (typeof window !== 'undefined') {
         const enrolled = localStorage.getItem(ENROLLMENT_KEY);
         if (enrolled === 'true') {
           // Already enrolled, don't check for recovery
           setCheckingExisting(false);
+          setHasExistingAlias(false);
+          setIsNewUser(true);
           return;
         }
       }
@@ -109,46 +114,59 @@ export default function LandingPage() {
         const data = await response.json();
 
         if (isMounted && response.ok && data.alias) {
-          // Existing alias found - this is a recovery scenario
+          // Existing alias found - this is a returning user
+          setHasExistingAlias(true);
+          setIsNewUser(false);
+          
+          // If localStorage is missing, this is a recovery scenario - auto-login
           if (typeof window !== 'undefined') {
-            localStorage.setItem(ENROLLMENT_KEY, 'true');
-            const bidderName =
-              data.alias.name || name.trim() || data.alias.alias;
-            localStorage.setItem(
-              STORAGE_KEY,
-              JSON.stringify({
-                email,
-                bidder_name: bidderName,
-                alias: data.alias,
-              })
-            );
-
-            // Send security notification only for recovery (localStorage was missing)
-            if (!hasSentRecoveryNotification) {
-              setHasSentRecoveryNotification(true);
-              fetch('/api/alias/security-notify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-              }).catch((err) =>
-                console.error('Security notification error:', err)
+            const enrolled = localStorage.getItem(ENROLLMENT_KEY);
+            if (enrolled !== 'true') {
+              localStorage.setItem(ENROLLMENT_KEY, 'true');
+              const bidderName =
+                data.alias.name || name.trim() || data.alias.alias;
+              localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({
+                  email,
+                  bidder_name: bidderName,
+                  alias: data.alias,
+                })
               );
-            }
 
-            // Redirect to catalog or intended destination
-            const redirect = localStorage.getItem('auction_redirect');
-            if (redirect) {
-              localStorage.removeItem('auction_redirect');
-              router.push(redirect);
-            } else {
-              router.push('/');
+              // Send security notification only for recovery (localStorage was missing)
+              if (!hasSentRecoveryNotification) {
+                setHasSentRecoveryNotification(true);
+                fetch('/api/alias/security-notify', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email }),
+                }).catch((err) =>
+                  console.error('Security notification error:', err)
+                );
+              }
+
+              // Redirect to catalog or intended destination
+              const redirect = localStorage.getItem('auction_redirect');
+              if (redirect) {
+                localStorage.removeItem('auction_redirect');
+                router.push(redirect);
+              } else {
+                router.push('/');
+              }
             }
           }
+        } else {
+          // No existing alias - this is a new user
+          setHasExistingAlias(false);
+          setIsNewUser(true);
         }
       } catch (err) {
         // Silently fail - email might not have an alias yet
         if (isMounted) {
           console.error('Error checking existing alias:', err);
+          setHasExistingAlias(false);
+          setIsNewUser(true);
         }
       } finally {
         if (isMounted) {
@@ -166,11 +184,13 @@ export default function LandingPage() {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [email, name, router]);
+  }, [email, name, router, hasSentRecoveryNotification]);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    if (!name || name.trim().length === 0) {
+    
+    // Only require name for new users
+    if (isNewUser && (!name || name.trim().length === 0)) {
       setError('Please enter your name');
       return;
     }
@@ -219,66 +239,65 @@ export default function LandingPage() {
       return;
     }
 
-    // Check for existing alias as a fallback (in case useEffect didn't catch it)
-    // Only if localStorage is missing (recovery scenario)
+    // Check for existing alias - if found, log them in directly
+    // This handles both recovery scenarios and returning users
     const isRecovery =
       typeof window !== 'undefined' &&
       localStorage.getItem(ENROLLMENT_KEY) !== 'true';
 
-    if (isRecovery) {
-      setCheckingExisting(true);
-      try {
-        const response = await fetch('/api/alias/get', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
+    // Always check for existing alias when submitting
+    setCheckingExisting(true);
+    try {
+      const response = await fetch('/api/alias/get', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok && data.alias) {
-          // Existing alias found - this is a recovery scenario
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(ENROLLMENT_KEY, 'true');
-            const bidderName =
-              data.alias.name || name.trim() || data.alias.alias;
-            localStorage.setItem(
-              STORAGE_KEY,
-              JSON.stringify({
-                email,
-                bidder_name: bidderName,
-                alias: data.alias,
-              })
+      if (response.ok && data.alias) {
+        // Existing alias found - log them in
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(ENROLLMENT_KEY, 'true');
+          const bidderName =
+            data.alias.name || name.trim() || data.alias.alias;
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              email,
+              bidder_name: bidderName,
+              alias: data.alias,
+            })
+          );
+
+          // Send security notification only for recovery (localStorage was missing)
+          if (isRecovery && !hasSentRecoveryNotification) {
+            setHasSentRecoveryNotification(true);
+            fetch('/api/alias/security-notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email }),
+            }).catch((err) =>
+              console.error('Security notification error:', err)
             );
-
-            // Send security notification only for recovery (localStorage was missing)
-            if (!hasSentRecoveryNotification) {
-              setHasSentRecoveryNotification(true);
-              fetch('/api/alias/security-notify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-              }).catch((err) =>
-                console.error('Security notification error:', err)
-              );
-            }
-
-            // Redirect to catalog or intended destination
-            const redirect = localStorage.getItem('auction_redirect');
-            if (redirect) {
-              localStorage.removeItem('auction_redirect');
-              router.push(redirect);
-            } else {
-              router.push('/');
-            }
-            return;
           }
+
+          // Redirect to catalog or intended destination
+          const redirect = localStorage.getItem('auction_redirect');
+          if (redirect) {
+            localStorage.removeItem('auction_redirect');
+            router.push(redirect);
+          } else {
+            router.push('/');
+          }
+          return;
         }
-      } catch (err) {
-        console.error('Error checking existing alias on submit:', err);
-      } finally {
-        setCheckingExisting(false);
       }
+    } catch (err) {
+      console.error('Error checking existing alias on submit:', err);
+    } finally {
+      setCheckingExisting(false);
     }
 
     // No existing alias found - send verification email FIRST
@@ -523,8 +542,9 @@ export default function LandingPage() {
                 Bidder Check-In
               </h1>
               <p className='text-white/90 text-sm leading-snug max-w-md mx-auto'>
-                Enter your name and email to pull up your bidder profile or
-                create one.
+                {hasExistingAlias
+                  ? 'Enter your email to access your bidder profile.'
+                  : 'Enter your name and email to create your bidder profile.'}
               </p>
             </div>
 
@@ -532,31 +552,41 @@ export default function LandingPage() {
             <div className='px-4 sm:px-5 md:px-6 py-4 sm:py-5'>
               {/* Form */}
               <form onSubmit={handleEmailSubmit} className='space-y-3'>
-                <div>
-                  <label
-                    htmlFor={nameInputId}
-                    className='block text-sm font-semibold text-gray-900 mb-1'
-                  >
-                    Your Name
-                  </label>
-                  <input
-                    id={nameInputId}
-                    type='text'
-                    className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
-                    placeholder='Jane Doe'
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      setError('');
-                    }}
-                    required
-                    aria-required='true'
-                    aria-describedby={`${nameInputId}-helper`}
-                  />
-                  <p id={`${nameInputId}-helper`} className='sr-only'>
-                    Enter your full name
-                  </p>
-                </div>
+                {isNewUser && (
+                  <div>
+                    <label
+                      htmlFor={nameInputId}
+                      className='block text-sm font-semibold text-gray-900 mb-1'
+                    >
+                      Your Name
+                    </label>
+                    <input
+                      id={nameInputId}
+                      type='text'
+                      className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
+                      placeholder='Jane Doe'
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        setError('');
+                      }}
+                      required
+                      aria-required='true'
+                      aria-describedby={`${nameInputId}-helper`}
+                    />
+                    <p id={`${nameInputId}-helper`} className='sr-only'>
+                      Enter your full name
+                    </p>
+                  </div>
+                )}
+
+                {hasExistingAlias && (
+                  <div className='mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
+                    <p className='text-sm text-blue-800'>
+                      Welcome back! We found your account. You can proceed with just your email.
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <label
@@ -574,6 +604,9 @@ export default function LandingPage() {
                     onChange={(e) => {
                       setEmail(e.target.value);
                       setError('');
+                      // Reset existing alias state when email changes
+                      setHasExistingAlias(false);
+                      setIsNewUser(true);
                     }}
                     required
                     aria-required='true'
