@@ -253,10 +253,10 @@ Supabase Free tier projects can be paused after periods of inactivity. While pin
 3. **Add GitHub Secrets**:
 
    - Go to your GitHub repository → **Settings → Secrets and variables → Actions**
-   - Click **New repository secret**
-   - Add these two secrets:
+   - The workflow uses these secrets (you may already have them):
      - `SUPABASE_URL`: Your Supabase project URL (e.g., `https://xxxxx.supabase.co`)
-     - `SUPABASE_ANON_KEY`: Your Supabase anon/public key (found in **Project Settings → API**)
+     - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon/public key (found in **Project Settings → API**)
+   - If you don't have these secrets yet, click **New repository secret** to add them
 
 4. **Test the workflow**:
 
