@@ -43,10 +43,17 @@ npm install
    - The SQL already includes enabling Realtime for the `bids` table
 5. **If you have an EXISTING database**: Run `supabase-migration.sql` first to update the bids table schema, then run the rest of `supabase-schema.sql` for any missing tables/views
 6. Verify Realtime is enabled:
+
    - Go to **Database → Tables**
    - Click on the `bids` table
    - Check that "Enable Realtime" is toggled ON in the table settings
    - Alternatively, ensure Realtime is enabled for your project: **Project Settings → API → Realtime**
+
+7. **Set up Supabase Keep-Alive (Prevent Free Tier Pausing):**
+   - Go to **SQL Editor** in your Supabase dashboard
+   - Run the contents of `supabase-heartbeat-migration.sql` to create the heartbeat table
+   - This creates a simple table that GitHub Actions can ping to keep your Supabase project active
+   - See the [Keep-Alive Setup](#keep-alive-setup) section below for GitHub Actions configuration
 
 ### 3. Environment Variables
 
@@ -159,6 +166,7 @@ See `supabase-schema.sql` for full schema and RLS policies.
 ## Security
 
 ### Authentication & Authorization
+
 - Admin routes protected with Basic Auth
 - Vendor admin authentication uses JWT-based sessions (secure token-based auth)
 - Email verification required before alias creation and bidding
@@ -166,23 +174,27 @@ See `supabase-schema.sql` for full schema and RLS policies.
 - Service Role key only used server-side
 
 ### Rate Limiting
+
 - Bid placement: 20 requests per minute per IP
 - Email verification: 3 requests per 10 minutes per IP
 - Alias creation: 5 requests per hour per IP
 - Vendor authentication: 5 requests per 15 minutes per IP
 
 ### CSRF Protection
+
 - CSRF tokens required for all state-changing operations (bids, alias creation)
 - Tokens are signed and time-limited (1 hour expiration)
 - Prevents cross-site request forgery attacks
 
 ### Input Validation
+
 - Server-side validation of bids (minimum increment, deadline)
 - Zod schema validation on all API routes
 - Email format and domain validation
 - File upload type and size validation
 
 ### Error Handling
+
 - No sensitive error details exposed to clients
 - Errors logged server-side only in development mode
 - Secure error messages for production
@@ -216,6 +228,64 @@ The platform sends email notifications for bid confirmations and winner notifica
 - **Bid Confirmation**: Sent immediately when a bid is placed (includes bid amount and link to item)
 - **Winner Notification**: Sent when auction closes to the winning bidder (includes payment/pickup instructions)
 - **Admin Winners List**: Sent to all admins (configured in `ADMIN_EMAILS`) when auction closes, containing a list of all winners with names, emails, and winning bid amounts
+
+## Keep-Alive Setup
+
+To prevent your Supabase Free tier project from pausing due to inactivity, this project includes a GitHub Actions workflow that pings Supabase every 6 hours.
+
+### Why This Matters
+
+Supabase Free tier projects can be paused after periods of inactivity. While pings don't guarantee prevention, they significantly reduce the chance of pausing. The only guaranteed way to avoid pausing is to upgrade to a paid plan.
+
+### Setup Steps
+
+1. **Create the heartbeat table** (if you haven't already):
+
+   - Go to **Supabase Dashboard → SQL Editor**
+   - Run the contents of `supabase-heartbeat-migration.sql`
+   - This creates a simple table with anonymous read access
+
+2. **Push your code to GitHub**:
+
+   - Make sure your repository is on GitHub (public repos are free for GitHub Actions)
+   - The workflow file is already in `.github/workflows/supabase-keepalive.yml`
+
+3. **Add GitHub Secrets**:
+
+   - Go to your GitHub repository → **Settings → Secrets and variables → Actions**
+   - Click **New repository secret**
+   - Add these two secrets:
+     - `SUPABASE_URL`: Your Supabase project URL (e.g., `https://xxxxx.supabase.co`)
+     - `SUPABASE_ANON_KEY`: Your Supabase anon/public key (found in **Project Settings → API**)
+
+4. **Test the workflow**:
+
+   - Go to **Actions** tab in your GitHub repository
+   - Find "Supabase Keepalive" workflow
+   - Click **Run workflow** to manually trigger it
+   - Verify it completes successfully
+
+5. **Verify it's running**:
+   - The workflow runs automatically every 6 hours (at 00:00, 06:00, 12:00, and 18:00 UTC)
+   - You can check the **Actions** tab to see run history
+   - Each run should show "Ping OK" if successful
+
+### How It Works
+
+- The workflow uses GitHub Actions cron to run every 6 hours
+- It makes a simple GET request to your Supabase REST API (`/rest/v1/heartbeat`)
+- Uses only the public anon key (safe to expose)
+- Only reads from the heartbeat table (no write permissions needed)
+
+### Adjusting the Schedule
+
+To change how often it pings, edit `.github/workflows/supabase-keepalive.yml` and modify the cron schedule:
+
+- `"0 */6 * * *"` = Every 6 hours
+- `"0 */4 * * *"` = Every 4 hours
+- `"0 */12 * * *"` = Every 12 hours
+
+See [GitHub Actions cron syntax](https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions#onschedule) for more options.
 
 ## Future Enhancements
 

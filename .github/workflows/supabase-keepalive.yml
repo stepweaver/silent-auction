@@ -1,0 +1,38 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    # Every 6 hours (UTC). Adjust if you want.
+    # Format: minute hour day month day-of-week
+    # This runs at 00:00, 06:00, 12:00, and 18:00 UTC daily
+    - cron: "0 */6 * * *"
+  # Allow manual triggering from GitHub Actions UI
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase heartbeat table
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -e
+          URL="${SUPABASE_URL}/rest/v1/heartbeat?select=id&limit=1"
+
+          echo "Pinging: $URL"
+          HTTP_CODE=$(curl -s -o /tmp/resp.json -w "%{http_code}" "$URL" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+
+          echo "HTTP: $HTTP_CODE"
+          cat /tmp/resp.json
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Ping failed"
+            exit 1
+          fi
+
+          echo "Ping OK"
+
