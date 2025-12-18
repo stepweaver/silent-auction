@@ -21,7 +21,7 @@ export default function LandingPage() {
   const [hasSentRecoveryNotification, setHasSentRecoveryNotification] =
     useState(false);
   const [hasExistingAlias, setHasExistingAlias] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(null); // null = unknown, true = new, false = returning
   const nameInputId = useId();
   const emailInputId = useId();
 
@@ -87,7 +87,7 @@ export default function LandingPage() {
       if (!email || !email.includes('@') || email.split('@').length !== 2) {
         setCheckingExisting(false);
         setHasExistingAlias(false);
-        setIsNewUser(true);
+        setIsNewUser(null); // Unknown until we have a valid email format
         return;
       }
 
@@ -98,7 +98,7 @@ export default function LandingPage() {
           // Already enrolled, don't check for recovery
           setCheckingExisting(false);
           setHasExistingAlias(false);
-          setIsNewUser(true);
+          setIsNewUser(null); // Don't show name field for already enrolled users
           return;
         }
       }
@@ -166,7 +166,7 @@ export default function LandingPage() {
         if (isMounted) {
           console.error('Error checking existing alias:', err);
           setHasExistingAlias(false);
-          setIsNewUser(true);
+          setIsNewUser(null); // Unknown on error - don't assume new user
         }
       } finally {
         if (isMounted) {
@@ -189,10 +189,11 @@ export default function LandingPage() {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     
-    // Only require name for new users
-    if (isNewUser && (!name || name.trim().length === 0)) {
-      setError('Please enter your name');
-      return;
+    // Only require name for new users (when we know they're new or unknown)
+    // If isNewUser is false, they're returning and don't need to enter name
+    if (isNewUser !== false && (!name || name.trim().length === 0)) {
+      // Check if they're actually a new user before requiring name
+      // We'll check this in the alias lookup below
     }
 
     // Validate email format first
@@ -302,6 +303,14 @@ export default function LandingPage() {
 
     // No existing alias found - send verification email FIRST
     // User must verify email before creating alias
+    // At this point, we know they're a new user, so name is required
+    if (!name || name.trim().length === 0) {
+      setError('Please enter your name to create your bidder profile');
+      setCheckingExisting(false);
+      setIsNewUser(true); // Mark as new user so name field shows
+      return;
+    }
+
     setError('');
     setEnrolling(true);
 
@@ -552,7 +561,7 @@ export default function LandingPage() {
             <div className='px-4 sm:px-5 md:px-6 py-4 sm:py-5'>
               {/* Form */}
               <form onSubmit={handleEmailSubmit} className='space-y-3'>
-                {isNewUser && (
+                {(isNewUser === true || isNewUser === null) && (
                   <div>
                     <label
                       htmlFor={nameInputId}
@@ -570,8 +579,8 @@ export default function LandingPage() {
                         setName(e.target.value);
                         setError('');
                       }}
-                      required
-                      aria-required='true'
+                      required={isNewUser !== false}
+                      aria-required={isNewUser !== false}
                       aria-describedby={`${nameInputId}-helper`}
                     />
                     <p id={`${nameInputId}-helper`} className='sr-only'>
@@ -601,13 +610,13 @@ export default function LandingPage() {
                     className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
                     placeholder='your@email.com'
                     value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError('');
-                      // Reset existing alias state when email changes
-                      setHasExistingAlias(false);
-                      setIsNewUser(true);
-                    }}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setError('');
+                        // Reset existing alias state when email changes
+                        setHasExistingAlias(false);
+                        setIsNewUser(null); // Unknown until we check
+                      }}
                     required
                     aria-required='true'
                     aria-describedby={
