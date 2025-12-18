@@ -6,7 +6,11 @@ import { formatDollar } from '@/lib/money';
 
 export default function ItemCard({ item, priority = false }) {
   const current = Number(item.current_high_bid ?? item.start_price);
-  const hasBids = item.current_high_bid != null && Number(item.current_high_bid) > Number(item.start_price);
+  // Check if bids exist - use explicit flag if provided, otherwise check if current_high_bid exists and differs from start_price
+  // The explicit flag (_hasBids) is more reliable as it's based on actual bid existence in DB
+  const hasBids = item._hasBids !== undefined 
+    ? item._hasBids 
+    : (item.current_high_bid != null && Number(item.current_high_bid) > Number(item.start_price));
   const minIncrement = Number(item.min_increment ?? 1);
   const nextMin = hasBids ? (current + minIncrement) : Number(item.start_price);
   const url = `/i/${item.slug}`;

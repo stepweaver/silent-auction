@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
 import HotItemIndicator from '@/components/HotItemIndicator';
@@ -25,7 +26,9 @@ const LeaderboardItem = memo(function LeaderboardItem({
   const currentBid = Number(item.current_high_bid ?? item.start_price);
   const leaderId = topBid?.alias_id || topBid?.bidder_name || null;
   const leaderName = topBid?.user_aliases?.alias || topBid?.bidder_name || 'No bids yet';
-  const hasLeader = topBid && currentBid > Number(item.start_price);
+  // Check if bids exist based on topBid existence, not amount comparison
+  // This handles cases where someone bids exactly the starting price
+  const hasLeader = topBid !== null && topBid !== undefined;
 
   // Detect leader change (use prop or internal detection)
   useEffect(() => {
@@ -49,10 +52,12 @@ const LeaderboardItem = memo(function LeaderboardItem({
   return (
     <>
       {/* Desktop/Tablet View - Optimized for projector */}
-      <div
+      <Link
+        href={`/i/${item.slug}`}
         className={`
           hidden md:block relative bg-white rounded-xl shadow-lg border-2 overflow-hidden
-          transition-all duration-500 ease-out
+          transition-all duration-500 ease-out cursor-pointer
+          hover:shadow-xl hover:scale-[1.02]
           ${isHot ? 'border-orange-400 shadow-orange-200' : 'border-gray-200'}
           ${isAnimating ? 'ring-4 ring-yellow-400 ring-opacity-50 scale-105' : ''}
           ${hasBiddingWar ? 'animate-pulse' : ''}
@@ -162,13 +167,15 @@ const LeaderboardItem = memo(function LeaderboardItem({
             <div className="absolute inset-0 bg-yellow-400 opacity-20 animate-ping rounded-xl"></div>
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Mobile View - Compact */}
-      <div
+      <Link
+        href={`/i/${item.slug}`}
         className={`
           md:hidden relative bg-white rounded-lg shadow-md border overflow-hidden
-          transition-all duration-500 ease-out
+          transition-all duration-500 ease-out cursor-pointer
+          hover:shadow-lg active:scale-[0.98]
           ${isHot ? 'border-orange-400 shadow-orange-200' : 'border-gray-200'}
           ${isAnimating ? 'ring-2 ring-yellow-400 ring-opacity-50' : ''}
           ${hasBiddingWar ? 'animate-pulse' : ''}
@@ -258,7 +265,7 @@ const LeaderboardItem = memo(function LeaderboardItem({
             <div className="absolute inset-0 bg-yellow-400 opacity-15 animate-ping rounded-lg"></div>
           </div>
         )}
-      </div>
+      </Link>
     </>
   );
 });

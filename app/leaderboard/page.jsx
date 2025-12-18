@@ -155,10 +155,17 @@ export default function LeaderboardPage() {
       });
 
       // Sort items by bid count (descending), then by title
-      const itemsWithBidCounts = openItems.map(item => ({
-        ...item,
-        bidCount: newBidCounts[item.id] || 0
-      })).sort((a, b) => {
+      // Also update current_high_bid from actual top bids
+      const itemsWithBidCounts = openItems.map(item => {
+        const topBid = newTopBids[item.id];
+        const actualCurrentBid = topBid?.amount || null;
+        return {
+          ...item,
+          bidCount: newBidCounts[item.id] || 0,
+          // Override current_high_bid with actual top bid from bids table
+          current_high_bid: actualCurrentBid !== null ? actualCurrentBid : item.current_high_bid,
+        };
+      }).sort((a, b) => {
         if (b.bidCount !== a.bidCount) {
           return b.bidCount - a.bidCount; // Most bids first
         }

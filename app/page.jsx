@@ -47,11 +47,42 @@ export default function CatalogPage() {
         .order('title', { ascending: true });
       if (error) throw error;
 
-      // Mark items as closed if deadline passed
-      const itemsWithDeadline = (data || []).map((item) => ({
-        ...item,
-        is_closed: item.is_closed || deadlinePassed,
-      }));
+      // Fetch top bid for each item to get accurate current_high_bid and bid existence
+      const topBidsPromises = (data || []).map(async (item) => {
+        const { data: topBidData } = await s
+          .from('bids')
+          .select('amount')
+          .eq('item_id', item.id)
+          .order('amount', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        return {
+          itemId: item.id,
+          topBidAmount: topBidData?.amount || null,
+          hasBids: topBidData !== null && topBidData !== undefined
+        };
+      });
+
+      const topBidsResults = await Promise.all(topBidsPromises);
+      const topBidsMap = topBidsResults.reduce((acc, { itemId, topBidAmount, hasBids }) => {
+        acc[itemId] = { topBidAmount, hasBids };
+        return acc;
+      }, {});
+
+      // Mark items as closed if deadline passed and update current_high_bid from actual bids
+      const itemsWithDeadline = (data || []).map((item) => {
+        const bidInfo = topBidsMap[item.id];
+        const actualCurrentBid = bidInfo?.topBidAmount ?? null;
+        return {
+          ...item,
+          is_closed: item.is_closed || deadlinePassed,
+          // Override current_high_bid with actual top bid from bids table
+          current_high_bid: actualCurrentBid !== null ? actualCurrentBid : item.current_high_bid,
+          // Track whether bids exist (separate from amount comparison)
+          _hasBids: bidInfo?.hasBids || false,
+        };
+      });
 
       setItems(itemsWithDeadline);
     } catch (err) {
