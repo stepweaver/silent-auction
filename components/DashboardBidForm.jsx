@@ -14,7 +14,16 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
   const helperTextId = `${amountInputId}-helper`;
   const statusMessageId = `${amountInputId}-status`;
   const hasStatusMessage = Boolean(message);
-  const isErrorMessage = hasStatusMessage && message.toLowerCase().includes('error');
+  // Detect error messages - check for common error indicators
+  const messageLower = message.toLowerCase();
+  const isErrorMessage = hasStatusMessage && (
+    messageLower.includes('error') || 
+    messageLower.includes('invalid') || 
+    messageLower.includes('not allowed') ||
+    messageLower.includes('must') ||
+    messageLower.startsWith('minimum') ||
+    messageLower.includes('failed')
+  );
 
   const currentHigh = Number(item.current_high_bid ?? item.start_price);
   const hasBids = item.current_high_bid != null && Number(item.current_high_bid) > Number(item.start_price);
@@ -113,15 +122,15 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
       {hasStatusMessage && (
         <div
           id={statusMessageId}
-          role="status"
-          aria-live="polite"
-          className={`text-xs p-2 rounded border ${
+          role={isErrorMessage ? "alert" : "status"}
+          aria-live={isErrorMessage ? "assertive" : "polite"}
+          className={`text-xs p-3 rounded-lg border-2 ${
             isErrorMessage
-              ? 'border-red-200 bg-red-50 text-red-700'
+              ? 'border-red-400 bg-red-50 text-red-800'
               : 'border-green-200 bg-green-50 text-green-700'
           }`}
         >
-          {message}
+          <span className="font-semibold">{message}</span>
         </div>
       )}
 

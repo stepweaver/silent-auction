@@ -9,7 +9,8 @@ export default function HowToBidPage() {
         <h1 className='text-2xl sm:text-3xl font-semibold mb-2'>How to Bid</h1>
         <p className='text-gray-700'>
           Bidding is simple and fast. You'll need to provide your name and email
-          for bid confirmations and winner notifications only.
+          for winner notifications and optional bid confirmations. Bid confirmation 
+          emails are opt-in only—you can enable them in your dashboard if desired.
         </p>
       </div>
 
@@ -42,8 +43,9 @@ export default function HowToBidPage() {
           minimum shown. Higher bids help your PTO even more!
         </li>
         <li className='pl-2'>
-          <strong>Submit your bid</strong> - We'll email you a confirmation.
-          Monitor your dashboard for live updates on items you've bid on.
+          <strong>Submit your bid</strong> - If you've opted in to email notifications, 
+          you'll receive a confirmation email for your first bid on each item. You can 
+          always view your bids and monitor activity in your dashboard.
         </li>
       </ol>
 
@@ -67,7 +69,13 @@ export default function HowToBidPage() {
                 You can increase your bid at any time before the auction closes
               </li>
               <li>
-                Winners will receive payment and pickup instructions via email
+                Winners will receive payment and pickup instructions via email (required)
+              </li>
+              <li>
+                Bid confirmation emails are optional—opt in through your dashboard if you want them
+              </li>
+              <li>
+                Bid confirmations are sent only for your first bid on each item, not every bid
               </li>
             </ul>
           </div>
@@ -88,8 +96,10 @@ export default function HowToBidPage() {
           </p>
           <p>
             <strong>Privacy:</strong> We only collect your name and email
-            address to manage your bids and send notifications. Your information
-            is stored securely and will not be sold or shared.
+            address to manage your bids and send notifications. Bid confirmation 
+            emails are opt-in only—you control whether you receive them. Winner 
+            notifications are sent automatically and cannot be opted out of. Your 
+            information is stored securely and will not be sold or shared.
           </p>
           <p>
             <strong>Limitation of Liability:</strong> Items are sold "as is"

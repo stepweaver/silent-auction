@@ -83,19 +83,82 @@ export default function TermsPage() {
               <h3 className='font-semibold text-gray-900 mb-2'>Data Collection</h3>
               <p>
                 We only collect your name and email address for the sole purpose of managing your bids 
-                and sending bid confirmations and winner notifications. This is not an account creation—we 
+                and sending auction-related notifications. This is not an account creation—we 
                 simply need this information to track your bids and contact you about auction results.
+              </p>
+              <p className='mt-2'>
+                <strong>Email Preferences:</strong> Bid confirmation emails are optional and require your 
+                explicit opt-in. You can enable or disable bid confirmation emails at any time through 
+                your dashboard. Winner notifications and other essential emails are sent automatically 
+                and cannot be opted out of, as they are required for auction operations.
               </p>
             </div>
             <div>
               <h3 className='font-semibold text-gray-900 mb-2'>How We Use Your Information</h3>
               <ul className='list-disc list-inside ml-4 space-y-1'>
-                <li>To send bid confirmation emails when you place a bid</li>
+                <li>To send bid confirmation emails when you place a bid (opt-in only)</li>
                 <li>To notify you if you win an item</li>
                 <li>To track your bids and display them on your dashboard</li>
                 <li>To display your anonymous alias (color + emoji/icon) on public bid lists</li>
                 <li>To contact you regarding auction-related matters</li>
+                <li>To send email verification during registration</li>
+                <li>To send security alerts if your alias is accessed from a new device or location</li>
               </ul>
+            </div>
+            <div>
+              <h3 className='font-semibold text-gray-900 mb-2'>Email Communications & Opt-In System</h3>
+              <p className='mb-3'>
+                We use an opt-in email system powered by Resend to send you notifications about your auction activity. 
+                You have full control over which emails you receive.
+              </p>
+              <div className='space-y-3'>
+                <div>
+                  <h4 className='font-semibold text-gray-900 mb-1'>Opt-In Email Notifications (Bid Confirmations)</h4>
+                  <p className='mb-2'>
+                    <strong>Bid confirmation emails are optional and require your explicit opt-in.</strong> By default, 
+                    bid confirmation emails are disabled. You can enable or disable them at any time through your 
+                    dashboard (accessible via the avatar/profile icon).
+                  </p>
+                  <ul className='list-disc list-inside ml-4 space-y-1 text-sm'>
+                    <li>Bid confirmations are sent only for your <strong>initial bid on each item</strong> (not for subsequent bids on the same item)</li>
+                    <li>Each email includes the item name, your bid amount, and a link to view the item</li>
+                    <li>You can opt-in or opt-out at any time through your dashboard</li>
+                    <li>If you opt-out, you can still view all your bids in your dashboard</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className='font-semibold text-gray-900 mb-1'>Required Email Notifications</h4>
+                  <p className='mb-2'>
+                    The following emails are sent automatically and cannot be opted out of, as they are essential 
+                    for auction operations:
+                  </p>
+                  <ul className='list-disc list-inside ml-4 space-y-1 text-sm'>
+                    <li><strong>Winner Notifications:</strong> Sent automatically when the auction closes if you are a winning bidder. These emails include payment and pickup instructions.</li>
+                    <li><strong>Email Verification:</strong> Sent during registration to verify your email address and prevent fraud.</li>
+                    <li><strong>Security Alerts:</strong> Sent if your alias is accessed from a new device or location to help protect your account.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className='font-semibold text-gray-900 mb-1'>Managing Your Email Preferences</h4>
+                  <p className='mb-2'>
+                    You can manage your email preferences at any time by:
+                  </p>
+                  <ul className='list-disc list-inside ml-4 space-y-1 text-sm'>
+                    <li>Accessing your dashboard (click the avatar/profile icon)</li>
+                    <li>Using the "Email Preferences" section to enable or disable bid confirmation emails</li>
+                    <li>Your preference is saved immediately and applies to all future bids</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className='font-semibold text-gray-900 mb-1'>Email Service Provider</h4>
+                  <p className='text-sm'>
+                    We use Resend (resend.com) as our email service provider to deliver emails securely and reliably. 
+                    Resend is a trusted email delivery service that complies with industry standards for email security 
+                    and deliverability. Your email address is shared with Resend solely for the purpose of sending you 
+                    auction-related emails.
+                  </p>
+                </div>
+              </div>
             </div>
             <div>
               <h3 className='font-semibold text-gray-900 mb-2'>Data Storage & Security</h3>

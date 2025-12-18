@@ -19,7 +19,16 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
 
   const statusMessage = (message && message.length ? message : msg);
   const hasStatusMessage = Boolean(statusMessage);
-  const isErrorMessage = hasStatusMessage && statusMessage.toLowerCase().includes('error');
+  // Detect error messages - check for common error indicators
+  const statusLower = statusMessage.toLowerCase();
+  const isErrorMessage = hasStatusMessage && (
+    statusLower.includes('error') || 
+    statusLower.includes('invalid') || 
+    statusLower.includes('not allowed') ||
+    statusLower.includes('must') ||
+    statusLower.startsWith('minimum') ||
+    statusLower.includes('failed')
+  );
   const amountInputId = useId();
   const helperTextId = `${amountInputId}-helper`;
   const statusMessageId = `${amountInputId}-status`;
@@ -255,14 +264,14 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
             {hasStatusMessage && (
               <div
                 id={statusMessageId}
-                role='status'
-                aria-live='polite'
-                className={`rounded-lg p-3 border text-xs sm:text-sm ${
-                  isErrorMessage ? 'text-red-700' : 'text-green-700'
+                role='alert'
+                aria-live='assertive'
+                className={`rounded-lg p-4 border-2 text-xs sm:text-sm ${
+                  isErrorMessage ? 'text-red-800' : 'text-green-700'
                 }`}
                 style={isErrorMessage ? {
-                  backgroundColor: 'rgba(239, 68, 68, 0.05)',
-                  borderColor: 'rgba(239, 68, 68, 0.2)'
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  borderColor: 'rgba(239, 68, 68, 0.4)'
                 } : {
                   backgroundColor: 'rgba(4, 122, 44, 0.08)',
                   borderColor: 'rgba(4, 122, 44, 0.3)'

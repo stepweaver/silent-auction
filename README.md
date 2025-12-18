@@ -214,9 +214,9 @@ Supabase Realtime is used to automatically update:
 
 ## Notifications
 
-The platform sends email notifications for bid confirmations and winner notifications. Users should monitor their dashboard for live updates on items they've bid on.
+The platform uses an opt-in email system powered by Resend to send notifications. Users should monitor their dashboard for live updates on items they've bid on.
 
-**Email Notifications (Required):**
+**Email Notifications Setup (Required):**
 
 1. Sign up at [resend.com](https://resend.com) (free tier available - 3,000 emails/month)
 2. Get your API key from the dashboard
@@ -225,9 +225,19 @@ The platform sends email notifications for bid confirmations and winner notifica
 
 **What emails are sent:**
 
-- **Bid Confirmation**: Sent immediately when a bid is placed (includes bid amount and link to item)
-- **Winner Notification**: Sent when auction closes to the winning bidder (includes payment/pickup instructions)
+- **Bid Confirmation** (Opt-in only): Sent only for a user's initial bid on each item (not subsequent bids on the same item). Users must explicitly opt-in through their dashboard to receive these emails. Includes bid amount and link to item.
+- **Winner Notification** (Required): Sent automatically when auction closes to the winning bidder. Includes payment/pickup instructions. Cannot be opted out of.
+- **Email Verification** (Required): Sent during registration to verify email addresses and prevent fraud. Cannot be opted out of.
+- **Security Alerts** (Required): Sent if a user's alias is accessed from a new device or location. Cannot be opted out of.
 - **Admin Winners List**: Sent to all admins (configured in `ADMIN_EMAILS`) when auction closes, containing a list of all winners with names, emails, and winning bid amounts
+
+**Opt-In System Details:**
+
+- Bid confirmation emails are **disabled by default** and require explicit opt-in
+- Users can enable/disable bid confirmations at any time through their dashboard (avatar/profile page)
+- Only initial bids on each item trigger confirmation emails (not every bid)
+- Winner notifications and other essential emails are sent automatically and cannot be opted out of
+- The system monitors opt-in rates and can alert administrators if rates exceed 50%
 
 ## Keep-Alive Setup
 

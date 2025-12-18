@@ -115,8 +115,9 @@ export async function POST(req) {
     const current = hasBids ? Number(topBid.amount) : Number(item.start_price);
     const minIncrement = Number(item.min_increment ?? 1);
     const needed = hasBids ? (Number(current) + minIncrement) : Number(item.start_price);
+    const bidAmount = Number(amount);
 
-    if (Number(amount) < needed) {
+    if (bidAmount < needed) {
       return new Response(`Minimum allowed bid: ${needed.toFixed(2)}`, { status: 400 });
     }
 
