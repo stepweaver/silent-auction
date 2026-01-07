@@ -221,20 +221,44 @@ export async function POST(req) {
     // BEST PRACTICE: Check verified_emails table, NOT user_aliases
     // This ensures we only create aliases for verified emails
     // Check if record exists (we'll verify verified_at is not null after)
-    const { data: emailRecord, error: emailRecordError } = await s
-      .from('verified_emails')
-      .select('email, name, verified_at')
-      .eq('email', trimmedEmail)
-      .maybeSingle();
-
-    if (emailRecordError) {
-      console.error('[ALIAS CREATE] Error checking email verification record:', {
-        error: emailRecordError,
+    let emailRecord = null;
+    let emailRecordError = null;
+    
+    try {
+      const result = await s
+        .from('verified_emails')
+        .select('email, name, verified_at')
+        .eq('email', trimmedEmail)
+        .maybeSingle();
+      
+      emailRecord = result.data;
+      emailRecordError = result.error;
+    } catch (err) {
+      console.error('[ALIAS CREATE] Exception checking email verification record:', {
+        error: err,
+        message: err?.message,
+        stack: err?.stack,
         email: trimmedEmail,
         timestamp: new Date().toISOString()
       });
       return Response.json(
-        { error: 'Error checking email verification status' },
+        { error: `Error checking email verification status: ${err?.message || 'Unknown error'}` },
+        { status: 500 }
+      );
+    }
+
+    if (emailRecordError) {
+      console.error('[ALIAS CREATE] Supabase error checking email verification record:', {
+        error: emailRecordError,
+        code: emailRecordError?.code,
+        message: emailRecordError?.message,
+        details: emailRecordError?.details,
+        hint: emailRecordError?.hint,
+        email: trimmedEmail,
+        timestamp: new Date().toISOString()
+      });
+      return Response.json(
+        { error: `Error checking email verification status: ${emailRecordError?.message || 'Database error'}` },
         { status: 500 }
       );
     }
