@@ -11,7 +11,6 @@ export default function VendorAdminsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ email: '', name: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [enrollmentLink, setEnrollmentLink] = useState(null);
   const [expandedDonors, setExpandedDonors] = useState(new Set());
 
   async function load() {
@@ -41,7 +40,6 @@ export default function VendorAdminsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setMsg('');
-    setEnrollmentLink(null);
 
     try {
       const res = await fetch('/api/admin/vendor-admin', {
@@ -59,28 +57,9 @@ export default function VendorAdminsPage() {
       const data = await res.json();
       
       if (data.email_sent) {
-        // Show the generated link for verification (even if email was sent)
-        if (data.enrollment_link) {
-          setEnrollmentLink(data.enrollment_link);
-        }
         setMsg('Donor created successfully! An enrollment email has been sent to ' + form.email + '.');
       } else {
-        // Fallback: show link if email wasn't sent
-        const link = data.enrollment_link || (() => {
-          const token = data.enrollment_token;
-          if (token) {
-            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-            return `${baseUrl}/vendor-enroll?token=${encodeURIComponent(token)}`;
-          }
-          return null;
-        })();
-        
-        if (link) {
-          setEnrollmentLink(link);
-          setMsg('Donor created successfully! Email could not be sent. Please send them the enrollment link below.');
-        } else {
-          setMsg('Donor created successfully!');
-        }
+        setMsg('Donor created successfully!');
       }
       setForm({ email: '', name: '' });
       setShowForm(false);
@@ -90,17 +69,6 @@ export default function VendorAdminsPage() {
       console.error(err);
     } finally {
       setIsSubmitting(false);
-    }
-  }
-
-  function copyEnrollmentLink() {
-    if (enrollmentLink) {
-      navigator.clipboard.writeText(enrollmentLink);
-      const originalMsg = msg;
-      setMsg('Enrollment link copied to clipboard!');
-      setTimeout(() => {
-        setMsg(originalMsg);
-      }, 2000);
     }
   }
 
@@ -140,33 +108,6 @@ export default function VendorAdminsPage() {
           }`}
         >
           {msg}
-        </div>
-      )}
-
-      {enrollmentLink && (
-        <div className={`mb-3 sm:mb-4 p-3 sm:p-4 border rounded-xl ${msg.includes('Email could not be sent') ? 'bg-yellow-50 border-yellow-200' : 'bg-blue-50 border-blue-200'}`}>
-          <h3 className="font-semibold mb-2 text-sm sm:text-base">
-            {msg.includes('Email could not be sent') ? 'Enrollment Link (Fallback)' : 'Enrollment Link'}
-          </h3>
-          <p className="text-xs sm:text-sm text-gray-600 mb-2">
-            {msg.includes('Email could not be sent') 
-              ? 'Email could not be sent automatically. Please send this link to the donor manually.'
-              : 'Enrollment link that was sent via email (for your reference):'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              readOnly
-              value={enrollmentLink}
-              className="flex-1 border rounded px-3 py-2 text-xs sm:text-sm bg-white font-mono break-all"
-            />
-            <button
-              onClick={copyEnrollmentLink}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm sm:text-base whitespace-nowrap"
-            >
-              Copy Link
-            </button>
-          </div>
         </div>
       )}
 

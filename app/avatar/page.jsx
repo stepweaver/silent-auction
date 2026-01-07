@@ -316,7 +316,7 @@ export default function DashboardPage() {
                       </label>
                       <p className="text-xs text-gray-500 mt-1.5">
                         {emailPreference 
-                          ? 'You will receive an email after each bid you place.'
+                          ? 'You will receive an email when you place your first bid on each item. All your bids are viewable here in the dashboard.'
                           : 'Bid confirmations are disabled. You can view your bids in the dashboard.'}
                       </p>
                     </div>
