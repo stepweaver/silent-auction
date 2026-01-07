@@ -22,8 +22,10 @@ export default function LandingPage() {
     useState(false);
   const [hasExistingAlias, setHasExistingAlias] = useState(false);
   const [isNewUser, setIsNewUser] = useState(null); // null = unknown, true = new, false = returning
+  const [honeypot, setHoneypot] = useState(''); // Honeypot field - should remain empty
   const nameInputId = useId();
   const emailInputId = useId();
+  const honeypotId = useId();
 
   useEffect(() => {
     // Check if email was just verified
@@ -321,6 +323,7 @@ export default function LandingPage() {
         body: JSON.stringify({
           email: email.trim(),
           name: name.trim(),
+          company_website: honeypot, // Honeypot field - should be empty
         }),
       });
 
@@ -654,6 +657,20 @@ export default function LandingPage() {
                       {error}
                     </p>
                   )}
+                </div>
+
+                {/* Honeypot field - hidden from users, bots will fill it */}
+                <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                  <label htmlFor={honeypotId}>Company Website (leave blank)</label>
+                  <input
+                    id={honeypotId}
+                    type="text"
+                    name="company_website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
                 </div>
 
                 <button

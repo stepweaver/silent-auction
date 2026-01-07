@@ -1,4 +1,4 @@
-import { isValidEmailFormat, getEmailDomain, suggestEmailCorrection } from '@/lib/validation';
+import { isValidEmailFormat, getEmailDomain, suggestEmailCorrection, isValidName } from '@/lib/validation';
 import { generateVerificationToken } from '@/lib/emailVerification';
 import { sendEmailVerification } from '@/lib/notifications';
 import { supabaseServer } from '@/lib/serverSupabase';
@@ -15,36 +15,55 @@ const resolve4 = promisify(dns.resolve4);
  */
 export async function POST(req) {
   try {
-    // Rate limiting disabled for testing
-    // Rate limiting: 3 verification emails per 10 minutes per IP
+    // Rate limiting: 5 verification emails per 10 minutes per IP
     // This prevents email spam/abuse
-    // const rateLimitResult = await checkRateLimit(req, 3, 10 * 60 * 1000);
-    // if (rateLimitResult) {
-    //   return Response.json(
-    //     { 
-    //       error: 'Too many verification email requests. Please wait before requesting another.',
-    //       retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
-    //     },
-    //     { 
-    //       status: 429,
-    //       headers: { 
-    //         'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
-    //         'X-RateLimit-Limit': '3',
-    //         'X-RateLimit-Remaining': '0',
-    //         'X-RateLimit-Reset': rateLimitResult.resetAt.toString()
-    //       }
-    //     }
-    //   );
-    // }
+    const rateLimitResult = await checkRateLimit(req, 5, 10 * 60 * 1000);
+    if (rateLimitResult) {
+      return Response.json(
+        { 
+          error: 'Too many verification email requests. Please wait before requesting another.',
+          retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
+        },
+        { 
+          status: 429,
+          headers: { 
+            'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString()
+          }
+        }
+      );
+    }
 
     const body = await req.json();
-    const { email, name } = body;
+    const { email, name, company_website } = body;
+
+    // Honeypot check: if company_website has any value, it's a bot
+    if (company_website && company_website.trim().length > 0) {
+      // Silently reject - return success to not reveal the honeypot
+      return Response.json({
+        success: true,
+        message: 'Verification email sent. Please check your inbox.',
+      });
+    }
 
     if (!email || typeof email !== 'string') {
       return Response.json(
         { error: 'Email is required' },
         { status: 400 }
       );
+    }
+
+    // Validate name if provided (required for new users)
+    if (name && typeof name === 'string') {
+      const nameValidation = isValidName(name);
+      if (!nameValidation.valid) {
+        return Response.json(
+          { error: nameValidation.error || 'Please enter a valid name' },
+          { status: 400 }
+        );
+      }
     }
 
     const trimmedEmail = email.trim().toLowerCase();
