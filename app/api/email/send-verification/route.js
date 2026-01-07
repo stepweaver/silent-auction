@@ -132,50 +132,9 @@ export async function POST(req) {
       }, { status: 400 });
     }
 
-    // Persist the registrant's name so we can associate it with their avatar after verification
-    const trimmedName = typeof name === 'string' ? name.trim() : '';
-    if (trimmedName) {
-      try {
-        const { data: existingVerification } = await s
-          .from('verified_emails')
-          .select('verified_at, name')
-          .eq('email', trimmedEmail)
-          .maybeSingle();
-
-        if (existingVerification) {
-          // Only update pending verifications or add missing name metadata
-          if (!existingVerification.verified_at || !existingVerification.name) {
-            await s
-              .from('verified_emails')
-              .update({ name: trimmedName })
-              .eq('email', trimmedEmail);
-          }
-        } else {
-          await s
-            .from('verified_emails')
-            .insert({
-              email: trimmedEmail,
-              name: trimmedName,
-            });
-        }
-      } catch (nameStoreError) {
-        if (nameStoreError?.code === '23505') {
-          try {
-            await s
-              .from('verified_emails')
-              .update({ name: trimmedName })
-              .eq('email', trimmedEmail);
-          } catch (retryError) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('Retry failed while persisting verification name metadata:', retryError);
-            }
-          }
-        } else if (process.env.NODE_ENV === 'development') {
-          // Failing to persist the name should not block verification email delivery
-          console.error('Failed to persist verification name metadata:', nameStoreError);
-        }
-      }
-    }
+    // Note: Name is NOT stored in verified_emails table (it doesn't have a name column)
+    // Name is passed via localStorage (auction_pending_name) and stored in user_aliases when alias is created
+    // The verified_emails table only tracks: email, verified_at, created_at
 
     // Step 4: Generate verification token and send email
     const verificationToken = generateVerificationToken(trimmedEmail);

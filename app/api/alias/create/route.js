@@ -298,14 +298,19 @@ export async function POST(req) {
     const verifiedEmail = emailRecord;
 
     // verified_emails table doesn't have a name column - use name from request
+    // If no name provided, generate one from email or alias
     const fallbackName = typeof requestName === 'string' ? requestName.trim() : '';
-    const finalName = fallbackName;
-
+    let finalName = fallbackName;
+    
+    // If no name provided, use alias or email username as fallback
     if (!finalName) {
-      return Response.json(
-        { error: 'We could not find your name for this email. Please restart the registration flow so we can capture it.' },
-        { status: 400 }
-      );
+      if (alias) {
+        finalName = alias; // Use alias as name if no name provided
+      } else {
+        // Generate name from email
+        const emailUsername = trimmedEmail.split('@')[0];
+        finalName = emailUsername.charAt(0).toUpperCase() + emailUsername.slice(1);
+      }
     }
 
     // Note: verified_emails table doesn't store name, so we just use the request name
