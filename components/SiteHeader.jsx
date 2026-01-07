@@ -131,6 +131,24 @@ export default function SiteHeader() {
               Leaderboard
             </Link>
             <Link
+              href='/vendor-enroll'
+              aria-current={isActive('/vendor') || isActive('/vendor-enroll') ? 'page' : undefined}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                isActive('/vendor') || isActive('/vendor-enroll')
+                  ? 'text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              style={
+                isActive('/vendor') || isActive('/vendor-enroll')
+                  ? {
+                      backgroundColor: 'var(--primary-500)',
+                    }
+                  : {}
+              }
+            >
+              Donor Login
+            </Link>
+            <Link
               href='/admin'
               prefetch={false}
               aria-current={isActive('/admin') ? 'page' : undefined}
@@ -301,6 +319,28 @@ export default function SiteHeader() {
                 }
               >
                 Leaderboard
+              </Link>
+              <Link
+                href='/vendor-enroll'
+                aria-current={isActive('/vendor') || isActive('/vendor-enroll') ? 'page' : undefined}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors mb-1 active:opacity-85 touch-manipulation ${
+                  isActive('/vendor') || isActive('/vendor-enroll')
+                    ? 'text-white'
+                    : 'text-gray-700 active:bg-gray-100'
+                }`}
+                style={
+                  isActive('/vendor') || isActive('/vendor-enroll')
+                    ? {
+                        backgroundColor: 'var(--primary-500)',
+                        minHeight: '48px',
+                      }
+                    : {
+                        minHeight: '48px',
+                      }
+                }
+              >
+                Donor Login
               </Link>
             <Link
               href='/admin'

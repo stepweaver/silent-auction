@@ -12,6 +12,22 @@ function VendorEnrollContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
+  // Redirect if already logged in (unless there's a token in URL)
+  useEffect(() => {
+    const token = searchParams?.get('token');
+    if (token) return; // Don't redirect if there's a token to process
+    
+    if (typeof window !== 'undefined') {
+      const vendorAdminId = localStorage.getItem('vendor_admin_id');
+      const vendorAdminEmail = localStorage.getItem('vendor_admin_email');
+      
+      if (vendorAdminId && vendorAdminEmail) {
+        // Already logged in, redirect to dashboard
+        router.push('/vendor');
+      }
+    }
+  }, [router, searchParams]);
+
   async function authenticateWithToken(token) {
     setIsAuthenticating(true);
     setMsg('');
