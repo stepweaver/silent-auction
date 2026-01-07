@@ -64,11 +64,53 @@ export default function AliasSelector({
   const [checkingExistingEmail, setCheckingExistingEmail] = useState(false);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [checkingVerification, setCheckingVerification] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
   const emojiPickerId = useId();
   const modalTitleId = useId();
 
   // Use the name from verification token generation
   const name = propName;
+
+  // Check verification status when email is provided
+  useEffect(() => {
+    const checkVerification = async () => {
+      if (!email || !email.trim()) {
+        setCheckingVerification(false);
+        setIsVerified(false);
+        return;
+      }
+
+      setCheckingVerification(true);
+      try {
+        const response = await fetch('/api/alias/check-verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const verified = data.verified === true;
+          setIsVerified(verified);
+          if (!verified) {
+            // Clear any previous success messages if not verified
+            setSuccess('');
+          }
+        } else {
+          setIsVerified(false);
+        }
+      } catch (err) {
+        console.error('Error checking verification:', err);
+        setIsVerified(false);
+      } finally {
+        setCheckingVerification(false);
+      }
+    };
+
+    checkVerification();
+  }, [email]);
 
   // Check if email already has an alias when email changes
   useEffect(() => {
@@ -251,6 +293,34 @@ export default function AliasSelector({
       return;
     }
 
+    // Check verification before proceeding
+    if (!isVerified && !checkingVerification) {
+      // Double-check verification status
+      try {
+        const checkResponse = await fetch('/api/alias/check-verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const checkData = await checkResponse.json();
+        
+        if (!checkData.verified) {
+          setError('Please verify your email address before creating an alias. Check your email for the verification link.');
+          return;
+        }
+        setIsVerified(true);
+      } catch (err) {
+        console.error('Error checking verification:', err);
+        setError('Please verify your email address before creating an alias. Check your email for the verification link.');
+        return;
+      }
+    }
+
+    if (!isVerified) {
+      setError('Please verify your email address before creating an alias. Check your email for the verification link.');
+      return;
+    }
+
     // Validate email format and domain - REQUIRED before proceeding
     try {
       const response = await fetch('/api/email/validate', {
@@ -305,6 +375,14 @@ export default function AliasSelector({
       const data = await response.json();
 
       if (!response.ok) {
+        // Log error details for debugging
+        console.error('[ALIAS SELECTOR] Create alias failed:', {
+          status: response.status,
+          error: data.error,
+          email: email.trim(),
+          payload: requestPayload,
+        });
+
         // If email already has an alias, show the existing alias info
         if (data.existingAlias) {
           setError(data.error || 'This email already has an alias');
@@ -322,6 +400,7 @@ export default function AliasSelector({
             onAliasSelected(data.existingAlias);
           }
         } else {
+          // Show the actual error message from the server
           setError(data.error || 'Error creating alias');
         }
         return;
@@ -740,6 +819,28 @@ export default function AliasSelector({
           </button>
         </div>
 
+        {/* Verification Status */}
+        {checkingVerification && (
+          <div className='bg-blue-50 border-2 border-blue-200 rounded-lg p-2 mb-2'>
+            <p className='text-blue-700 font-medium text-xs flex items-center gap-1.5'>
+              <svg
+                className='w-4 h-4 flex-shrink-0 animate-spin'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                />
+              </svg>
+              Checking verification status...
+            </p>
+          </div>
+        )}
+
         {/* Error/Success Messages */}
         {error && (
           <div
@@ -826,7 +927,7 @@ export default function AliasSelector({
             type='button'
             onClick={handleCreateAlias}
             disabled={
-              !selectedColor || !selectedAnimal || isCreating || !!error
+              !selectedColor || !selectedAnimal || isCreating || checkingVerification || !!error || !isVerified
             }
             className='flex-1 px-3 py-2 text-white font-semibold rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-xs flex items-center justify-center gap-1.5'
             style={{ backgroundColor: 'var(--primary-500)' }}

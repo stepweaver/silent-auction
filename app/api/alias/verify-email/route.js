@@ -108,9 +108,22 @@ export async function POST(req) {
 
     if (insertError) {
       console.error('Error recording email verification:', insertError);
-      // Check if it's a unique constraint violation (already exists)
+      // Check if it's a unique constraint violation (record already exists)
       if (insertError.code === '23505') {
-        // Already verified, return success
+        // Try to update the existing record with verified_at
+        const { data: updatedVerification, error: updateError } = await s
+          .from('verified_emails')
+          .update({ verified_at: nowIso })
+          .eq('email', trimmedEmail)
+          .select()
+          .maybeSingle();
+
+        if (updateError) {
+          console.error('Error updating verification record on insert conflict:', updateError);
+          // Continue anyway - might already be verified
+        }
+
+        // Check if user already has an alias
         const { data: existingAlias } = await s
           .from('user_aliases')
           .select('*')
@@ -119,7 +132,9 @@ export async function POST(req) {
 
         return Response.json({
           verified: true,
-          message: 'Email verified successfully. You can now create your alias.',
+          message: existingAlias
+            ? 'Email verified successfully. You can use your existing alias.'
+            : 'Email verified successfully. You can now create your alias.',
           alias: existingAlias || null,
         });
       }

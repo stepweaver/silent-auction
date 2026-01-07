@@ -13,6 +13,9 @@ export async function POST(req) {
       );
     }
 
+    // Normalize email consistently
+    const normalizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : email;
+
     const s = supabaseServer();
 
     // Extract current IP from request
@@ -22,7 +25,7 @@ export async function POST(req) {
     const { data: alias, error } = await s
       .from('user_aliases')
       .select('*')
-      .eq('email', email)
+      .eq('email', normalizedEmail)
       .maybeSingle();
 
     if (error) {
@@ -49,7 +52,7 @@ export async function POST(req) {
       // Update IP asynchronously (don't wait for it)
       s.from('user_aliases')
         .update({ last_known_ip: currentIP })
-        .eq('email', email)
+        .eq('email', normalizedEmail)
         .then(() => {
           // Silently succeed
         })

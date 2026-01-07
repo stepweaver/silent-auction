@@ -12,6 +12,9 @@ export async function POST(req) {
       );
     }
 
+    // Normalize email consistently
+    const normalizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : email;
+
     const s = supabaseServer();
 
     // Check if alias exists (globally unique)
@@ -36,9 +39,10 @@ export async function POST(req) {
       );
     }
 
-    // If alias exists, check if it's the same email
+    // If alias exists, check if it's the same email (normalized comparison)
     if (existingAlias) {
-      if (existingAlias.email === email) {
+      const existingEmailNormalized = typeof existingAlias.email === 'string' ? existingAlias.email.toLowerCase().trim() : existingAlias.email;
+      if (existingEmailNormalized === normalizedEmail) {
         // Same user owns this alias - it's available to them
         return Response.json({ available: true, owned: true });
       } else {

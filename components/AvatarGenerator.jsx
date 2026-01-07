@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CustomAvatar from './CustomAvatar';
 
 const AVATAR_STYLES = [
@@ -12,8 +12,49 @@ export default function AvatarGenerator({ email, name, onAvatarSelected, initial
   const [seed, setSeed] = useState(initialSeed || email || 'default');
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
+  const [checkingVerification, setCheckingVerification] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
 
   const currentStyle = AVATAR_STYLES.find(s => s.id === selectedStyle);
+
+  // Check verification status when email is provided
+  useEffect(() => {
+    const checkVerification = async () => {
+      if (!email || !email.trim()) {
+        setCheckingVerification(false);
+        setIsVerified(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/alias/check-verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setIsVerified(data.verified === true);
+          if (!data.verified) {
+            setError('Please verify your email address before creating an alias. Check your email for the verification link.');
+          }
+        } else {
+          setError(data.error || 'Error checking verification status');
+          setIsVerified(false);
+        }
+      } catch (err) {
+        console.error('Error checking verification:', err);
+        setError('Error checking verification status. Please try again.');
+        setIsVerified(false);
+      } finally {
+        setCheckingVerification(false);
+      }
+    };
+
+    checkVerification();
+  }, [email]);
 
   const handleRandomize = () => {
     // Generate a random seed
@@ -26,6 +67,12 @@ export default function AvatarGenerator({ email, name, onAvatarSelected, initial
   const handleCreate = async () => {
     if (!email) {
       setError('Email is required');
+      return;
+    }
+
+    // Double-check verification before creating
+    if (!isVerified) {
+      setError('Please verify your email address before creating an alias. Check your email for the verification link.');
       return;
     }
 
@@ -167,6 +214,13 @@ export default function AvatarGenerator({ email, name, onAvatarSelected, initial
         </label>
       </div>
 
+      {/* Verification Check Status */}
+      {checkingVerification && (
+        <div className="bg-info/10 border-2 border-info/30 rounded-xl p-4 mb-4">
+          <span className="text-info font-semibold">Checking verification status...</span>
+        </div>
+      )}
+
       {/* Error/Success Messages */}
       {error && (
         <div className="bg-error/10 border-2 border-error/30 rounded-xl p-4 mb-4">
@@ -178,7 +232,7 @@ export default function AvatarGenerator({ email, name, onAvatarSelected, initial
       <button
         type="button"
         onClick={handleCreate}
-        disabled={isCreating || !email}
+        disabled={isCreating || !email || checkingVerification || !isVerified}
         className="btn btn-primary btn-lg w-full shadow-lg"
       >
         {isCreating ? (
