@@ -227,7 +227,7 @@ export async function POST(req) {
     try {
       const result = await s
         .from('verified_emails')
-        .select('email, name, verified_at')
+        .select('email, verified_at')
         .eq('email', trimmedEmail)
         .maybeSingle();
       
@@ -297,9 +297,9 @@ export async function POST(req) {
     // Use the verified email record
     const verifiedEmail = emailRecord;
 
-    const verifiedName = typeof verifiedEmail.name === 'string' ? verifiedEmail.name.trim() : '';
+    // verified_emails table doesn't have a name column - use name from request
     const fallbackName = typeof requestName === 'string' ? requestName.trim() : '';
-    const finalName = verifiedName || fallbackName;
+    const finalName = fallbackName;
 
     if (!finalName) {
       return Response.json(
@@ -308,18 +308,7 @@ export async function POST(req) {
       );
     }
 
-    if (!verifiedName && finalName) {
-      try {
-        await s
-          .from('verified_emails')
-          .update({ name: finalName })
-          .eq('email', trimmedEmail);
-      } catch (namePersistError) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to persist verified name metadata:', namePersistError);
-        }
-      }
-    }
+    // Note: verified_emails table doesn't store name, so we just use the request name
 
     // Email is verified and no alias exists (we already checked existingUserAlias above) - create the alias
     // This is the FIRST and ONLY time we write to user_aliases
