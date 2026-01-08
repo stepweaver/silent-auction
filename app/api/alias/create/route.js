@@ -218,6 +218,41 @@ export async function POST(req) {
       );
     }
 
+    // PREVENT DUPLICATE REGISTRATIONS: Check if same name exists with different email
+    // This prevents issues where one person registers multiple times
+    if (finalName) {
+      const normalizedName = finalName.trim().toLowerCase();
+      const { data: existingNameRecords, error: nameCheckError } = await s
+        .from('user_aliases')
+        .select('id, email, alias, name, created_at')
+        .ilike('name', normalizedName); // Case-insensitive match
+
+      if (nameCheckError) {
+        // Log but don't block - this is a warning check, not critical
+        console.warn('[ALIAS CREATE] Error checking for duplicate names:', nameCheckError);
+      } else if (existingNameRecords && existingNameRecords.length > 0) {
+        // Found existing records with same name
+        const differentEmails = existingNameRecords.filter(
+          record => record.email.toLowerCase().trim() !== trimmedEmail
+        );
+
+        if (differentEmails.length > 0) {
+          // Log warning about potential duplicate registration
+          console.warn('[ALIAS CREATE] Potential duplicate registration detected:', {
+            name: finalName,
+            newEmail: trimmedEmail,
+            existingEmails: differentEmails.map(r => r.email),
+            existingAliases: differentEmails.map(r => r.alias),
+            timestamp: new Date().toISOString()
+          });
+
+          // In production, you might want to return an error or require admin approval
+          // For now, we'll allow it but log a warning (user might legitimately have multiple emails)
+          // You could add: return Response.json({ error: 'An account with this name already exists. Please contact support if this is you.' }, { status: 400 });
+        }
+      }
+    }
+
     // BEST PRACTICE: Check verified_emails table, NOT user_aliases
     // This ensures we only create aliases for verified emails
     // Check if record exists (we'll verify verified_at is not null after)

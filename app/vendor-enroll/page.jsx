@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useId } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -11,6 +11,8 @@ function VendorEnrollContent() {
   const [msg, setMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [honeypot, setHoneypot] = useState(''); // Honeypot field - should remain empty
+  const honeypotId = useId();
 
   // Redirect if already logged in (unless there's a token in URL)
   useEffect(() => {
@@ -80,7 +82,7 @@ function VendorEnrollContent() {
       const res = await fetch('/api/vendor-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, company_website: honeypot }),
       });
 
       if (!res.ok) {
@@ -173,6 +175,20 @@ function VendorEnrollContent() {
                   required
                   disabled={isSubmitting}
                   placeholder="your@email.com"
+                />
+              </div>
+
+              {/* Honeypot field - hidden from users, bots will fill it */}
+              <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                <label htmlFor={honeypotId}>Company Website (leave blank)</label>
+                <input
+                  id={honeypotId}
+                  type="text"
+                  name="company_website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
                 />
               </div>
 

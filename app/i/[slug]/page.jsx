@@ -51,9 +51,10 @@ export default function ItemPage({ params }) {
 
       let aliasesMap = {};
       if (aliasIds.length > 0) {
+        // Select all relevant alias fields (supporting old and new systems)
         const { data: aliasesData, error: aliasesError } = await s
           .from('user_aliases')
-          .select('id, alias, color, animal')
+          .select('id, alias, color, animal, icon, avatar_style, avatar_seed')
           .in('id', aliasIds);
 
         if (aliasesError) {
@@ -64,14 +65,57 @@ export default function ItemPage({ params }) {
             acc[alias.id] = alias;
             return acc;
           }, {});
+          
+          // Log if any alias_ids weren't found (data integrity issue)
+          const foundIds = new Set(aliasesData.map(a => a.id));
+          const missingIds = aliasIds.filter(id => !foundIds.has(id));
+          if (missingIds.length > 0) {
+            console.warn(`[Item Page] Missing aliases for alias_ids: ${missingIds.join(', ')} on item ${itemData.id}`);
+          }
+        }
+      }
+
+      // For bids missing aliases, try email-based fallback lookup
+      const bidsMissingAliases = (bidsData || []).filter(
+        bid => bid.alias_id && !aliasesMap[bid.alias_id] && bid.email
+      );
+
+      // Batch lookup aliases by email for missing ones
+      let emailAliasesMap = {};
+      if (bidsMissingAliases.length > 0) {
+        const missingEmails = [...new Set(bidsMissingAliases.map(bid => bid.email))];
+        const { data: emailAliasesData } = await s
+          .from('user_aliases')
+          .select('id, alias, color, animal, icon, avatar_style, avatar_seed, email')
+          .in('email', missingEmails);
+
+        if (emailAliasesData) {
+          emailAliasesMap = emailAliasesData.reduce((acc, alias) => {
+            acc[alias.email] = alias;
+            return acc;
+          }, {});
+          
+          // Log recovery for monitoring
+          if (emailAliasesData.length > 0) {
+            console.warn(`[Item Page] Recovered ${emailAliasesData.length} aliases by email lookup for item ${itemData.id}`);
+          }
         }
       }
 
       // Join aliases with bids
-      const bidsWithAliases = (bidsData || []).map(bid => ({
-        ...bid,
-        user_aliases: bid.alias_id ? aliasesMap[bid.alias_id] : null,
-      }));
+      const bidsWithAliases = (bidsData || []).map(bid => {
+        let bidAlias = bid.alias_id ? aliasesMap[bid.alias_id] : null;
+        
+        // Fallback: If alias_id lookup failed, try email lookup
+        if (!bidAlias && bid.email && emailAliasesMap[bid.email]) {
+          bidAlias = emailAliasesMap[bid.email];
+        }
+        
+        return {
+          ...bid,
+          user_aliases: bidAlias,
+        };
+      });
 
       // Create hash to detect changes (only update if data actually changed)
       const newHash = bidsWithAliases.map(b => 

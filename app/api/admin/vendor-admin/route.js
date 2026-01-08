@@ -22,6 +22,19 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
+    
+    // Honeypot check: if company_website has any value, it's a bot
+    if (body.company_website && body.company_website.trim().length > 0) {
+      // Silently reject - return success to not reveal the honeypot
+      return Response.json({
+        ok: true,
+        vendor_admin: null,
+        enrollment_token: '',
+        enrollment_link: '',
+        email_sent: false,
+      });
+    }
+    
     const parsed = VendorAdminSchema.safeParse(body);
 
     if (!parsed.success) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 
@@ -12,6 +12,8 @@ export default function VendorAdminsPage() {
   const [form, setForm] = useState({ email: '', name: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedDonors, setExpandedDonors] = useState(new Set());
+  const [honeypot, setHoneypot] = useState(''); // Honeypot field - should remain empty
+  const honeypotId = useId();
 
   async function load() {
     try {
@@ -45,7 +47,7 @@ export default function VendorAdminsPage() {
       const res = await fetch('/api/admin/vendor-admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, company_website: honeypot }),
       });
 
       if (!res.ok) {
@@ -62,6 +64,7 @@ export default function VendorAdminsPage() {
         setMsg('Donor created successfully!');
       }
       setForm({ email: '', name: '' });
+      setHoneypot('');
       setShowForm(false);
       await load();
     } catch (err) {
@@ -151,6 +154,21 @@ export default function VendorAdminsPage() {
                 An enrollment email with a login link will be sent to this address automatically.
               </p>
             </div>
+
+            {/* Honeypot field - hidden from users, bots will fill it */}
+            <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+              <label htmlFor={honeypotId}>Company Website (leave blank)</label>
+              <input
+                id={honeypotId}
+                type="text"
+                name="company_website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
+
             <button
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"

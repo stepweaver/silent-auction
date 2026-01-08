@@ -99,9 +99,10 @@ export default function LeaderboardPage() {
 
         let aliasesMap = {};
         if (aliasIds.length > 0) {
+          // Select all relevant alias fields (supporting old and new systems)
           const { data: aliasesData, error: aliasesError } = await s
             .from('user_aliases')
-            .select('id, alias, color, animal')
+            .select('id, alias, color, animal, icon, avatar_style, avatar_seed')
             .in('id', aliasIds);
 
           if (aliasesError) {
@@ -111,23 +112,86 @@ export default function LeaderboardPage() {
               acc[alias.id] = alias;
               return acc;
             }, {});
+            
+            // Log if any alias_ids weren't found (data integrity issue)
+            const foundIds = new Set(aliasesData.map(a => a.id));
+            const missingIds = aliasIds.filter(id => !foundIds.has(id));
+            if (missingIds.length > 0) {
+              console.warn(`[Leaderboard] Missing aliases for alias_ids: ${missingIds.join(', ')} on item ${item.id}`);
+            }
           }
         }
 
         // Join aliases with top bid
+        // If alias_id lookup failed, try to find alias by email as fallback
+        let topBidAlias = null;
+        if (topBid) {
+          if (topBid.alias_id) {
+            topBidAlias = aliasesMap[topBid.alias_id];
+            
+            // Fallback: If alias_id lookup failed but we have an email, try to find alias by email
+            if (!topBidAlias && topBid.email) {
+              const { data: emailAliasData } = await s
+                .from('user_aliases')
+                .select('id, alias, color, animal, icon, avatar_style, avatar_seed')
+                .eq('email', topBid.email)
+                .maybeSingle();
+              
+              if (emailAliasData) {
+                topBidAlias = emailAliasData;
+                // Log this recovery for monitoring
+                console.warn(`[Leaderboard] Recovered alias for bid ${topBid.id} by email lookup. alias_id was ${topBid.alias_id} but not found, recovered alias: ${emailAliasData.alias}`);
+              }
+            }
+          }
+        }
+
         const topBidWithAlias = topBid ? {
           ...topBid,
-          user_aliases: topBid.alias_id ? aliasesMap[topBid.alias_id] : null
+          user_aliases: topBidAlias
         } : null;
 
         // Get recent bids (last 60 seconds for bidding war detection) with aliases
-        const recentBidsList = (bidsData || []).filter(bid => {
+        const recentBidsFiltered = (bidsData || []).filter(bid => {
           const bidTime = new Date(bid.created_at);
           return now - bidTime < 60000; // 60 seconds
-        }).map(bid => ({
-          ...bid,
-          user_aliases: bid.alias_id ? aliasesMap[bid.alias_id] : null
-        }));
+        });
+
+        // For recent bids missing aliases, try email-based fallback lookup
+        const recentBidsMissingAliases = recentBidsFiltered.filter(
+          bid => bid.alias_id && !aliasesMap[bid.alias_id] && bid.email
+        );
+
+        // Batch lookup aliases by email for missing ones
+        let emailAliasesMap = {};
+        if (recentBidsMissingAliases.length > 0) {
+          const missingEmails = [...new Set(recentBidsMissingAliases.map(bid => bid.email))];
+          const { data: emailAliasesData } = await s
+            .from('user_aliases')
+            .select('id, alias, color, animal, icon, avatar_style, avatar_seed, email')
+            .in('email', missingEmails);
+
+          if (emailAliasesData) {
+            emailAliasesMap = emailAliasesData.reduce((acc, alias) => {
+              acc[alias.email] = alias;
+              return acc;
+            }, {});
+          }
+        }
+
+        const recentBidsList = recentBidsFiltered.map(bid => {
+          let bidAlias = bid.alias_id ? aliasesMap[bid.alias_id] : null;
+          
+          // Fallback: If alias_id lookup failed, try email lookup
+          if (!bidAlias && bid.email && emailAliasesMap[bid.email]) {
+            bidAlias = emailAliasesMap[bid.email];
+          }
+          
+          return {
+            ...bid,
+            user_aliases: bidAlias
+          };
+        });
 
         return {
           itemId: item.id,

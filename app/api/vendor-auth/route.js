@@ -38,6 +38,19 @@ export async function POST(req) {
     }
 
     const body = await req.json();
+    
+    // Honeypot check: if company_website has any value, it's a bot
+    if (body.company_website && body.company_website.trim().length > 0) {
+      // Silently reject - return success to not reveal the honeypot
+      return Response.json({
+        ok: true,
+        token: 'invalid',
+        vendor_admin_id: 0,
+        email: body.email || '',
+        name: '',
+      });
+    }
+    
     const parsed = AuthSchema.safeParse(body);
 
     if (!parsed.success) {

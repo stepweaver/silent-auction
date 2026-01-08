@@ -159,6 +159,12 @@ export async function POST(req) {
 
     const aliasId = existingAlias.id;
 
+    // Validate that alias_id exists (defensive programming)
+    if (!aliasId) {
+      console.error('[BID] Alias ID missing for email:', email);
+      return new Response('Error: Alias ID is missing. Please contact support.', { status: 500 });
+    }
+
     // Check if this is user's first bid on this item (before inserting)
     const { data: previousBids } = await s
       .from('bids')
