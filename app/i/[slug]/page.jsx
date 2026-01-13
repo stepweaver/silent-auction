@@ -51,10 +51,10 @@ export default function ItemPage({ params }) {
 
       let aliasesMap = {};
       if (aliasIds.length > 0) {
-        // Select all relevant alias fields (supporting old and new systems)
+        // Select alias fields
         const { data: aliasesData, error: aliasesError } = await s
           .from('user_aliases')
-          .select('id, alias, color, animal, icon, avatar_style, avatar_seed')
+          .select('id, alias, color, animal')
           .in('id', aliasIds);
 
         if (aliasesError) {
@@ -86,7 +86,7 @@ export default function ItemPage({ params }) {
         const missingEmails = [...new Set(bidsMissingAliases.map(bid => bid.email))];
         const { data: emailAliasesData } = await s
           .from('user_aliases')
-          .select('id, alias, color, animal, icon, avatar_style, avatar_seed, email')
+          .select('id, alias, color, animal, email')
           .in('email', missingEmails);
 
         if (emailAliasesData) {

@@ -1,18 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Field from '@/components/Field';
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'Sports',
   'Restaurants',
   'Family Fun',
   'Services',
   'Memberships',
-  'Other',
+  'Student Enrichment',
 ];
 
 export default function NewItemPage() {
@@ -31,14 +31,50 @@ export default function NewItemPage() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [customCategories, setCustomCategories] = useState([]);
+  const [customCategoryInput, setCustomCategoryInput] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
 
-  function handleSlugChange(e) {
-    const slug = e.target.value
+  // Fetch custom categories on load
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        if (res.ok) {
+          const { categories } = await res.json();
+          // Filter out default categories to get only custom ones
+          const custom = categories.filter(cat => !DEFAULT_CATEGORIES.includes(cat));
+          setCustomCategories(custom);
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  // Combined categories list: defaults + custom (sorted) + Other at the end
+  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories.sort(), 'Other'];
+
+  // Auto-generate slug from title
+  function generateSlug(title) {
+    if (!title) return '';
+    return title
       .toLowerCase()
       .trim()
       .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-    setForm((f) => ({ ...f, slug }));
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function handleTitleChange(e) {
+    const title = e.target.value;
+    setForm((f) => ({ 
+      ...f, 
+      title,
+      slug: generateSlug(title)
+    }));
   }
 
   async function handlePhotoUpload(file) {
@@ -137,25 +173,10 @@ export default function NewItemPage() {
             type="text"
             className="border rounded px-3 py-2 w-full"
             value={form.title}
-            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            onChange={handleTitleChange}
             required
             disabled={isSubmitting}
           />
-        </Field>
-
-        <Field label="Slug" required>
-          <input
-            type="text"
-            className="border rounded px-3 py-2 w-full font-mono"
-            value={form.slug}
-            onChange={handleSlugChange}
-            required
-            disabled={isSubmitting}
-            placeholder="auto-generated-from-title"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            URL-friendly identifier (auto-formatted from title if not provided)
-          </p>
         </Field>
 
         <Field label="Description">
@@ -171,17 +192,46 @@ export default function NewItemPage() {
         <Field label="Category">
           <select
             className="border rounded px-3 py-2 w-full"
-            value={form.category}
-            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+            value={showCustomInput ? 'Other' : form.category}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === 'Other') {
+                setShowCustomInput(true);
+                setForm((f) => ({ ...f, category: '' }));
+              } else {
+                setShowCustomInput(false);
+                setCustomCategoryInput('');
+                setForm((f) => ({ ...f, category: value }));
+              }
+            }}
             disabled={isSubmitting}
           >
             <option value="">Select a category...</option>
-            {CATEGORIES.map((cat) => (
+            {allCategories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
             ))}
           </select>
+          {showCustomInput && (
+            <div className="mt-2">
+              <input
+                type="text"
+                className="border rounded px-3 py-2 w-full"
+                placeholder="Enter new category name..."
+                value={customCategoryInput}
+                onChange={(e) => {
+                  setCustomCategoryInput(e.target.value);
+                  setForm((f) => ({ ...f, category: e.target.value }));
+                }}
+                disabled={isSubmitting}
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                This category will be saved and available for future items.
+              </p>
+            </div>
+          )}
         </Field>
 
         <Field label="Photo">

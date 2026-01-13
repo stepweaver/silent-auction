@@ -9,13 +9,13 @@ import Field from '@/components/Field';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'Sports',
   'Restaurants',
   'Family Fun',
   'Services',
   'Memberships',
-  'Other',
+  'Student Enrichment',
 ];
 
 export default function VendorEditItemPage({ params }) {
@@ -40,6 +40,9 @@ export default function VendorEditItemPage({ params }) {
   const [photoPreview, setPhotoPreview] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [topBid, setTopBid] = useState(null);
+  const [customCategories, setCustomCategories] = useState([]);
+  const [customCategoryInput, setCustomCategoryInput] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -51,6 +54,27 @@ export default function VendorEditItemPage({ params }) {
       setVendorAdminId(id);
     }
   }, [router]);
+
+  // Fetch custom categories on load
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        if (res.ok) {
+          const { categories } = await res.json();
+          // Filter out default categories to get only custom ones
+          const custom = categories.filter(cat => !DEFAULT_CATEGORIES.includes(cat));
+          setCustomCategories(custom);
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  // Combined categories list: defaults + custom (sorted) + Other at the end
+  const allCategories = [...DEFAULT_CATEGORIES, ...customCategories.sort(), 'Other'];
 
   async function loadItem() {
     try {
@@ -374,17 +398,57 @@ export default function VendorEditItemPage({ params }) {
                         e.currentTarget.style.borderColor = 'rgb(229 231 235)';
                         e.currentTarget.style.boxShadow = 'none';
                       }}
-                      value={form.category}
-                      onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                      value={showCustomInput ? 'Other' : form.category}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === 'Other') {
+                          setShowCustomInput(true);
+                          setForm((f) => ({ ...f, category: '' }));
+                        } else {
+                          setShowCustomInput(false);
+                          setCustomCategoryInput('');
+                          setForm((f) => ({ ...f, category: value }));
+                        }
+                      }}
                       disabled={isSubmitting}
                     >
                       <option value="">Select a category...</option>
-                      {CATEGORIES.map((cat) => (
+                      {allCategories.map((cat) => (
                         <option key={cat} value={cat}>
                           {cat}
                         </option>
                       ))}
                     </select>
+                    {showCustomInput && (
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm sm:text-base"
+                          style={{
+                            borderColor: 'rgb(229 231 235)'
+                          }}
+                          onFocus={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--primary-500)';
+                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0, 177, 64, 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.currentTarget.style.borderColor = 'rgb(229 231 235)';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                          placeholder="Enter new category name..."
+                          value={customCategoryInput}
+                          onChange={(e) => {
+                            setCustomCategoryInput(e.target.value);
+                            setForm((f) => ({ ...f, category: e.target.value }));
+                          }}
+                          disabled={isSubmitting}
+                          autoFocus
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          This category will be saved and available for future items.
+                        </p>
+                      </div>
+                    )}
                   </Field>
 
                   <Field label="Photo">

@@ -136,7 +136,7 @@ export async function POST(req) {
 
 // GET - Verify donor session (supports both JWT and legacy header-based auth)
 export async function GET(req) {
-  const headersList = headers();
+  const headersList = await headers();
   
   // Try JWT token first (new method)
   const authHeader = headersList.get('authorization');

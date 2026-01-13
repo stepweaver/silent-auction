@@ -18,66 +18,66 @@ Use this checklist before the event to verify everything works correctly.
 - [λ] Page loads without errors
 - [λ] Name field accepts input
 - [λ] Email field accepts input
-- [ ] Email validation catches invalid formats (test: `bad@email`, `missing.com`)
-- [ ] Email validation catches fake domains (test: `test@fakexyz123.com`)
-- [ ] Typo suggestions work (test: `user@gmial.com` → suggests gmail.com)
-- [ ] "Send Verification Email" button works
-- [ ] Success message appears after sending
-- [ ] Rate limiting works (try sending 6+ times quickly)
+- [λ] Email validation catches invalid formats (test: `bad@email`, `missing.com`)
+- [λ] Email validation catches fake domains (test: `test@fakexyz123.com`)
+- [ ] Typo suggestions work (test: `user@gmial.com` → suggests gmail.com) - Didn't work, or I couldn't get it to trigger. I entered 'gmial'. No suggestions ever appeared.
+- [λ] "Send Verification Email" button works
+- [λ] Success message appears after sending
+- [λ] Rate limiting works (try sending 6+ times quickly)
 
 ### Email Verification (`/verify-email`)
-- [ ] Verification email arrives in inbox (check spam too)
-- [ ] Email contains correct logo and branding
-- [ ] Verification link in email works
-- [ ] Link redirects to avatar selection after verification
-- [ ] Expired/invalid links show appropriate error
+- [λ] Verification email arrives in inbox (check spam too)
+- [ ] Email contains correct logo and branding - I don't see a logo in the email?
+- [λ] Verification link in email works
+- [λ] Link redirects to avatar selection after verification
+- [λ] Expired/invalid links show appropriate error
 
 ### Avatar/Alias Selection
-- [ ] Color picker displays all 20 colors
-- [ ] Icon picker displays all 47 icons
-- [ ] "Spin" / randomize button works
-- [ ] Selected combination shows preview
-- [ ] "Confirm" creates the alias
-- [ ] User is redirected to catalog after confirmation
-- [ ] Alias is saved to localStorage
+- [λ] Color picker displays all 20 colors
+- [λ] Icon picker displays all 47 icons
+- [ ] "Spin" / randomize button works - make the spinning animation just a little longer? The emoji spins around once. Maybe do it twice?
+- [λ] Selected combination shows preview
+- [λ] "Confirm" creates the alias
+- [ ] User is redirected to catalog after confirmation - No user is redirected to dashboard. This is prefered, though. Change nothing.
+- [λ] Alias is saved to localStorage
 
 ---
 
 ## 🛒 Catalog & Browsing
 
 ### Main Catalog (`/`)
-- [ ] Page loads and shows all open items
-- [ ] Items display: photo, title, current bid, starting bid
-- [ ] "Find something you love—every dollar supports our kids!" tagline shows
-- [ ] Items link to individual item pages
-- [ ] QR codes on cards are scannable
-- [ ] Real-time updates work (bid on item, catalog updates)
-- [ ] Closed items show "CLOSED" badge (if any)
-- [ ] Unenrolled users are redirected to `/landing`
+- [λ] Page loads and shows all open items
+- [λ] Items display: photo, title, current bid, starting bid
+- [λ] "Find something you love—every dollar supports our kids!" tagline shows
+- [λ] Items link to individual item pages
+- [λ] QR codes on cards are scannable
+- [λ] Real-time updates work (bid on item, catalog updates)
+- [λ] Closed items show "CLOSED" badge (if any)
+- [λ] Unenrolled users are redirected to `/landing`
 
 ### Individual Item Page (`/i/[slug]`)
-- [ ] Page loads with item details
-- [ ] Photo displays correctly
-- [ ] Description shows
-- [ ] Current bid amount is accurate
-- [ ] Minimum next bid is calculated correctly (+$1)
-- [ ] Bid history shows recent bids with aliases (NOT real names)
-- [ ] Bidding deadline countdown shows (if set)
-- [ ] Real-time updates work when others bid
+- [λ] Page loads with item details
+- [λ] Photo displays correctly
+- [λ] Description shows
+- [λ] Current bid amount is accurate
+- [λ] Minimum next bid is calculated correctly (+$1)
+- [λ] Bid history shows recent bids with aliases (NOT real names)
+- [λ] Bidding deadline countdown shows (if set)
+- [λ] Real-time updates work when others bid
 
 ---
 
 ## 💰 Bidding Flow
 
 ### Placing Bids
-- [ ] Bid form shows user's alias with "Your secret bidding identity 🕵️"
-- [ ] Bid amount field accepts input
-- [ ] Minimum bid validation works (can't bid below minimum)
-- [ ] "Place Bid" button submits bid
-- [ ] Success message appears
-- [ ] Bid appears in bid history immediately
-- [ ] Current bid updates
-- [ ] Rate limiting works (try 25+ bids in 1 minute)
+- [λ] Bid form shows user's alias with "Your secret bidding identity 🕵️"
+- [λ] Bid amount field accepts input
+- [λ] Minimum bid validation works (can't bid below minimum)
+- [λ] "Place Bid" button submits bid
+- [λ] Success message appears
+- [λ] Bid appears in bid history immediately
+- [λ] Current bid updates
+- [λ] Rate limiting works (try 25+ bids in 1 minute)
 
 ### Bid Confirmation Email (Opt-in)
 - [ ] First bid on an item triggers confirmation email (if enabled)
@@ -122,55 +122,55 @@ Use this checklist before the event to verify everything works correctly.
 ## 🔧 Admin Panel
 
 ### Admin Login
-- [ ] `/admin` prompts for Basic Auth
-- [ ] Correct credentials grant access
-- [ ] Wrong credentials are rejected
+- [λ] `/admin` prompts for Basic Auth
+- [λ] Correct credentials grant access
+- [λ] Wrong credentials are rejected
 
 ### Admin Dashboard (`/admin`)
-- [ ] Dashboard loads with auction settings
-- [ ] Current deadline displays (or "Not set")
-- [ ] Auction status shows (Open/Closed)
-- [ ] Item count shows
-- [ ] "Set Deadline" form works
-- [ ] "Extend Deadline" buttons work (+15m, +30m, +1h)
-- [ ] "Open Auction" / "Close Auction" toggle works
+- [λ] Dashboard loads with auction settings
+- [λ] Current deadline displays (or "Not set")
+- [λ] Auction status shows (Open/Closed)
+- [λ] Item count shows
+- [λ] "Set Deadline" form works
+- [λ] "Extend Deadline" buttons work (+15m, +30m, +1h)
+- [λ] "Open Auction" / "Close Auction" toggle works
 
 ### Item Management
-- [ ] Item list shows all items with current bids
-- [ ] "Add New Item" link works
-- [ ] Creating new item works:
-  - [ ] Title (required)
-  - [ ] Description
-  - [ ] Category
-  - [ ] Starting price
-  - [ ] Photo upload OR photo URL
-- [ ] Editing existing item works
-- [ ] Slug auto-generates from title
-- [ ] Photo uploads to Supabase storage
+- [λ] Item list shows all items with current bids
+- [λ] "Add New Item" link works
+- [λ] Creating new item works:
+  - [λ] Title (required)
+  - [λ] Description
+  - [λ] Category
+  - [λ] Starting price
+  - [λ] Photo upload OR photo URL
+- [λ] Editing existing item works
+- [λ] Slug auto-generates from title
+- [λ] Photo uploads to Supabase storage
 
 ### QR Codes (`/admin/qr-codes`)
-- [ ] QR code grid displays all items
-- [ ] Individual QR codes are scannable
-- [ ] "Download All QR Codes" generates PDF
-- [ ] PDF contains all items with:
-  - [ ] Item title
-  - [ ] Description snippet
-  - [ ] Starting bid
-  - [ ] Scannable QR code
-  - [ ] "Mary Frank PTO Silent Auction" branding
+- [λ] QR code grid displays all items
+- [λ] Individual QR codes are scannable
+- [λ] "Download All QR Codes" generates PDF
+- [λ] PDF contains all items with:
+  - [λ] Item title
+  - [λ] Description snippet
+  - [λ] Starting bid
+  - [λ] Scannable QR code
+  - [ ] "Mary Frank PTO Silent Auction" branding - should there be a logo?
 
 ### Vendor Admin Management
-- [ ] Can create new vendor admin accounts
-- [ ] Vendor receives enrollment email
-- [ ] Vendor can login at `/vendor-enroll`
-- [ ] Vendor dashboard (`/vendor`) shows their items only
+- [λ] Can create new vendor admin accounts
+- [λ] Vendor receives enrollment email
+- [λ] Vendor can login at `/vendor-enroll`
+- [λ] Vendor dashboard (`/vendor`) shows their items only
 
 ---
 
 ## 📧 Email Notifications
 
 ### Test Each Email Type
-- [ ] **Verification Email** - sent on registration
+- [λ] **Verification Email** - sent on registration
 - [ ] **Bid Confirmation** - sent on first bid (if opted in)
 - [ ] **Winner Notification** - sent when auction closes
 - [ ] **Security Alert** - sent on suspicious access (optional to test)

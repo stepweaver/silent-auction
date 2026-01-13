@@ -4,7 +4,7 @@ import { ItemSchema } from '@/lib/validation';
 import { vendorAdminOwnsItem } from '@/lib/vendorAuth';
 
 export async function PATCH(req, { params }) {
-  const headersList = headers();
+  const headersList = await headers();
   const vendorAdminId = headersList.get('x-vendor-admin-id');
 
   if (!vendorAdminId) {

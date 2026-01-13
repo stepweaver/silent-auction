@@ -4,7 +4,7 @@ import { ItemSchema } from '@/lib/validation';
 
 // POST - Create item (vendor admin only)
 export async function POST(req) {
-  const headersList = headers();
+  const headersList = await headers();
   const vendorAdminId = headersList.get('x-vendor-admin-id');
 
   if (!vendorAdminId) {
