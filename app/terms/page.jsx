@@ -1,8 +1,39 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function TermsPage() {
+  const router = useRouter();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [cleared, setCleared] = useState(false);
+
+  const handleClearData = () => {
+    // Clear all auction-related localStorage data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auction_bidder_info');
+      localStorage.removeItem('auction_enrolled');
+      localStorage.removeItem('auction_pending_name');
+      localStorage.removeItem('auction_alias_data');
+      // Clear any other auction-related items
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('auction_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
+    setCleared(true);
+    setShowConfirm(false);
+    // Redirect to landing page after a short delay
+    setTimeout(() => {
+      router.push('/landing');
+    }, 2000);
+  };
+
   return (
     <main className='max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8'>
       <div className="mb-6">
@@ -211,6 +242,45 @@ export default function TermsPage() {
             please contact the auction administrator using the contact information provided in winner 
             notification emails or on the auction website.
           </p>
+        </section>
+
+        {/* Clear My Data */}
+        <section className='rounded-xl border border-red-200 bg-red-50 p-6'>
+          <h2 className='text-2xl font-semibold text-red-900 mb-4'>
+            Clear My Local Data
+          </h2>
+          <p className='text-red-700 leading-relaxed mb-4'>
+            This will clear your bidding alias and enrollment data from this device. You will need to 
+            re-verify your email to bid again. <strong>Note:</strong> This does not delete your bids or 
+            account from our servers—it only clears your local session.
+          </p>
+          {cleared ? (
+            <div className='p-4 bg-green-100 border border-green-300 rounded-lg text-green-800'>
+              ✓ Local data cleared! Redirecting to registration...
+            </div>
+          ) : showConfirm ? (
+            <div className='flex flex-col sm:flex-row gap-3'>
+              <button
+                onClick={handleClearData}
+                className='px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium'
+              >
+                Yes, Clear My Data
+              </button>
+              <button
+                onClick={() => setShowConfirm(false)}
+                className='px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium'
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowConfirm(true)}
+              className='px-6 py-2 bg-red-100 text-red-700 border border-red-300 rounded-lg hover:bg-red-200 font-medium'
+            >
+              Clear Local Data
+            </button>
+          )}
         </section>
 
         {/* Back to Catalog */}

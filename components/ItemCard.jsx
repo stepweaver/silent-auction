@@ -53,8 +53,11 @@ export default function ItemCard({ item, priority = false }) {
             />
           </div>
         ) : (
-          <div className="grid place-items-center h-48 text-xs text-gray-400">
-            No photo
+          <div className="grid place-items-center h-48 bg-gradient-to-br from-emerald-50 to-teal-100">
+            <div className="text-center">
+              <div className="text-4xl mb-2">🎁</div>
+              <p className="text-xs text-emerald-600 font-medium">Mystery Item!</p>
+            </div>
           </div>
         )}
       </div>

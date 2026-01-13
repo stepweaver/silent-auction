@@ -4,14 +4,18 @@ import { useState, useEffect, useMemo, useId } from 'react';
 import Image from 'next/image';
 import { COLORS, ANIMALS, generateRandomAlias, formatAlias } from '@/lib/alias';
 
-// Animation keyframes for randomize effect
+// Animation keyframes for randomize effect (2 full rotations)
 const randomizeAnimation = `
   @keyframes randomizeSpin {
     0% { transform: rotate(0deg) scale(1); }
-    25% { transform: rotate(90deg) scale(1.1); }
-    50% { transform: rotate(180deg) scale(1.2); }
-    75% { transform: rotate(270deg) scale(1.1); }
-    100% { transform: rotate(360deg) scale(1); }
+    12.5% { transform: rotate(90deg) scale(1.1); }
+    25% { transform: rotate(180deg) scale(1.15); }
+    37.5% { transform: rotate(270deg) scale(1.1); }
+    50% { transform: rotate(360deg) scale(1.05); }
+    62.5% { transform: rotate(450deg) scale(1.1); }
+    75% { transform: rotate(540deg) scale(1.15); }
+    87.5% { transform: rotate(630deg) scale(1.1); }
+    100% { transform: rotate(720deg) scale(1); }
   }
   @keyframes randomizeShake {
     0%, 100% { transform: translateX(0); }
@@ -185,9 +189,9 @@ export default function AliasSelector({
     setError('');
     setSuccess('');
 
-    // Animate through a few random selections before settling
+    // Animate through random selections before settling (longer animation)
     let iterations = 0;
-    const maxIterations = 8;
+    const maxIterations = 16; // More iterations for longer spin
     const interval = setInterval(() => {
       const random = generateRandomAlias();
       setSelectedColor(random.color);
@@ -207,7 +211,7 @@ export default function AliasSelector({
           else setEmojiCategory('vehicles');
         }
       }
-    }, 80);
+    }, 100); // 100ms per iteration = 1.6s total
   };
 
   // Check alias availability
@@ -514,7 +518,7 @@ export default function AliasSelector({
                 style={{
                   backgroundColor: selectedColorObj?.hex,
                   animation: isRandomizing
-                    ? 'randomizeSpin 0.6s ease-in-out'
+                    ? 'randomizeSpin 1.6s ease-in-out'
                     : undefined,
                 }}
               >

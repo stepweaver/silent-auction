@@ -66,29 +66,31 @@ const LeaderboardItem = memo(function LeaderboardItem({
           ${isPositionAnimating ? 'ring-4 ring-green-400 ring-opacity-50 shadow-green-200 scale-[1.02]' : ''}
         `}
       >
-        {/* Position change indicator */}
-        {isPositionAnimating && movedUp && (
-          <div className="absolute top-2 left-2 z-20 px-2 py-1 bg-green-500 text-white rounded-full text-xs font-bold shadow-lg animate-bounce">
-            ↑ Moving Up!
-          </div>
-        )}
-        {/* Hot indicator badge */}
-        {isHot && (
-          <div className="absolute top-2 right-2 z-20 flex items-center gap-0.5 px-2 py-1 bg-orange-500 text-white rounded-full text-xs font-bold shadow-md">
-            <HotItemIndicator size="sm" />
-            <span>HOT</span>
-          </div>
-        )}
-
-        {/* Bidding war badge */}
-        {hasBiddingWar && (
-          <div className="absolute top-2 left-2 z-20 px-2 py-1 bg-red-500 text-white rounded-full text-xs font-bold shadow-md animate-pulse">
-            ⚔️ WAR
-          </div>
-        )}
-
         {/* Content - desktop layout - compact but readable */}
-        <div className="p-4 space-y-3">
+        <div className={`p-4 space-y-3 ${(isHot || hasBiddingWar || (isPositionAnimating && movedUp)) ? 'pt-10' : ''}`}>
+          {/* Badges row */}
+          {(isHot || hasBiddingWar || (isPositionAnimating && movedUp)) && (
+            <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                {isPositionAnimating && movedUp && (
+                  <span className="px-2 py-1 bg-green-500 text-white rounded-full text-xs font-bold shadow-lg animate-bounce">
+                    ↑ Moving Up!
+                  </span>
+                )}
+                {hasBiddingWar && (
+                  <span className="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-bold shadow-md animate-pulse">
+                    ⚔️ WAR
+                  </span>
+                )}
+              </div>
+              {isHot && (
+                <div className="flex items-center gap-0.5 px-2 py-1 bg-orange-500 text-white rounded-full text-xs font-bold shadow-md">
+                  <HotItemIndicator size="sm" />
+                  <span>HOT</span>
+                </div>
+              )}
+            </div>
+          )}
           {/* Title with bid count */}
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-bold text-base lg:text-lg text-gray-900 line-clamp-2 leading-tight flex-1">
@@ -184,29 +186,31 @@ const LeaderboardItem = memo(function LeaderboardItem({
           ${isPositionAnimating ? 'ring-2 ring-green-400 ring-opacity-50 scale-[1.02]' : ''}
         `}
       >
-        {/* Position change indicator */}
-        {isPositionAnimating && movedUp && (
-          <div className="absolute top-1 left-1 z-20 px-1.5 py-0.5 bg-green-500 text-white rounded-full text-[10px] font-bold shadow-md">
-            ↑
-          </div>
-        )}
-        {/* Hot indicator badge */}
-        {isHot && (
-          <div className="absolute top-1 right-1 z-20 flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-500 text-white rounded-full text-[10px] font-bold shadow-md">
-            <HotItemIndicator />
-            <span>HOT</span>
-          </div>
-        )}
-
-        {/* Bidding war badge */}
-        {hasBiddingWar && (
-          <div className="absolute top-1 left-1 z-20 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[10px] font-bold shadow-md animate-pulse">
-            ⚔️ WAR
-          </div>
-        )}
-
         {/* Content - mobile layout */}
-        <div className="p-2.5 space-y-1.5">
+        <div className={`p-2.5 space-y-1.5 ${(isHot || hasBiddingWar || (isPositionAnimating && movedUp)) ? 'pt-7' : ''}`}>
+          {/* Badges row - positioned within content flow */}
+          {(isHot || hasBiddingWar || (isPositionAnimating && movedUp)) && (
+            <div className="absolute top-1 left-1 right-1 z-20 flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                {isPositionAnimating && movedUp && (
+                  <span className="px-1.5 py-0.5 bg-green-500 text-white rounded-full text-[10px] font-bold shadow-md">
+                    ↑
+                  </span>
+                )}
+                {hasBiddingWar && (
+                  <span className="px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[10px] font-bold shadow-md animate-pulse">
+                    ⚔️ WAR
+                  </span>
+                )}
+              </div>
+              {isHot && (
+                <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-500 text-white rounded-full text-[10px] font-bold shadow-md">
+                  <HotItemIndicator />
+                  <span>HOT</span>
+                </div>
+              )}
+            </div>
+          )}
           {/* Title */}
           <h3 className="font-bold text-sm text-gray-900 line-clamp-2 leading-tight">
             {item.title}

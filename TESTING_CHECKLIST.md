@@ -5,10 +5,10 @@ Use this checklist before the event to verify everything works correctly.
 ---
 
 ## 🔐 Prerequisites
-- [ ] Site is deployed and accessible at production URL
-- [ ] Supabase database is connected and has data
-- [ ] Resend email service is configured
-- [ ] Admin credentials are set (`BASIC_AUTH_USER` / `BASIC_AUTH_PASS`)
+- [λ] Site is deployed and accessible at production URL
+- [λ] Supabase database is connected and has data
+- [λ] Resend email service is configured
+- [λ] Admin credentials are set (`BASIC_AUTH_USER` / `BASIC_AUTH_PASS`)
 
 ---
 
@@ -35,7 +35,7 @@ Use this checklist before the event to verify everything works correctly.
 ### Avatar/Alias Selection
 - [λ] Color picker displays all 20 colors
 - [λ] Icon picker displays all 47 icons
-- [ ] "Spin" / randomize button works - make the spinning animation just a little longer? The emoji spins around once. Maybe do it twice?
+- [ ] "Spin" / randomize button works - Works, but make the spinning animation just a little longer? The emoji spins around once. Maybe do it twice?
 - [λ] Selected combination shows preview
 - [λ] "Confirm" creates the alias
 - [ ] User is redirected to catalog after confirmation - No user is redirected to dashboard. This is prefered, though. Change nothing.
@@ -80,13 +80,13 @@ Use this checklist before the event to verify everything works correctly.
 - [λ] Rate limiting works (try 25+ bids in 1 minute)
 
 ### Bid Confirmation Email (Opt-in)
-- [ ] First bid on an item triggers confirmation email (if enabled)
-- [ ] Email shows item name, bid amount, link to item
-- [ ] Subsequent bids on same item do NOT send emails
+- [λ] First bid on an item triggers confirmation email (if enabled)
+- [ ] Email shows item name, bid amount, link to item - Works, but needs to be styled consistently with our colors. currently, it's blue. 
+- [λ] Subsequent bids on same item do NOT send emails
 
 ### Being Outbid
-- [ ] When outbid, the UI updates in real-time
-- [ ] New minimum bid reflects the higher bid
+- [λ] When outbid, the UI updates in real-time
+- [λ] New minimum bid reflects the higher bid
 
 ---
 
@@ -95,27 +95,27 @@ Use this checklist before the event to verify everything works correctly.
 - [λ] Dashboard loads and shows user's alias
 - [λ] Avatar preview displays correctly
 - [λ] "Your secret bidding identity 🕵️" label shows
-- [ ] List of user's bids appears
-- [ ] Each bid shows: item name, amount, status (winning/outbid)
-- [ ] "Winning" badges show on leading bids
-- [ ] "Outbid" indicators show when not leading
-- [ ] Links to items work
-- [ ] Email preference toggle works (enable/disable bid confirmations)
-- [ ] Logout/clear alias works
+- [λ] List of user's bids appears
+- [λ] Each bid shows: item name, amount, status (winning/outbid)
+- [λ] "Winning" badges show on leading bids
+- [λ] "Outbid" indicators show when not leading
+- [λ] Links to items work
+- [λ] Email preference toggle works (enable/disable bid confirmations)
+- [ ] Logout/clear alias works - Where is this option? Should we have this option to "wipe all user data" from within the terms and/or privacy policy page?
 
 ---
 
 ## 🏆 Leaderboard (`/leaderboard`)
 
-- [ ] Page loads with all open items
-- [ ] Items sorted by bid count (most active first)
-- [ ] Each item shows: title, current bid, leading bidder's ALIAS
-- [ ] **NO real names shown** - only aliases like "Red Star", "Blue Cat"
-- [ ] Anonymous bidders show as "Anonymous Bidder"
-- [ ] Real-time updates when bids placed
-- [ ] "HOT" badges appear on recently bid items
-- [ ] "WAR" badges appear when multiple bidders active
-- [ ] Position animations work when items move up
+- [λ] Page loads with all open items
+- [λ] Items sorted by bid count (most active first)
+- [λ] Each item shows: title, current bid, leading bidder's ALIAS
+- [λ] **NO real names shown** - only aliases like "Red Star", "Blue Cat"
+- [λ] Anonymous bidders show as "Anonymous Bidder"
+- [λ] Real-time updates when bids placed
+- [λ] "HOT" badges appear on recently bid items
+- [λ] "WAR" badges appear when multiple bidders active
+- [λ] Position animations work when items move up
 
 ---
 
@@ -171,84 +171,84 @@ Use this checklist before the event to verify everything works correctly.
 
 ### Test Each Email Type
 - [λ] **Verification Email** - sent on registration
-- [ ] **Bid Confirmation** - sent on first bid (if opted in)
-- [ ] **Winner Notification** - sent when auction closes
-- [ ] **Security Alert** - sent on suspicious access (optional to test)
-- [ ] **Vendor Enrollment** - sent when vendor admin created
+- [λ] **Bid Confirmation** - sent on first bid (if opted in)
+- [ ] **Winner Notification** - sent when auction closes - I closed the auction but didn't get the admin email list of winners?
+- [λ] **Security Alert** - sent on suspicious access (optional to test)
+- [λ] **Vendor Enrollment** - sent when vendor admin created
 
 ### Email Content Check
-- [ ] Logo displays correctly
-- [ ] "Mary Frank PTO" branding consistent
-- [ ] Footer shows "λstepweaver LLC" attribution
-- [ ] Reply-to address is correct
-- [ ] Links in emails work
+- [ ] Logo displays correctly - Again, I'm not seeing any logos in any emails. It would be nice if our emails contained the logo, but it's not working if it's supposed to.
+- [λ] "Mary Frank PTO" branding consistent - Please check?
+- [λ] Footer shows "λstepweaver LLC" attribution - It does
+- [λ] Reply-to address is correct
+- [λ] Links in emails work
 
 ---
 
 ## 🏁 Auction Close Flow
 
 ### Manual Close
-- [ ] Admin clicks "Close Auction"
-- [ ] All items marked as closed
-- [ ] Winner emails sent to all winners
-- [ ] Catalog shows all items as "CLOSED"
-- [ ] Bidding is disabled on all items
+- [λ] Admin clicks "Close Auction"
+- [λ] All items marked as closed
+- [ ] Winner emails sent to all winners - Should the admin users have received a list of the winners?
+- [λ] Catalog shows all items as "CLOSED"
+- [λ] Bidding is disabled on all items
 
-### Deadline Auto-Close (if configured)
+### Deadline Auto-Close (if configured) - How do we configure this without having a server? I couldn't figure it out. We tried, before.
 - [ ] Auction closes automatically at deadline
 - [ ] Winner notifications sent
 - [ ] Items marked closed
 
 ### Winner Email Content
-- [ ] "You won!" subject line
-- [ ] "Thanks for supporting Mary Frank—our kids thank you!"
-- [ ] Lists all won items with amounts
-- [ ] Shows total due
-- [ ] Payment instructions (from settings)
-- [ ] Pickup instructions (from settings)
-- [ ] Link to Payment Instructions page
+- [λ] "You won!" subject line
+- [λ] "Thanks for supporting Mary Frank—our kids thank you!"
+- [λ] Lists all won items with amounts
+- [λ] Shows total due
+- [λ] Payment instructions (from settings)
+- [λ] Pickup instructions (from settings)
+- [λ] Link to Payment Instructions page
 
 ---
 
 ## 📱 Mobile Experience
 
-- [ ] Landing page works on mobile
-- [ ] Avatar selection works on touch
-- [ ] Catalog is responsive
-- [ ] Item pages are readable
-- [ ] Bid form is usable on small screens
-- [ ] Leaderboard is readable
-- [ ] QR codes scan from phone camera
+- [λ] Landing page works on mobile
+- [λ] Avatar selection works on touch
+- [λ] Catalog is responsive
+- [λ] Item pages are readable
+- [λ] Bid form is usable on small screens
+- [λ] Leaderboard is readable
+- [λ] QR codes scan from phone camera
 
 ---
 
 ## 🔒 Security Checks
 
-- [ ] Unenrolled users cannot access catalog (redirects to `/landing`)
-- [ ] Admin pages require authentication
-- [ ] Rate limiting blocks excessive requests
-- [ ] Real names never shown publicly (only aliases)
-- [ ] Email verification required before bidding
+- [λ] Unenrolled users cannot access catalog (redirects to `/landing`)
+- [λ] Admin pages require authentication
+- [λ] Rate limiting blocks excessive requests
+- [λ] Real names never shown publicly (only aliases)
+- [λ] Email verification required before bidding
 
 ---
 
 ## 📄 Static Pages
 
-- [ ] `/terms` - Terms & Privacy loads, content is correct
-- [ ] `/how-to-bid` - Instructions page loads
-- [ ] `/payment-instructions` - Payment page loads (after auction)
+- [λ] `/terms` - Terms & Privacy loads, content is correct
+- [λ] `/how-to-bid` - Instructions page loads
+- [λ] `/payment-instructions` - Payment page loads (after auction)
 
 ---
 
 ## 🐛 Edge Cases to Test
 
-- [ ] Bid exactly the starting price (should work)
-- [ ] Bid with cents (e.g., $25.50) - verify handling
-- [ ] Very long item titles display correctly
-- [ ] Items with no photo display placeholder
-- [ ] Multiple users bidding simultaneously
-- [ ] Refresh page during bid - no duplicate bids
-- [ ] Back button behavior after bidding
+- [λ] Bid exactly the starting price (should work)
+- [λ] Bid with cents (e.g., $25.50) - verify handling
+- [λ] Very long item titles display correctly
+- [ ] Items with no photo display placeholder - We need a placeholder. Currently just says "No Photo". What can we reach for, creative or fun, here?
+- [λ] Multiple users bidding simultaneously - I haven't actually tested this, but it should work, right? I've logged in with two registered users and outbid each other. It all works very well thus far.
+- [λ] Refresh page during bid - no duplicate bids
+- [λ] Back button behavior after bidding
 
 ---
 
