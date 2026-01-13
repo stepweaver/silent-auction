@@ -28,7 +28,7 @@ export default function HowToBidPage() {
       <ol className='mt-6 list-decimal list-inside space-y-4 text-gray-800'>
         <li className='pl-2'>
           <strong>Create your bidding alias</strong> - Choose a color and emoji
-          to represent you anonymously. This is how others will see your bids.
+          to represent you anonymously. Your secret bidding identity 🕵️
         </li>
         <li className='pl-2'>
           <strong>Browse the catalog</strong> - Explore all available items with

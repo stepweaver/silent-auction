@@ -244,7 +244,7 @@ export default function IconAliasSelector({ email, onAliasSelected, initialAlias
                 {formatAlias(selectedColor, selectedIcon)}
               </div>
               <div className="text-sm text-base-content/70 mb-2">
-                This is how others will see your bids
+                Your secret bidding identity 🕵️ - This is how others will see your bids
               </div>
               <div className="flex items-center justify-center sm:justify-start gap-2 text-xs text-base-content/60">
                 <span className="badge badge-primary badge-sm">{selectedColorObj?.name}</span>

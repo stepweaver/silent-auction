@@ -94,7 +94,7 @@ Use this checklist before the event to verify everything works correctly.
 
 - [λ] Dashboard loads and shows user's alias
 - [λ] Avatar preview displays correctly
-- [ ] "Your secret bidding identity 🕵️" label shows
+- [λ] "Your secret bidding identity 🕵️" label shows
 - [ ] List of user's bids appears
 - [ ] Each bid shows: item name, amount, status (winning/outbid)
 - [ ] "Winning" badges show on leading bids

@@ -266,7 +266,7 @@ export default function DashboardPage() {
                         {userAlias.alias}
                       </div>
                       <div className="text-xs text-gray-600">
-                        This is how others see your bids
+                      Your secret bidding identity 🕵️
                       </div>
                     </div>
                   </div>
