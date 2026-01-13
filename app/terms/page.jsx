@@ -28,11 +28,13 @@ export default function TermsPage() {
               </p>
             </div>
             <div>
-              <h3 className='font-semibold text-gray-900 mb-2'>Payment Obligation</h3>
+              <h3 className='font-semibold text-gray-900 mb-2'>Payment &amp; Pickup Obligation</h3>
               <p>
                 Winning bidders are legally obligated to pay the full amount of their winning bid. 
-                Payment must be made in person at the close of the auction, using cash or check, at the main organizer&apos;s table in the hallway. 
-                Payment is expected promptly at the conclusion of the event; if it is not received within a reasonable timeframe determined by the auction administrator, the item may be awarded to the next highest bidder and the original winning bid considered forfeited.
+                <strong>You MUST be present to pay and pick up your items if you win.</strong> Payment must be made in person at the close of the auction at the designated checkout area.
+              </p>
+              <p className='mt-2'>
+                If payment is not received by the end of the event, the item may be awarded to the next highest bidder and the original winning bid considered forfeited.
               </p>
             </div>
             <div>

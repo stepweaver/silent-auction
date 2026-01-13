@@ -3,7 +3,7 @@ export default function manifest() {
     name: 'Mary Frank Elementary Silent Auction',
     short_name: 'Auction',
     description:
-      'Browse items, place bids, and support the Mary Frank Elementary PTO silent auction.',
+      'Browse items, place bids, and support the Mary Frank PTO silent auction.',
     start_url: '/',
     display: 'standalone',
     background_color: '#f8fafc',

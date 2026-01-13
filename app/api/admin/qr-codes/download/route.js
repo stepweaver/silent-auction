@@ -92,7 +92,7 @@ export async function GET() {
         cursorY -= spacing;
       };
 
-      drawCentered('Mary Frank Elementary PTO Silent Auction', fontRegular, 12, rgb(0.023, 0.35, 0.2));
+      drawCentered('Mary Frank PTO Silent Auction', fontRegular, 12, rgb(0.023, 0.35, 0.2));
       drawCentered(item.title || 'Auction Item', fontBold, 28, rgb(0.07, 0.09, 0.15), 18);
 
       const itemUrl = `${siteUrl}/i/${item.slug}`;
@@ -156,8 +156,8 @@ export async function GET() {
       }
 
       cursorY = Math.max(cursorY, margin);
-      page.drawText('Mary Frank Elementary PTO • Silent Auction', {
-        x: (pageWidth - fontRegular.widthOfTextAtSize('Mary Frank Elementary PTO • Silent Auction', 10)) / 2,
+      page.drawText('Mary Frank PTO • Silent Auction', {
+        x: (pageWidth - fontRegular.widthOfTextAtSize('Mary Frank PTO • Silent Auction', 10)) / 2,
         y: margin,
         size: 10,
         font: fontRegular,

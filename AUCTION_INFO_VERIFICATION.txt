@@ -1,0 +1,132 @@
+SILENT AUCTION INFORMATION - PLEASE VERIFY
+==========================================
+Generated: January 2026
+Please review and confirm all details are accurate.
+
+================================================================================
+ORGANIZATION NAME
+================================================================================
+Currently using: "Mary Frank PTO" and "Mary Frank Elementary"
+- Is this the correct official name?
+- Should it be "Mary Frank Elementary PTO" everywhere?
+
+================================================================================
+PAYMENT INFORMATION
+================================================================================
+Current Terms page says:
+- "You do not have to be present during bidding, but you MUST be present to pay 
+   and pick up your items if you win."
+- "Payment must be made in person at the close of the auction at the designated 
+   checkout area."
+
+QUESTIONS:
+1. Where is the checkout area? (e.g., "main hallway table", "cafeteria exit")
+2. What payment methods are accepted?
+   - Cash only?
+   - Cash and check?
+   - Cash, check, and card?
+3. Is there a specific deadline time for payment/pickup?
+
+================================================================================
+PICKUP INFORMATION
+================================================================================
+Current Terms state:
+"You MUST be present to pay and pick up your items if you win."
+"If payment is not received by the end of the event, the item may be awarded 
+to the next highest bidder."
+
+No alternative arrangements offered - keeps things simple.
+
+================================================================================
+EMAIL COMMUNICATIONS
+================================================================================
+The system sends the following emails:
+
+1. EMAIL VERIFICATION (Required - cannot opt out)
+   - Sent when user first registers
+   - Contains verification link (expires in 24 hours)
+   - Must be verified before user can bid
+
+2. BID CONFIRMATION (Opt-in only)
+   - Disabled by default
+   - User must enable in their dashboard
+   - Only sent for FIRST bid on each item (not every bid)
+   - Contains: item name, bid amount, link to view item
+
+3. WINNER NOTIFICATION (Required - cannot opt out)
+   - Sent automatically when auction closes
+   - Contains: all items won, total amount due, payment/pickup instructions
+   - Includes link to Payment Instructions page
+
+4. SECURITY ALERT (Required - cannot opt out)
+   - Sent if alias is accessed from new device/location
+   - Helps protect against unauthorized access
+
+5. ADMIN WINNERS LIST (Disabled)
+   - Currently disabled to reduce email volume
+   - Admins can view winners in the dashboard instead
+
+================================================================================
+EMAIL SENDER INFORMATION
+================================================================================
+From name: "Mary Frank PTO Auction" (configurable via NEXT_PUBLIC_AUCTION_FROM_NAME)
+From email: Set in RESEND_FROM_EMAIL environment variable
+Reply-to: Set in NEXT_PUBLIC_CONTACT_EMAIL environment variable
+
+Footer attribution in emails:
+"Built, donated, and administered by λstepweaver LLC on behalf of the Mary Frank PTO."
+
+================================================================================
+PRIVACY POLICY SUMMARY
+================================================================================
+We collect:
+- Name and email address only
+
+We use it for:
+- Tracking bids
+- Sending bid confirmations (opt-in)
+- Notifying winners (required)
+- Email verification (required)
+- Security alerts (required)
+
+We do NOT:
+- Sell or share personal information
+- Use data for purposes beyond this auction
+
+Data retention:
+- Retained for duration of auction and reasonable follow-up period
+- Minimal records kept for accounting/legal purposes after auction concludes
+
+================================================================================
+TERMS SUMMARY
+================================================================================
+Key points:
+1. All bids are final and binding
+2. Winning bidders must pay full bid amount
+3. Must be present to pay and pickup (or make advance arrangements)
+4. Items sold "as is" without warranty
+5. All sales final - no refunds
+6. Auction administrator decisions are final
+
+================================================================================
+CONTACT INFORMATION
+================================================================================
+Website footer contact: Pulls from NEXT_PUBLIC_CONTACT_EMAIL env variable
+  (defaults to auction@stepweaver.dev if not set)
+
+QUESTIONS:
+1. What email should be used for auction inquiries?
+2. Is there a phone number for day-of questions?
+
+================================================================================
+ACTION ITEMS FOR ORGANIZER
+================================================================================
+Please confirm or update:
+[ ] Organization name (Mary Frank PTO vs Mary Frank Elementary PTO)
+[ ] Checkout location
+[ ] Payment methods accepted
+[ ] Pickup deadline/alternative times
+[ ] Contact email for arrangements
+[ ] Contact phone for day-of (if any)
+
+================================================================================

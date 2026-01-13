@@ -10,25 +10,25 @@ const resolve4 = promisify(dns.resolve4);
 
 export async function POST(req) {
   try {
-    // Rate limiting disabled for testing
-    // const rateLimitResult = await checkRateLimit(req, 5, 60 * 60 * 1000);
-    // if (rateLimitResult) {
-    //   return Response.json(
-    //     { 
-    //       error: 'Too many alias creation requests. Please try again later.',
-    //       retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
-    //     },
-    //     { 
-    //       status: 429,
-    //       headers: { 
-    //         'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
-    //         'X-RateLimit-Limit': '5',
-    //         'X-RateLimit-Remaining': '0',
-    //         'X-RateLimit-Reset': rateLimitResult.resetAt.toString()
-    //       }
-    //     }
-    //   );
-    // }
+    // Rate limiting: 5 alias creations per hour per IP
+    const rateLimitResult = await checkRateLimit(req, 5, 60 * 60 * 1000);
+    if (rateLimitResult) {
+      return Response.json(
+        { 
+          error: 'Too many requests. Please try again later.',
+          retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
+        },
+        { 
+          status: 429,
+          headers: { 
+            'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetAt.toString()
+          }
+        }
+      );
+    }
 
     // CSRF protection for state-changing operations
     const csrfValid = await verifyCSRFToken(req);
@@ -51,16 +51,6 @@ export async function POST(req) {
       name: requestName,
     } = body;
 
-    // Always log request (for debugging)
-    console.log('[ALIAS CREATE] Request received:', {
-      email: email,
-      alias,
-      hasColor: !!color,
-      hasAnimal: !!animal,
-      hasIcon: !!icon,
-      hasAvatarStyle: !!avatar_style,
-      timestamp: new Date().toISOString()
-    });
 
     // Support old system (color/animal), new system (color/icon), and avatar system (avatar_style/avatar_seed)
     if (!email || !alias) {
@@ -72,8 +62,6 @@ export async function POST(req) {
 
     // Validate email format - normalize consistently
     const trimmedEmail = email.toLowerCase().trim();
-    
-    console.log('[ALIAS CREATE] Normalized email:', trimmedEmail);
     if (!isValidEmailFormat(trimmedEmail)) {
       const suggestion = suggestEmailCorrection(trimmedEmail);
       let errorMsg = 'Please enter a valid email address';
@@ -299,18 +287,7 @@ export async function POST(req) {
     }
 
     // CRITICAL: Email must be verified before creating alias
-    // Log details for debugging (always log, not just in dev)
-    console.log('[ALIAS CREATE] Verification check:', {
-      email: trimmedEmail,
-      found: !!emailRecord,
-      emailInDB: emailRecord?.email,
-      verified_at: emailRecord?.verified_at,
-      verified: !!(emailRecord?.verified_at),
-      timestamp: new Date().toISOString()
-    });
-
     if (!emailRecord) {
-      console.error(`[ALIAS CREATE] No verification record found for email: ${trimmedEmail} at ${new Date().toISOString()}`);
       return Response.json(
         { error: 'Please verify your email address before creating an alias. Check your email for the verification link.' },
         { status: 400 }
@@ -318,15 +295,10 @@ export async function POST(req) {
     }
 
     if (!emailRecord.verified_at || emailRecord.verified_at === null) {
-      console.error(`[ALIAS CREATE] Email record exists but not verified. Email: ${trimmedEmail}, verified_at: ${emailRecord.verified_at} at ${new Date().toISOString()}`);
       return Response.json(
         { error: 'Please verify your email address before creating an alias. Check your email for the verification link.' },
         { status: 400 }
       );
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[ALIAS CREATE] Verification check passed. Email: ${trimmedEmail}, verified_at: ${emailRecord.verified_at}`);
     }
 
     // Use the verified email record

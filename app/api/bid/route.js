@@ -203,7 +203,7 @@ export async function POST(req) {
           itemTitle: item.title,
           bidAmount: Number(amount),
           itemUrl,
-          contactEmail: settings?.contact_email || process.env.AUCTION_CONTACT_EMAIL || null,
+          contactEmail: settings?.contact_email || process.env.NEXT_PUBLIC_CONTACT_EMAIL || process.env.AUCTION_CONTACT_EMAIL || null,
         });
       } catch (e) {
         // Log error server-side only, don't expose details to client

@@ -77,7 +77,7 @@ export default function PaymentInstructionsPage() {
               <div>
                 <h2 className="text-2xl font-bold text-primary mb-3">Payment</h2>
                 <div className="alert alert-info">
-                  <span>Payment instructions will be available soon. Please check back later or contact the event organizers.</span>
+                  <span>Payment must be made in person at the checkout area when the auction closes. Contact the organizers for specific details.</span>
                 </div>
               </div>
             )}

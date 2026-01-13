@@ -8,9 +8,9 @@ export default function HowToBidPage() {
       <div className='mb-6'>
         <h1 className='text-2xl sm:text-3xl font-semibold mb-2'>How to Bid</h1>
         <p className='text-gray-700'>
-          Bidding is simple and fast. You'll need to provide your name and email
-          for winner notifications and optional bid confirmations. Bid confirmation 
-          emails are opt-in only—you can enable them in your dashboard if desired.
+          Three taps and you're in. You'll need to provide your name and email
+          for winner notifications. Bid confirmation emails are opt-in—enable them 
+          in your dashboard if you'd like.
         </p>
       </div>
 

@@ -71,7 +71,7 @@ export async function POST(req) {
       await sendAliasAccessNotification({
         email,
         alias: alias.alias,
-        contactEmail: settings?.contact_email || process.env.AUCTION_CONTACT_EMAIL || null,
+        contactEmail: settings?.contact_email || process.env.NEXT_PUBLIC_CONTACT_EMAIL || process.env.AUCTION_CONTACT_EMAIL || null,
         siteUrl,
       });
 

@@ -53,9 +53,9 @@ export const metadata = {
     'bidding',
     'Mary Frank Elementary',
   ],
-  authors: [{ name: 'Mary Frank Elementary PTO' }],
-  creator: 'Mary Frank Elementary PTO',
-  publisher: 'Mary Frank Elementary PTO',
+  authors: [{ name: 'Mary Frank PTO' }],
+  creator: 'Mary Frank PTO',
+  publisher: 'Mary Frank PTO',
   formatDetection: {
     email: false,
     address: false,

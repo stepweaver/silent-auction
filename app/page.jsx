@@ -138,7 +138,7 @@ export default function CatalogPage() {
               Silent Auction Catalog
             </h1>
             <p className='text-sm text-gray-600'>
-              Browse items and place your bids.
+              Find something you love—every dollar supports our kids!
             </p>
           </div>
         </div>

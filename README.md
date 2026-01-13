@@ -70,8 +70,8 @@ BASIC_AUTH_USER=admin
 BASIC_AUTH_PASS=some-strong-pass
 
 # Auction Settings (optional - can also be set in admin)
-AUCTION_CONTACT_EMAIL=pto@example.org
-PAYMENT_INSTRUCTIONS="Pay at checkout table by 9pm. We accept cash, card, and Venmo @SchoolPTO."
+NEXT_PUBLIC_CONTACT_EMAIL=pto@example.org
+PAYMENT_INSTRUCTIONS="Pay at checkout table by 9pm. We accept cash and check only."
 PICKUP_INSTRUCTIONS="Pickup at gym stage tonight or Monday 3–5pm in the office with receipt."
 
 # Notification Settings

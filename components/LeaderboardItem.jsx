@@ -24,8 +24,10 @@ const LeaderboardItem = memo(function LeaderboardItem({
   const [prevLeaderId, setPrevLeaderId] = useState(null);
 
   const currentBid = Number(item.current_high_bid ?? item.start_price);
-  const leaderId = topBid?.alias_id || topBid?.bidder_name || null;
-  const leaderName = topBid?.user_aliases?.alias || topBid?.bidder_name || 'No bids yet';
+  const leaderId = topBid?.alias_id || topBid?.id || null;
+  // PRIVACY: Never show bidder_name on public leaderboard - only show alias
+  // If no alias exists, show "Anonymous Bidder" to protect privacy
+  const leaderName = topBid?.user_aliases?.alias || 'Anonymous Bidder';
   // Check if bids exist based on topBid existence, not amount comparison
   // This handles cases where someone bids exactly the starting price
   const hasLeader = topBid !== null && topBid !== undefined;

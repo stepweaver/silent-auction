@@ -76,7 +76,7 @@ export default function QrCodeCard({ item, itemUrl, qrSrc }) {
 
       <div className='text-center'>
         <p className='text-sm font-semibold uppercase tracking-wide text-emerald-600'>
-          Mary Frank Elementary PTO Silent Auction
+          Mary Frank PTO Silent Auction
         </p>
         <h2 className='mt-2 text-3xl font-bold text-gray-900 sm:text-4xl'>
           {item.title}

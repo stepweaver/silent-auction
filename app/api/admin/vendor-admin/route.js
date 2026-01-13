@@ -171,7 +171,7 @@ export async function POST(req) {
       .eq('id', 1)
       .maybeSingle();
 
-    const contactEmail = settings?.contact_email || process.env.AUCTION_CONTACT_EMAIL || null;
+    const contactEmail = settings?.contact_email || process.env.NEXT_PUBLIC_CONTACT_EMAIL || process.env.AUCTION_CONTACT_EMAIL || null;
 
     // Send enrollment email (don't fail if email fails)
     try {

@@ -196,7 +196,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
                 />
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-sm text-gray-900">Bidding as: {userAlias.alias}</div>
-                  <div className="text-xs text-gray-600">This is how others see your bids</div>
+                  <div className="text-xs text-gray-600">Your secret bidding identity 🕵️</div>
                 </div>
               </div>
             </div>

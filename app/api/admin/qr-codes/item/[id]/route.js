@@ -119,7 +119,7 @@ export async function GET(request, context = {}) {
     };
 
     drawCentered(
-      'Mary Frank Elementary PTO Silent Auction',
+      'Mary Frank PTO Silent Auction',
       fontRegular,
       12,
       rgb(0.023, 0.35, 0.2)
@@ -211,10 +211,10 @@ export async function GET(request, context = {}) {
     }
 
     cursorY = Math.max(cursorY, margin);
-    page.drawText('Mary Frank Elementary PTO • Silent Auction', {
+    page.drawText('Mary Frank PTO • Silent Auction', {
       x:
         (pageWidth -
-          fontRegular.widthOfTextAtSize('Mary Frank Elementary PTO • Silent Auction', 10)) /
+          fontRegular.widthOfTextAtSize('Mary Frank PTO • Silent Auction', 10)) /
         2,
       y: margin,
       size: 10,

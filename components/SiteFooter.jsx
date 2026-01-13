@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 export default function SiteFooter() {
   const currentYear = new Date().getFullYear();
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || process.env.AUCTION_CONTACT_EMAIL || 'auction@stepweaver.dev';
 
   return (
     <footer className='no-print mt-auto border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70'>
@@ -11,7 +12,7 @@ export default function SiteFooter() {
           aria-label='Footer'
         >
           <p className='w-full text-center sm:w-auto sm:text-left'>
-            © {currentYear} Mary Frank Elementary PTO
+            © {currentYear} Mary Frank PTO
           </p>
           <div className='flex flex-wrap items-center justify-center sm:justify-end gap-x-3 gap-y-1'>
             <Link
@@ -22,7 +23,7 @@ export default function SiteFooter() {
             </Link>
             <a
               className='font-medium text-gray-600 hover:text-gray-900'
-              href='mailto:auction@stepweaver.dev'
+              href={`mailto:${contactEmail}`}
             >
               Contact
             </a>
