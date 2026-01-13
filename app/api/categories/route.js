@@ -1,4 +1,4 @@
-import { supabaseServer } from '@/lib/supabaseServer';
+import { supabaseServer } from '@/lib/serverSupabase';
 
 // GET /api/categories - Fetch all unique categories from items
 export async function GET() {

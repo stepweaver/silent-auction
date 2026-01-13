@@ -92,8 +92,8 @@ Use this checklist before the event to verify everything works correctly.
 
 ## 📊 User Dashboard (`/avatar`)
 
-- [ ] Dashboard loads and shows user's alias
-- [ ] Avatar preview displays correctly
+- [λ] Dashboard loads and shows user's alias
+- [λ] Avatar preview displays correctly
 - [ ] "Your secret bidding identity 🕵️" label shows
 - [ ] List of user's bids appears
 - [ ] Each bid shows: item name, amount, status (winning/outbid)
