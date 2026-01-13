@@ -15,9 +15,9 @@ Use this checklist before the event to verify everything works correctly.
 ## 👤 User Registration Flow
 
 ### Landing Page (`/landing`)
-- [ ] Page loads without errors
-- [ ] Name field accepts input
-- [ ] Email field accepts input
+- [λ] Page loads without errors
+- [λ] Name field accepts input
+- [λ] Email field accepts input
 - [ ] Email validation catches invalid formats (test: `bad@email`, `missing.com`)
 - [ ] Email validation catches fake domains (test: `test@fakexyz123.com`)
 - [ ] Typo suggestions work (test: `user@gmial.com` → suggests gmail.com)
