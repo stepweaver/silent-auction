@@ -1,17 +1,20 @@
 'use client';
 
 import { supabaseBrowser } from '@/lib/supabaseClient';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import ItemCard from '@/components/ItemCard';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
+const ALL_CATEGORIES = '__all__';
+const UNCATEGORIZED = 'Other';
 
 export default function CatalogPage() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+  const [activeFilter, setActiveFilter] = useState(ALL_CATEGORIES);
   const s = supabaseBrowser();
 
   // Check enrollment status
@@ -113,6 +116,49 @@ export default function CatalogPage() {
     };
   }, [checkingEnrollment]);
 
+  // Derive sorted category list and grouped items
+  const categories = useMemo(() => {
+    const catSet = new Set();
+    items.forEach((item) => {
+      const cat = item.category?.trim();
+      if (cat) catSet.add(cat);
+    });
+    return [...catSet].sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const groupedItems = useMemo(() => {
+    const filtered =
+      activeFilter === ALL_CATEGORIES
+        ? items
+        : items.filter((item) => {
+            if (activeFilter === UNCATEGORIZED) {
+              return !item.category?.trim();
+            }
+            return item.category?.trim() === activeFilter;
+          });
+
+    const groups = {};
+    filtered.forEach((item) => {
+      const cat = item.category?.trim() || UNCATEGORIZED;
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    });
+
+    // Sort category keys: named categories alphabetically, UNCATEGORIZED at the end
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (a === UNCATEGORIZED) return 1;
+      if (b === UNCATEGORIZED) return -1;
+      return a.localeCompare(b);
+    });
+
+    return sortedKeys.map((cat) => ({ category: cat, items: groups[cat] }));
+  }, [items, activeFilter]);
+
+  const hasUncategorized = useMemo(
+    () => items.some((item) => !item.category?.trim()),
+    [items]
+  );
+
   if (checkingEnrollment || loading) {
     return (
       <main className='w-full px-4 py-4 sm:py-6'>
@@ -138,21 +184,105 @@ export default function CatalogPage() {
               Silent Auction Catalog
             </h1>
             <p className='text-sm text-gray-600'>
-              Find something you love—every dollar supports our kids!
+              Find something you love - every dollar supports our kids!
             </p>
           </div>
         </div>
       </section>
+
+      {/* Category filter pills */}
+      {categories.length > 0 && (
+        <section className='mb-4'>
+          <div className='flex flex-wrap gap-2'>
+            <button
+              onClick={() => setActiveFilter(ALL_CATEGORIES)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
+                activeFilter === ALL_CATEGORIES
+                  ? 'text-white border-transparent shadow-sm'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+              }`}
+              style={
+                activeFilter === ALL_CATEGORIES
+                  ? { backgroundColor: 'var(--primary-500)' }
+                  : undefined
+              }
+            >
+              All
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveFilter(cat)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
+                  activeFilter === cat
+                    ? 'text-white border-transparent shadow-sm'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                }`}
+                style={
+                  activeFilter === cat
+                    ? { backgroundColor: 'var(--primary-500)' }
+                    : undefined
+                }
+              >
+                {cat}
+              </button>
+            ))}
+            {hasUncategorized && (
+              <button
+                onClick={() => setActiveFilter(UNCATEGORIZED)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
+                  activeFilter === UNCATEGORIZED
+                    ? 'text-white border-transparent shadow-sm'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                }`}
+                style={
+                  activeFilter === UNCATEGORIZED
+                    ? { backgroundColor: 'var(--primary-500)' }
+                    : undefined
+                }
+              >
+                {UNCATEGORIZED}
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
       {items.length === 0 ? (
         <div className='bg-white rounded-xl shadow-xl border border-gray-200'>
           <div className='px-4 py-12 text-center'>
             <p className='text-sm text-gray-600'>No items available.</p>
           </div>
         </div>
+      ) : groupedItems.length === 0 ? (
+        <div className='bg-white rounded-xl shadow-xl border border-gray-200'>
+          <div className='px-4 py-12 text-center'>
+            <p className='text-sm text-gray-600'>No items in this category.</p>
+          </div>
+        </div>
       ) : (
-        <div className='grid gap-3 xl:grid-cols-2 2xl:grid-cols-3'>
-          {items.map((item, index) => (
-            <ItemCard key={item.id} item={item} priority={index === 0} />
+        <div className='space-y-6'>
+          {groupedItems.map(({ category, items: catItems }) => (
+            <section key={category}>
+              <h2
+                className='text-base font-bold mb-2 px-1'
+                style={{ color: 'var(--primary-700, var(--primary-500))' }}
+              >
+                {category}
+                <span className='ml-2 text-xs font-normal text-gray-500'>
+                  ({catItems.length} {catItems.length === 1 ? 'item' : 'items'})
+                </span>
+              </h2>
+              <div className='grid gap-3 xl:grid-cols-2 2xl:grid-cols-3'>
+                {catItems.map((item, index) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    priority={category === groupedItems[0]?.category && index === 0}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

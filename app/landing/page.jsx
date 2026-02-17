@@ -12,16 +12,13 @@ export default function LandingPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [enrolling, setEnrolling] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState('intro'); // 'intro', 'verify', 'enroll'
-  const [checkingExisting, setCheckingExisting] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState('');
   const [hasSentRecoveryNotification, setHasSentRecoveryNotification] =
     useState(false);
-  const [hasExistingAlias, setHasExistingAlias] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(null); // null = unknown, true = new, false = returning
   const [honeypot, setHoneypot] = useState(''); // Honeypot field - should remain empty
   const nameInputId = useId();
   const emailInputId = useId();
@@ -79,124 +76,8 @@ export default function LandingPage() {
     }
   }, [router]);
 
-  // Check for existing alias when email is entered and valid
-  useEffect(() => {
-    let isMounted = true;
-    let timeoutId;
-
-    const checkExistingAlias = async () => {
-      // Basic format check - don't do expensive validation on every keystroke
-      if (!email || !email.includes('@') || email.split('@').length !== 2) {
-        setCheckingExisting(false);
-        setHasExistingAlias(false);
-        setIsNewUser(null); // Unknown until we have a valid email format
-        return;
-      }
-
-      // Check if already enrolled (recovery scenario)
-      if (typeof window !== 'undefined') {
-        const enrolled = localStorage.getItem(ENROLLMENT_KEY);
-        if (enrolled === 'true') {
-          // Already enrolled, don't check for recovery
-          setCheckingExisting(false);
-          setHasExistingAlias(false);
-          setIsNewUser(null); // Don't show name field for already enrolled users
-          return;
-        }
-      }
-
-      setCheckingExisting(true);
-      try {
-        const response = await fetch('/api/alias/get', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-
-        const data = await response.json();
-
-        if (isMounted && response.ok && data.alias) {
-          // Existing alias found - this is a returning user
-          setHasExistingAlias(true);
-          setIsNewUser(false);
-          
-          // If localStorage is missing, this is a recovery scenario - auto-login
-          if (typeof window !== 'undefined') {
-            const enrolled = localStorage.getItem(ENROLLMENT_KEY);
-            if (enrolled !== 'true') {
-              localStorage.setItem(ENROLLMENT_KEY, 'true');
-              const bidderName =
-                data.alias.name || name.trim() || data.alias.alias;
-              localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify({
-                  email,
-                  bidder_name: bidderName,
-                  alias: data.alias,
-                })
-              );
-
-              // Send security notification only for recovery (localStorage was missing)
-              if (!hasSentRecoveryNotification) {
-                setHasSentRecoveryNotification(true);
-                fetch('/api/alias/security-notify', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email }),
-                }).catch((err) =>
-                  console.error('Security notification error:', err)
-                );
-              }
-
-              // Redirect to catalog or intended destination
-              const redirect = localStorage.getItem('auction_redirect');
-              if (redirect) {
-                localStorage.removeItem('auction_redirect');
-                router.push(redirect);
-              } else {
-                router.push('/');
-              }
-            }
-          }
-        } else {
-          // No existing alias - this is a new user
-          setHasExistingAlias(false);
-          setIsNewUser(true);
-        }
-      } catch (err) {
-        // Silently fail - email might not have an alias yet
-        if (isMounted) {
-          console.error('Error checking existing alias:', err);
-          setHasExistingAlias(false);
-          setIsNewUser(null); // Unknown on error - don't assume new user
-        }
-      } finally {
-        if (isMounted) {
-          setCheckingExisting(false);
-        }
-      }
-    };
-
-    // Debounce the check
-    timeoutId = setTimeout(() => {
-      checkExistingAlias();
-    }, 800);
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [email, name, router, hasSentRecoveryNotification]);
-
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    
-    // Only require name for new users (when we know they're new or unknown)
-    // If isNewUser is false, they're returning and don't need to enter name
-    if (isNewUser !== false && (!name || name.trim().length === 0)) {
-      // Check if they're actually a new user before requiring name
-      // We'll check this in the alias lookup below
-    }
 
     // Validate email format first
     if (!email || !email.trim()) {
@@ -204,10 +85,10 @@ export default function LandingPage() {
       return;
     }
 
-    // Validate email format and domain - REQUIRED before proceeding
     setError('');
-    let emailValid = false;
+    setSubmitting(true);
 
+    // Step 1: Validate email format and domain
     try {
       const response = await fetch('/api/email/validate', {
         method: 'POST',
@@ -223,44 +104,34 @@ export default function LandingPage() {
           errorMsg += ` Did you mean ${data.suggestion}?`;
         }
         setError(errorMsg);
-        return; // BLOCK submission if validation fails
+        setSubmitting(false);
+        return;
       }
-
-      emailValid = true;
     } catch (err) {
       console.error('Email validation error:', err);
-      // If validation API fails, we MUST reject the email to prevent invalid registrations
       setError(
         'Unable to verify email address. Please check for typos and try again.'
       );
-      return; // BLOCK submission on validation failure
-    }
-
-    // Only proceed if email validation passed
-    if (!emailValid) {
-      setError('Please enter a valid email address');
+      setSubmitting(false);
       return;
     }
 
-    // Check for existing alias - if found, log them in directly
-    // This handles both recovery scenarios and returning users
+    // Step 2: Check for existing alias - if found, log them in
     const isRecovery =
       typeof window !== 'undefined' &&
       localStorage.getItem(ENROLLMENT_KEY) !== 'true';
 
-    // Always check for existing alias when submitting
-    setCheckingExisting(true);
     try {
       const response = await fetch('/api/alias/get', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim() }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.alias) {
-        // Existing alias found - log them in
+        // Existing user — log them in and redirect
         if (typeof window !== 'undefined') {
           localStorage.setItem(ENROLLMENT_KEY, 'true');
           const bidderName =
@@ -268,25 +139,23 @@ export default function LandingPage() {
           localStorage.setItem(
             STORAGE_KEY,
             JSON.stringify({
-              email,
+              email: email.trim(),
               bidder_name: bidderName,
               alias: data.alias,
             })
           );
 
-          // Send security notification only for recovery (localStorage was missing)
           if (isRecovery && !hasSentRecoveryNotification) {
             setHasSentRecoveryNotification(true);
             fetch('/api/alias/security-notify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email }),
+              body: JSON.stringify({ email: email.trim() }),
             }).catch((err) =>
               console.error('Security notification error:', err)
             );
           }
 
-          // Redirect to catalog or intended destination
           const redirect = localStorage.getItem('auction_redirect');
           if (redirect) {
             localStorage.removeItem('auction_redirect');
@@ -299,23 +168,16 @@ export default function LandingPage() {
       }
     } catch (err) {
       console.error('Error checking existing alias on submit:', err);
-    } finally {
-      setCheckingExisting(false);
     }
 
-    // No existing alias found - send verification email FIRST
-    // User must verify email before creating alias
-    // At this point, we know they're a new user, so name is required
+    // Step 3: New user — name is required
     if (!name || name.trim().length === 0) {
       setError('Please enter your name to create your bidder profile');
-      setCheckingExisting(false);
-      setIsNewUser(true); // Mark as new user so name field shows
+      setSubmitting(false);
       return;
     }
 
-    setError('');
-    setEnrolling(true);
-
+    // Step 4: Send verification email
     try {
       const response = await fetch('/api/email/send-verification', {
         method: 'POST',
@@ -323,7 +185,7 @@ export default function LandingPage() {
         body: JSON.stringify({
           email: email.trim(),
           name: name.trim(),
-          company_website: honeypot, // Honeypot field - should be empty
+          company_website: honeypot,
         }),
       });
 
@@ -331,9 +193,7 @@ export default function LandingPage() {
 
       if (!response.ok) {
         if (data.hasExistingAlias) {
-          // Email already has verified alias - redirect to recovery
           setError(data.error || 'This email already has an alias');
-          // Try to get the existing alias
           try {
             const aliasResponse = await fetch('/api/alias/get', {
               method: 'POST',
@@ -341,22 +201,20 @@ export default function LandingPage() {
               body: JSON.stringify({ email: email.trim() }),
             });
             const aliasData = await aliasResponse.json();
-            if (aliasData.alias) {
-              // Auto-login with existing alias
-              if (typeof window !== 'undefined') {
-                localStorage.setItem(ENROLLMENT_KEY, 'true');
-                const bidderName =
-                  aliasData.alias.name || name.trim() || aliasData.alias.alias;
-                localStorage.setItem(
-                  STORAGE_KEY,
-                  JSON.stringify({
-                    email: email.trim(),
-                    bidder_name: bidderName,
-                    alias: aliasData.alias,
-                  })
-                );
-                router.push('/');
-              }
+            if (aliasData.alias && typeof window !== 'undefined') {
+              localStorage.setItem(ENROLLMENT_KEY, 'true');
+              const bidderName =
+                aliasData.alias.name || name.trim() || aliasData.alias.alias;
+              localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({
+                  email: email.trim(),
+                  bidder_name: bidderName,
+                  alias: aliasData.alias,
+                })
+              );
+              router.push('/');
+              return;
             }
           } catch (err) {
             console.error('Error fetching existing alias:', err);
@@ -366,12 +224,11 @@ export default function LandingPage() {
             data.error || 'Failed to send verification email. Please try again.'
           );
         }
-        setEnrolling(false);
+        setSubmitting(false);
         return;
       }
 
-      // Verification email sent successfully
-      // Store name in localStorage so we can restore it after verification
+      // Verification email sent — store name for after verification
       if (typeof window !== 'undefined' && name && name.trim()) {
         localStorage.setItem('auction_pending_name', name.trim());
       }
@@ -383,11 +240,9 @@ export default function LandingPage() {
     } catch (err) {
       console.error('Error sending verification email:', err);
       setError('Failed to send verification email. Please try again.');
-      setEnrolling(false);
-      return;
     }
 
-    setEnrolling(false);
+    setSubmitting(false);
   };
 
   const handleAliasSelected = (alias) => {
@@ -554,9 +409,7 @@ export default function LandingPage() {
                 Bidder Check-In
               </h1>
               <p className='text-white/90 text-sm leading-snug max-w-md mx-auto'>
-                {hasExistingAlias
-                  ? 'Enter your email to access your bidder profile.'
-                  : 'Enter your name and email to create your bidder profile.'}
+                Enter your name and email to get started or sign back in.
               </p>
             </div>
 
@@ -564,41 +417,29 @@ export default function LandingPage() {
             <div className='px-4 sm:px-5 md:px-6 py-4 sm:py-5'>
               {/* Form */}
               <form onSubmit={handleEmailSubmit} className='space-y-3'>
-                {(isNewUser === true || isNewUser === null) && (
-                  <div>
-                    <label
-                      htmlFor={nameInputId}
-                      className='block text-sm font-semibold text-gray-900 mb-1'
-                    >
-                      Your Name
-                    </label>
-                    <input
-                      id={nameInputId}
-                      type='text'
-                      className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
-                      placeholder='Jane Doe'
-                      value={name}
-                      onChange={(e) => {
-                        setName(e.target.value);
-                        setError('');
-                      }}
-                      required={isNewUser !== false}
-                      aria-required={isNewUser !== false}
-                      aria-describedby={`${nameInputId}-helper`}
-                    />
-                    <p id={`${nameInputId}-helper`} className='sr-only'>
-                      Enter your full name
-                    </p>
-                  </div>
-                )}
-
-                {hasExistingAlias && (
-                  <div className='mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
-                    <p className='text-sm text-blue-800'>
-                      Welcome back! We found your account. You can proceed with just your email.
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <label
+                    htmlFor={nameInputId}
+                    className='block text-sm font-semibold text-gray-900 mb-1'
+                  >
+                    Your Name
+                  </label>
+                  <input
+                    id={nameInputId}
+                    type='text'
+                    className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
+                    placeholder='Jane Doe'
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setError('');
+                    }}
+                    aria-describedby={`${nameInputId}-helper`}
+                  />
+                  <p id={`${nameInputId}-helper`} className='text-xs text-gray-500 mt-1'>
+                    Returning users can leave this blank.
+                  </p>
+                </div>
 
                 <div>
                   <label
@@ -613,13 +454,10 @@ export default function LandingPage() {
                     className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
                     placeholder='your@email.com'
                     value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setError('');
-                        // Reset existing alias state when email changes
-                        setHasExistingAlias(false);
-                        setIsNewUser(null); // Unknown until we check
-                      }}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setError('');
+                    }}
                     required
                     aria-required='true'
                     aria-describedby={
@@ -675,14 +513,14 @@ export default function LandingPage() {
 
                 <button
                   type='submit'
-                  disabled={checkingExisting || enrolling}
+                  disabled={submitting}
                   className='w-full text-white font-semibold py-3.5 px-4 rounded-lg shadow-md active:shadow-lg transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
                   style={{
                     backgroundColor: 'var(--primary-500)',
                     minHeight: '48px',
                   }}
                 >
-                  {checkingExisting || enrolling ? (
+                  {submitting ? (
                     <>
                       <svg
                         className='animate-spin h-4 w-4'
@@ -704,12 +542,10 @@ export default function LandingPage() {
                           d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
                         ></path>
                       </svg>
-                      {checkingExisting
-                        ? 'Checking for your account...'
-                        : 'Sending verification email...'}
+                      Signing in...
                     </>
                   ) : (
-                    'Check My Account'
+                    'Check In'
                   )}
                 </button>
               </form>

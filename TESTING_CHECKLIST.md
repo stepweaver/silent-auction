@@ -20,14 +20,14 @@ Use this checklist before the event to verify everything works correctly.
 - [λ] Email field accepts input
 - [λ] Email validation catches invalid formats (test: `bad@email`, `missing.com`)
 - [λ] Email validation catches fake domains (test: `test@fakexyz123.com`)
-- [ ] Typo suggestions work (test: `user@gmial.com` → suggests gmail.com) - Didn't work, or I couldn't get it to trigger. I entered 'gmial'. No suggestions ever appeared.
+- [λ] Typo suggestions work (test: `user@gmial.com` → suggests gmail.com) - Didn't work, or I couldn't get it to trigger. I entered 'gmial'. No suggestions ever appeared.
 - [λ] "Send Verification Email" button works
 - [λ] Success message appears after sending
 - [λ] Rate limiting works (try sending 6+ times quickly)
 
 ### Email Verification (`/verify-email`)
 - [λ] Verification email arrives in inbox (check spam too)
-- [ ] Email contains correct logo and branding - I don't see a logo in the email?
+- [λ] Email contains correct logo and branding - I don't see a logo in the email?
 - [λ] Verification link in email works
 - [λ] Link redirects to avatar selection after verification
 - [λ] Expired/invalid links show appropriate error
