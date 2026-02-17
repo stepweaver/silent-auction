@@ -293,8 +293,16 @@ export default function ItemPage({ params }) {
                   />
                 </div>
               ) : (
-                <div className="w-full h-64 grid place-items-center text-gray-400">
-                  <span className="text-sm">No photo</span>
+                <div className="relative aspect-[4/3] w-full bg-white">
+                  <Image
+                    src="/logo-with-glow.png"
+                    alt={item.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 50vw"
+                    className="object-contain p-6 sm:p-10 opacity-60"
+                    priority
+                    loading="eager"
+                  />
                 </div>
               )}
             </figure>

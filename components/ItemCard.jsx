@@ -53,11 +53,16 @@ export default function ItemCard({ item, priority = false }) {
             />
           </div>
         ) : (
-          <div className="grid place-items-center aspect-[4/3] sm:aspect-auto sm:h-full min-h-[10rem] bg-gradient-to-br from-emerald-50 to-teal-100">
-            <div className="text-center">
-              <div className="text-4xl mb-2">🎁</div>
-              <p className="text-xs text-emerald-600 font-medium">Mystery Item!</p>
-            </div>
+          <div className="relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem] bg-white">
+            <Image
+              src="/logo-with-glow.png"
+              alt={item.title}
+              fill
+              sizes="(max-width: 640px) 100vw, 192px"
+              className={`object-contain p-4 ${isClosed ? 'opacity-80' : 'opacity-60'}`}
+              priority={priority}
+              loading={priority ? 'eager' : undefined}
+            />
           </div>
         )}
       </div>
