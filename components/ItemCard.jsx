@@ -41,19 +41,19 @@ export default function ItemCard({ item, priority = false }) {
           <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-[1px]" />
         )}
         {item.photo_url ? (
-          <div className="relative h-48 sm:h-full w-full">
+          <div className="relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem]">
             <Image
               src={item.photo_url}
               alt={item.title}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className={`object-cover sm:object-contain ${isClosed ? 'opacity-80' : ''}`}
+              sizes="(max-width: 640px) 100vw, 192px"
+              className={`object-contain p-2 ${isClosed ? 'opacity-80' : ''}`}
               priority={priority}
               loading={priority ? 'eager' : undefined}
             />
           </div>
         ) : (
-          <div className="grid place-items-center h-48 bg-gradient-to-br from-emerald-50 to-teal-100">
+          <div className="grid place-items-center aspect-[4/3] sm:aspect-auto sm:h-full min-h-[10rem] bg-gradient-to-br from-emerald-50 to-teal-100">
             <div className="text-center">
               <div className="text-4xl mb-2">🎁</div>
               <p className="text-xs text-emerald-600 font-medium">Mystery Item!</p>

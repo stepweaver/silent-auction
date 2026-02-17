@@ -11,11 +11,15 @@ import AliasAvatar from '@/components/AliasAvatar';
 
 const DEFAULT_CATEGORIES = [
   'Sports',
-  'Restaurants',
   'Family Fun',
-  'Services',
-  'Memberships',
-  'Student Enrichment',
+  'Arts & Crafts',
+  'Food & Dining',
+  'Adult',
+  'Self-Care',
+  'Home & Auto',
+  'Holiday',
+  'Grade Level Fun',
+  'Classroom & Teacher Fun',
 ];
 
 export default function VendorEditItemPage({ params }) {

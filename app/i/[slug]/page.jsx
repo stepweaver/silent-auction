@@ -287,7 +287,7 @@ export default function ItemPage({ params }) {
                     alt={item.title}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 50vw"
-                    className="object-cover sm:object-contain p-0 sm:p-4"
+                    className="object-contain p-2 sm:p-4"
                     priority
                     loading="eager"
                   />
