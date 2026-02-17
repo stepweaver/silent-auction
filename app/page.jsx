@@ -190,60 +190,40 @@ export default function CatalogPage() {
         </div>
       </section>
 
-      {/* Category filter pills */}
+      {/* Category filter dropdown */}
       {categories.length > 0 && (
         <section className='mb-4'>
-          <div className='flex flex-wrap gap-2'>
-            <button
-              onClick={() => setActiveFilter(ALL_CATEGORIES)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                activeFilter === ALL_CATEGORIES
-                  ? 'text-white border-transparent shadow-sm'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
-              }`}
-              style={
-                activeFilter === ALL_CATEGORIES
-                  ? { backgroundColor: 'var(--primary-500)' }
-                  : undefined
-              }
+          <div className='relative inline-block w-full sm:w-64'>
+            <select
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value)}
+              className='w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-10 text-sm font-semibold text-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2'
+              style={{ focusRingColor: 'var(--primary-500)', '--tw-ring-color': 'var(--primary-500)' }}
             >
-              All
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveFilter(cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                  activeFilter === cat
-                    ? 'text-white border-transparent shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
-                }`}
-                style={
-                  activeFilter === cat
-                    ? { backgroundColor: 'var(--primary-500)' }
-                    : undefined
-                }
+              <option value={ALL_CATEGORIES}>All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+              {hasUncategorized && (
+                <option value={UNCATEGORIZED}>{UNCATEGORIZED}</option>
+              )}
+            </select>
+            <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
+              <svg
+                className='h-4 w-4 text-gray-500'
+                xmlns='http://www.w3.org/2000/svg'
+                viewBox='0 0 20 20'
+                fill='currentColor'
               >
-                {cat}
-              </button>
-            ))}
-            {hasUncategorized && (
-              <button
-                onClick={() => setActiveFilter(UNCATEGORIZED)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
-                  activeFilter === UNCATEGORIZED
-                    ? 'text-white border-transparent shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
-                }`}
-                style={
-                  activeFilter === UNCATEGORIZED
-                    ? { backgroundColor: 'var(--primary-500)' }
-                    : undefined
-                }
-              >
-                {UNCATEGORIZED}
-              </button>
-            )}
+                <path
+                  fillRule='evenodd'
+                  d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z'
+                  clipRule='evenodd'
+                />
+              </svg>
+            </div>
           </div>
         </section>
       )}
