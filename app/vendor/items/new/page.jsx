@@ -12,7 +12,7 @@ const DEFAULT_CATEGORIES = [
   'Arts & Crafts',
   'Food & Dining',
   'Adult',
-  'Self-Care',
+  'Self-Care & Beauty',
   'Home & Auto',
   'Holiday',
   'Grade Level Fun',

@@ -7,6 +7,8 @@ import LeaderboardItem from '@/components/LeaderboardItem';
 import BidNotification from '@/components/BidNotification';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
+const ALL_CATEGORIES = '__all__';
+const UNCATEGORIZED = 'Other';
 
 export default function LeaderboardPage() {
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [activeFilter, setActiveFilter] = useState(ALL_CATEGORIES);
   const prevItemsStateRef = useRef({}); // Track previous state for change detection
   const prevPositionsRef = useRef({}); // Track previous positions for animation
   const prevBidCountsRef = useRef({}); // Track previous bid counts
@@ -387,6 +390,32 @@ export default function LeaderboardPage() {
     return states;
   }, [sortedItems, topBids, recentBids]);
 
+  // Derive unique category list from loaded items
+  const categories = useMemo(() => {
+    const catSet = new Set();
+    items.forEach((item) => {
+      const cat = item.category?.trim();
+      if (cat) catSet.add(cat);
+    });
+    return [...catSet].sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const hasUncategorized = useMemo(
+    () => items.some((item) => !item.category?.trim()),
+    [items]
+  );
+
+  // Filter sorted items by active category
+  const filteredItems = useMemo(() => {
+    if (activeFilter === ALL_CATEGORIES) return sortedItems;
+    return sortedItems.filter((item) => {
+      if (activeFilter === UNCATEGORIZED) {
+        return !item.category?.trim();
+      }
+      return item.category?.trim() === activeFilter;
+    });
+  }, [sortedItems, activeFilter]);
+
   if (checkingEnrollment || loading) {
     return (
       <main className='w-full min-h-screen px-4 py-4 sm:py-6 bg-gray-50'>
@@ -438,8 +467,46 @@ export default function LeaderboardPage() {
                 🏆 Live Leaderboard
               </h1>
               <p className='text-base lg:text-lg text-gray-600'>
-                Current leaders for all auction items
+                {activeFilter === ALL_CATEGORIES
+                  ? 'Current leaders for all auction items'
+                  : `Showing ${activeFilter} items`}
               </p>
+              {categories.length > 0 && (
+                <div className='mt-3 flex justify-center'>
+                  <div className='relative inline-block w-64'>
+                    <select
+                      value={activeFilter}
+                      onChange={(e) => setActiveFilter(e.target.value)}
+                      className='w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-2 pr-10 text-sm font-semibold text-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2'
+                      style={{ '--tw-ring-color': 'var(--primary-500)' }}
+                    >
+                      <option value={ALL_CATEGORIES}>All Categories</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                      {hasUncategorized && (
+                        <option value={UNCATEGORIZED}>{UNCATEGORIZED}</option>
+                      )}
+                    </select>
+                    <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
+                      <svg
+                        className='h-4 w-4 text-gray-500'
+                        xmlns='http://www.w3.org/2000/svg'
+                        viewBox='0 0 20 20'
+                        fill='currentColor'
+                      >
+                        <path
+                          fillRule='evenodd'
+                          d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z'
+                          clipRule='evenodd'
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -451,9 +518,15 @@ export default function LeaderboardPage() {
               <p className='text-lg text-gray-600'>No open items available.</p>
             </div>
           </div>
+        ) : filteredItems.length === 0 ? (
+          <div className='bg-white rounded-xl shadow-xl border border-gray-200'>
+            <div className='px-6 py-12 text-center'>
+              <p className='text-lg text-gray-600'>No items in this category.</p>
+            </div>
+          </div>
         ) : (
           <div className='grid gap-3 lg:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'>
-            {sortedItems.map((item, index) => {
+            {filteredItems.map((item, index) => {
               const state = itemStates[item.id] || {};
               return (
                 <LeaderboardItem
@@ -489,8 +562,46 @@ export default function LeaderboardPage() {
                 🏆 Live Leaderboard
               </h1>
               <p className='text-xs text-gray-600'>
-                Current leaders for all auction items
+                {activeFilter === ALL_CATEGORIES
+                  ? 'Current leaders for all auction items'
+                  : `Showing ${activeFilter} items`}
               </p>
+              {categories.length > 0 && (
+                <div className='mt-2 flex justify-center'>
+                  <div className='relative inline-block w-full'>
+                    <select
+                      value={activeFilter}
+                      onChange={(e) => setActiveFilter(e.target.value)}
+                      className='w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-xs font-semibold text-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2'
+                      style={{ '--tw-ring-color': 'var(--primary-500)' }}
+                    >
+                      <option value={ALL_CATEGORIES}>All Categories</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                      {hasUncategorized && (
+                        <option value={UNCATEGORIZED}>{UNCATEGORIZED}</option>
+                      )}
+                    </select>
+                    <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2'>
+                      <svg
+                        className='h-3.5 w-3.5 text-gray-500'
+                        xmlns='http://www.w3.org/2000/svg'
+                        viewBox='0 0 20 20'
+                        fill='currentColor'
+                      >
+                        <path
+                          fillRule='evenodd'
+                          d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z'
+                          clipRule='evenodd'
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -502,9 +613,15 @@ export default function LeaderboardPage() {
               <p className='text-sm text-gray-600'>No open items available.</p>
             </div>
           </div>
+        ) : filteredItems.length === 0 ? (
+          <div className='bg-white rounded-lg shadow-md border border-gray-200'>
+            <div className='px-4 py-8 text-center'>
+              <p className='text-sm text-gray-600'>No items in this category.</p>
+            </div>
+          </div>
         ) : (
           <div className='grid gap-2 grid-cols-1'>
-            {sortedItems.map((item, index) => {
+            {filteredItems.map((item, index) => {
               const state = itemStates[item.id] || {};
               return (
                 <LeaderboardItem

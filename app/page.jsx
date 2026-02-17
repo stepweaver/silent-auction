@@ -174,22 +174,6 @@ export default function CatalogPage() {
 
   return (
     <main className='w-full px-4 py-4 pb-8'>
-      <section className='mb-4'>
-        <div className='bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden'>
-          <div className='px-4 py-4'>
-            <h1
-              className='text-2xl font-bold mb-1'
-              style={{ color: 'var(--primary-500)' }}
-            >
-              Silent Auction Catalog
-            </h1>
-            <p className='text-sm text-gray-600'>
-              Find something you love - every dollar supports our kids!
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* Category filter dropdown */}
       {categories.length > 0 && (
         <section className='mb-4'>
