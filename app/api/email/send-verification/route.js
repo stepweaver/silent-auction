@@ -190,12 +190,20 @@ export async function POST(req) {
 
     // Send verification email
     try {
-      await sendEmailVerification({
+      const emailSent = await sendEmailVerification({
         email: trimmedEmail,
         name: name || trimmedEmail.split('@')[0],
         verificationLink,
         contactEmail,
       });
+
+      if (!emailSent) {
+        console.error('sendEmailVerification returned false for:', trimmedEmail);
+        return Response.json(
+          { error: 'Failed to send verification email. Please try again later or contact the auction administrators.' },
+          { status: 500 }
+        );
+      }
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
       return Response.json(
