@@ -175,6 +175,60 @@ html {
   }
 }
 
+/* Goal meter - green progress bar */
+.goal-bar-green {
+  background: linear-gradient(90deg, #047857, #059669, #10b981);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 8px rgba(4, 120, 87, 0.3);
+}
+
+/* Goal meter - rainbow cycling bar (goal reached) */
+.goal-bar-rainbow {
+  background: linear-gradient(
+    90deg,
+    #047857, #10b981, #f59e0b, #ef4444, #8b5cf6, #3b82f6, #047857
+  );
+  background-size: 300% 100%;
+  animation: goalRainbow 4s linear infinite, goalGlow 2s ease-in-out infinite;
+}
+
+@keyframes goalRainbow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+@keyframes goalGlow {
+  0%, 100% {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 8px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 20px rgba(245, 158, 11, 0.6);
+  }
+}
+
+/* Gold card background when goal is reached */
+.goal-meter-card-gold {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7, #fffbeb);
+}
+
+/* Celebrate button */
+.goal-celebrate-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+.goal-celebrate-btn:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+/* Trophy bounce animation */
+.goal-trophy-bounce {
+  animation: trophyBounce 2s ease-in-out infinite;
+}
+
+@keyframes trophyBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-2px) rotate(-5deg); }
+  75% { transform: translateY(-2px) rotate(5deg); }
+}
+
 @media print {
   .no-print {
     display: none !important;

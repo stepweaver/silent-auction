@@ -4,6 +4,8 @@ import { supabaseBrowser } from '@/lib/supabaseClient';
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import ItemCard from '@/components/ItemCard';
+import GoalMeter from '@/components/GoalMeter';
+import Link from 'next/link';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 const ALL_CATEGORIES = '__all__';
@@ -174,6 +176,9 @@ export default function CatalogPage() {
 
   return (
     <main className='w-full px-4 py-4 pb-8'>
+      {/* Fundraiser goal meter */}
+      <GoalMeter />
+
       {/* Category filter dropdown */}
       {categories.length > 0 && (
         <section className='mb-4'>
@@ -211,6 +216,28 @@ export default function CatalogPage() {
           </div>
         </section>
       )}
+
+      {/* Donate banner */}
+      <Link
+        href='/donate'
+        className='mb-4 flex items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md'
+        style={{ borderColor: 'rgba(4, 120, 87, 0.25)' }}
+      >
+        <div className='min-w-0'>
+          <p className='text-sm font-semibold text-gray-900'>
+            Want to support without bidding?
+          </p>
+          <p className='text-xs text-gray-500'>
+            Pledge a donation to help our cause directly.
+          </p>
+        </div>
+        <span
+          className='shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold text-white'
+          style={{ backgroundColor: 'var(--primary-500)' }}
+        >
+          Donate
+        </span>
+      </Link>
 
       {items.length === 0 ? (
         <div className='bg-white rounded-xl shadow-xl border border-gray-200'>

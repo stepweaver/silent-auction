@@ -133,18 +133,21 @@ export default function AdminDashboard() {
   const s = supabaseBrowser();
   const [settings, setSettings] = useState(null);
   const [items, setItems] = useState([]);
+  const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
 
   async function load() {
     try {
-      const [{ data: settingsData }, { data: itemsData }] = await Promise.all([
+      const [{ data: settingsData }, { data: itemsData }, { data: donationsData }] = await Promise.all([
         s.from('settings').select('*').eq('id', 1).maybeSingle(),
         s.from('item_leaders').select('*').order('title', { ascending: true }),
+        s.from('donations').select('*').order('created_at', { ascending: false }),
       ]);
 
       setSettings(settingsData);
       setItems(itemsData || []);
+      setDonations(donationsData || []);
     } catch (err) {
       console.error('Error loading:', err);
       setMsg('Error loading data');
@@ -213,8 +216,9 @@ export default function AdminDashboard() {
       if (res.ok) {
         const data = await res.json();
         if (newStatus && data.closeResult) {
-          const { emailsSent, adminEmailsSent } = data.closeResult;
-          setMsg(`Auction closed successfully. ${emailsSent} winner email(s) and ${adminEmailsSent} admin email(s) sent.`);
+          const { emailsSent, adminEmailsSent, donationEmailsSent = 0, donationsCount = 0 } = data.closeResult;
+          const donationMsg = donationsCount > 0 ? ` ${donationEmailsSent} donation payment email(s) sent for ${donationsCount} pledge(s).` : '';
+          setMsg(`Auction closed successfully. ${emailsSent} winner email(s) and ${adminEmailsSent} admin email(s) sent.${donationMsg}`);
         } else {
           setMsg(`Auction ${newStatus ? 'closed' : 'opened'} successfully`);
         }
@@ -530,6 +534,102 @@ export default function AdminDashboard() {
           </div>
         </>
       )}
+      {/* Donation Pledges Section */}
+      <div className='mt-6 sm:mt-8'>
+        <h2 className='text-lg sm:text-xl font-semibold mb-3'>
+          Donation Pledges
+          {donations.length > 0 && (
+            <span className='ml-2 text-sm font-normal text-gray-500'>
+              ({donations.length} pledge{donations.length !== 1 ? 's' : ''} — {formatDollar(donations.reduce((sum, d) => sum + Number(d.amount || 0), 0))} total)
+            </span>
+          )}
+        </h2>
+
+        {donations.length === 0 ? (
+          <p className='text-gray-600 text-sm'>No donation pledges yet.</p>
+        ) : (
+          <>
+            {/* Mobile: Card View */}
+            <div className='block md:hidden space-y-3'>
+              {donations.map((donation) => (
+                <div
+                  key={donation.id}
+                  className='border rounded-lg bg-white overflow-hidden p-3'
+                >
+                  <div className='flex justify-between items-start mb-2'>
+                    <div>
+                      <h3 className='font-semibold text-sm'>{donation.donor_name}</h3>
+                      <p className='text-xs text-gray-500'>{donation.email}</p>
+                    </div>
+                    <span className='font-bold text-green-600 text-sm'>
+                      {formatDollar(donation.amount)}
+                    </span>
+                  </div>
+                  {donation.message && (
+                    <p className='text-xs text-gray-600 italic mt-1'>
+                      &ldquo;{donation.message}&rdquo;
+                    </p>
+                  )}
+                  <p className='text-xs text-gray-400 mt-1'>
+                    {new Date(donation.created_at).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: Table View */}
+            <div className='hidden md:block overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6'>
+              <table className='w-full border-collapse border'>
+                <thead>
+                  <tr className='bg-gray-100'>
+                    <th className='border p-2 text-left text-sm'>Name</th>
+                    <th className='border p-2 text-left text-sm'>Email</th>
+                    <th className='border p-2 text-right text-sm'>Amount</th>
+                    <th className='border p-2 text-left text-sm'>Message</th>
+                    <th className='border p-2 text-left text-sm'>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {donations.map((donation) => (
+                    <tr key={donation.id} className='hover:bg-gray-50'>
+                      <td className='border p-2 text-sm'>{donation.donor_name}</td>
+                      <td className='border p-2 text-sm'>
+                        <a href={`mailto:${donation.email}`} className='text-blue-600 hover:underline'>
+                          {donation.email}
+                        </a>
+                      </td>
+                      <td className='border p-2 text-sm text-right'>
+                        <span className='font-semibold text-green-600'>
+                          {formatDollar(donation.amount)}
+                        </span>
+                      </td>
+                      <td className='border p-2 text-sm text-gray-600 max-w-xs truncate'>
+                        {donation.message ? (
+                          <span className='italic'>&ldquo;{donation.message}&rdquo;</span>
+                        ) : (
+                          <span className='text-gray-400'>—</span>
+                        )}
+                      </td>
+                      <td className='border p-2 text-sm text-gray-500 whitespace-nowrap'>
+                        {new Date(donation.created_at).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className='bg-gray-50 font-semibold'>
+                    <td className='border p-2 text-sm' colSpan={2}>Total</td>
+                    <td className='border p-2 text-sm text-right text-green-600'>
+                      {formatDollar(donations.reduce((sum, d) => sum + Number(d.amount || 0), 0))}
+                    </td>
+                    <td className='border p-2' colSpan={2}></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
