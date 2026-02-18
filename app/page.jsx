@@ -176,13 +176,16 @@ export default function CatalogPage() {
 
   return (
     <main className='w-full px-4 py-4 pb-8'>
-      {/* Fundraiser goal meter */}
-      <GoalMeter />
+      {/* Top section: Goal Meter and Filter - balanced layout for desktop */}
+      <div className='mb-4 flex flex-col gap-3 md:flex-row md:items-start md:gap-4'>
+        {/* Goal Meter - takes available space on desktop */}
+        <div className='flex-1'>
+          <GoalMeter />
+        </div>
 
-      {/* Category filter dropdown */}
-      {categories.length > 0 && (
-        <section className='mb-4'>
-          <div className='relative inline-block w-full sm:w-64'>
+        {/* Category filter dropdown - fixed width on desktop */}
+        {categories.length > 0 && (
+          <div className='relative w-full md:w-64 md:shrink-0'>
             <select
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
@@ -214,16 +217,16 @@ export default function CatalogPage() {
               </svg>
             </div>
           </div>
-        </section>
-      )}
+        )}
+      </div>
 
-      {/* Donate banner */}
+      {/* Donate banner - full width, better integrated */}
       <Link
         href='/donate'
-        className='mb-4 flex items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md'
+        className='mb-4 flex flex-col gap-2 rounded-xl border bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-3'
         style={{ borderColor: 'rgba(4, 120, 87, 0.25)' }}
       >
-        <div className='min-w-0'>
+        <div className='min-w-0 flex-1'>
           <p className='text-sm font-semibold text-gray-900'>
             Want to support without bidding?
           </p>
@@ -232,7 +235,7 @@ export default function CatalogPage() {
           </p>
         </div>
         <span
-          className='shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold text-white'
+          className='shrink-0 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-transform hover:scale-105'
           style={{ backgroundColor: 'var(--primary-500)' }}
         >
           Donate
