@@ -16,10 +16,6 @@ export default function SiteFooter() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const isMobileViewport = () =>
-      window.innerWidth <= 768 ||
-      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-
     const scrollContainer =
       document.getElementById('main-content') || window;
 
@@ -63,9 +59,7 @@ export default function SiteFooter() {
           target.tagName === 'SELECT')
       ) {
         focusedInputCount += 1;
-        if (isMobileViewport()) {
-          setIsKeyboardOpen(true);
-        }
+        setIsKeyboardOpen(true);
       }
     };
 
