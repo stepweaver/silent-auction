@@ -112,18 +112,20 @@ export default function SiteFooter() {
 
   return (
     <footer
-      className={`no-print mt-auto border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 transition-all duration-300 ease-in-out ${
+      className={`no-print mt-auto border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 transition-[max-height,opacity,padding,border-color] duration-300 ease-in-out overflow-hidden ${
         isHidden
-          ? 'translate-y-full opacity-0 pointer-events-none'
-          : 'translate-y-0 opacity-100'
+          ? 'opacity-0 pointer-events-none border-t-transparent'
+          : 'opacity-100'
       }`}
       style={{
-        transform: isHidden ? 'translateY(100%)' : 'translateY(0)',
-        transition: 'transform 0.25s ease-in-out, opacity 0.25s ease-in-out',
-        willChange: 'transform, opacity',
+        maxHeight: isHidden ? 0 : '6rem',
+        minHeight: isHidden ? 0 : undefined,
+        paddingTop: isHidden ? 0 : undefined,
+        paddingBottom: isHidden ? 0 : undefined,
+        transition: 'max-height 0.3s ease-in-out, opacity 0.25s ease-in-out, padding 0.3s ease-in-out',
       }}
     >
-      <div className="max-w-7xl mx-auto px-3 py-2 sm:px-4 sm:py-3">
+      <div className="max-w-7xl mx-auto px-3 py-2 sm:px-4 sm:py-3 min-h-0">
         <nav
           className="flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600"
           aria-label="Footer"
