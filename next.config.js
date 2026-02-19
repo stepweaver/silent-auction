@@ -10,6 +10,11 @@ const remotePatterns = [
     hostname: 'heritageguitars.com',
     pathname: '/**',
   },
+  {
+    protocol: 'https',
+    hostname: 'www.fallenoaks.farm',
+    pathname: '/**',
+  },
 ];
 
 if (supabaseUrl) {

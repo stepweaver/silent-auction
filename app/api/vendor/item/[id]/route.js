@@ -1,11 +1,10 @@
 import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { ItemSchema } from '@/lib/validation';
-import { vendorAdminOwnsItem } from '@/lib/vendorAuth';
+import { vendorAdminOwnsItem, getVendorAdminId } from '@/lib/vendorAuth';
 
 export async function PATCH(req, { params }) {
-  const headersList = await headers();
-  const vendorAdminId = headersList.get('x-vendor-admin-id');
+  const vendorAdminId = await getVendorAdminId();
 
   if (!vendorAdminId) {
     return new Response('Unauthorized', { status: 401 });
@@ -15,7 +14,6 @@ export async function PATCH(req, { params }) {
     const { id } = await params;
     const body = await req.json();
 
-    // Partial validation
     const updateData = {};
 
     if (body.title !== undefined) updateData.title = body.title;
@@ -29,14 +27,11 @@ export async function PATCH(req, { params }) {
     if (body.description !== undefined) updateData.description = body.description || null;
     if (body.photo_url !== undefined) updateData.photo_url = body.photo_url || null;
     if (body.start_price !== undefined) updateData.start_price = Number(body.start_price);
-    // min_increment is fixed at $5, not editable
     if (body.is_closed !== undefined) updateData.is_closed = Boolean(body.is_closed);
-    // Only include category if it's a non-empty string (skip if empty to avoid errors if column doesn't exist yet)
     if (body.category !== undefined && body.category && body.category.trim()) {
       updateData.category = body.category.trim();
     }
 
-    // Validate with partial schema
     const partialSchema = ItemSchema.partial();
     const parsed = partialSchema.safeParse(updateData);
 
@@ -46,13 +41,11 @@ export async function PATCH(req, { params }) {
 
     const s = supabaseServer();
 
-    // Check ownership
     const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
     if (!ownsItem) {
       return new Response('Unauthorized: You can only edit your own items', { status: 403 });
     }
 
-    // Check if slug change conflicts with existing
     if (updateData.slug) {
       const { data: existing } = await s
         .from('items')
@@ -73,9 +66,7 @@ export async function PATCH(req, { params }) {
       .select()
       .single();
 
-    // If error is about missing column (category), retry without it
     if (error && error.message && error.message.includes('column') && error.message.includes('category')) {
-      // Remove category from update and retry
       const { category, ...updateDataWithoutCategory } = updateData;
       const retryResult = await s
         .from('items')
@@ -104,6 +95,65 @@ export async function PATCH(req, { params }) {
     return Response.json({ ok: true, item });
   } catch (error) {
     console.error('Update item error:', error);
+    return new Response('Internal server error', { status: 500 });
+  }
+}
+
+export async function DELETE(_req, { params }) {
+  const vendorAdminId = await getVendorAdminId();
+
+  if (!vendorAdminId) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    const s = supabaseServer();
+
+    const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
+    if (!ownsItem) {
+      return new Response('Unauthorized: You can only delete your own items', { status: 403 });
+    }
+
+    const { data: existingItem, error: fetchError } = await s
+      .from('items')
+      .select('id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error('Fetch item before delete error:', fetchError);
+      return new Response('Failed to delete item', { status: 500 });
+    }
+
+    if (!existingItem) {
+      return new Response('Item not found', { status: 404 });
+    }
+
+    const { data: existingBid } = await s
+      .from('bids')
+      .select('id')
+      .eq('item_id', id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingBid) {
+      return new Response('This item already has bids and cannot be deleted.', { status: 400 });
+    }
+
+    const { error: deleteError } = await s
+      .from('items')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      console.error('Delete item error:', deleteError);
+      return new Response('Failed to delete item', { status: 500 });
+    }
+
+    return Response.json({ ok: true });
+  } catch (error) {
+    console.error('Delete item error:', error);
     return new Response('Internal server error', { status: 500 });
   }
 }

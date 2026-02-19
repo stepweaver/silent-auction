@@ -46,6 +46,7 @@ export default function EditItemPage({ params }) {
   const [customCategories, setCustomCategories] = useState([]);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch custom categories on load
   useEffect(() => {
@@ -251,6 +252,37 @@ export default function EditItemPage({ params }) {
     }
   }
 
+  async function handleDelete() {
+    if (!item) return;
+    const confirmed = window.confirm(
+      'Delete this item permanently?\n\nThis is only allowed for items that do not have any bids yet. This action cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    setMsg('');
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch(`/api/admin/item/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        setMsg(text || 'Error deleting item');
+        setIsDeleting(false);
+        return;
+      }
+
+      // On success, take admin back to dashboard
+      router.push('/admin');
+    } catch (err) {
+      console.error(err);
+      setMsg('Error deleting item');
+      setIsDeleting(false);
+    }
+  }
+
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -432,7 +464,7 @@ export default function EditItemPage({ params }) {
                 type="checkbox"
                 checked={form.is_closed}
                 onChange={(e) => setForm((f) => ({ ...f, is_closed: e.target.checked }))}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isDeleting}
                 className="w-4 h-4"
               />
               <span>Item is closed</span>
@@ -453,13 +485,21 @@ export default function EditItemPage({ params }) {
             <button
               type="submit"
               className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isDeleting}
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
             <Link href="/admin" className="px-4 py-2 border rounded hover:bg-gray-50 text-center text-sm sm:text-base">
               Cancel
             </Link>
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="px-4 py-2 border border-red-600 text-red-700 rounded hover:bg-red-50 disabled:opacity-50 text-sm sm:text-base w-full sm:w-auto"
+              disabled={isSubmitting || isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Item'}
+            </button>
           </div>
         </form>
 

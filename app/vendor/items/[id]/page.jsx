@@ -47,6 +47,7 @@ export default function VendorEditItemPage({ params }) {
   const [customCategories, setCustomCategories] = useState([]);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -286,6 +287,40 @@ export default function VendorEditItemPage({ params }) {
       console.error(err);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!item) return;
+    const confirmed = window.confirm(
+      'Delete this item permanently?\n\nThis is only allowed for items that do not have any bids yet. This action cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    setMsg('');
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch(`/api/vendor/item/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-vendor-admin-id': vendorAdminId || '',
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        setMsg(text || 'Error deleting item');
+        setIsDeleting(false);
+        return;
+      }
+
+      // On success, take donor back to dashboard
+      router.push('/vendor');
+    } catch (err) {
+      console.error(err);
+      setMsg('Error deleting item');
+      setIsDeleting(false);
     }
   }
 
@@ -589,7 +624,7 @@ export default function VendorEditItemPage({ params }) {
                       type="submit"
                       className="flex-1 px-4 py-2.5 text-white font-semibold rounded-lg text-sm sm:text-base transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       style={{ backgroundColor: 'var(--primary-500)' }}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isDeleting}
                     >
                       {isSubmitting ? (
                         <>
@@ -609,6 +644,14 @@ export default function VendorEditItemPage({ params }) {
                     >
                       Cancel
                     </Link>
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="px-4 py-2.5 border-2 border-red-600 text-red-700 font-semibold rounded-lg text-sm sm:text-base hover:bg-red-50 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isSubmitting || isDeleting}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete Item'}
+                    </button>
                   </div>
                 </form>
               </div>

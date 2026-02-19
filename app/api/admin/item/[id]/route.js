@@ -10,7 +10,6 @@ export async function PATCH(req, { params }) {
   const vendorAdminId = headersList.get('x-vendor-admin-id');
   const isSuperAdmin = checkBasicAuth(headersList);
 
-  // Either super admin or vendor admin must be authenticated
   if (!isSuperAdmin && !vendorAdminId) {
     return new Response('Unauthorized', {
       status: 401,
@@ -22,12 +21,10 @@ export async function PATCH(req, { params }) {
     const { id } = await params;
     const body = await req.json();
 
-    // Partial validation - only validate fields that are present
     const updateData = {};
 
     if (body.title !== undefined) updateData.title = body.title;
     if (body.slug !== undefined) {
-      // Normalize slug
       updateData.slug = body.slug
         .toLowerCase()
         .trim()
@@ -37,14 +34,11 @@ export async function PATCH(req, { params }) {
     if (body.description !== undefined) updateData.description = body.description || null;
     if (body.photo_url !== undefined) updateData.photo_url = body.photo_url || null;
     if (body.start_price !== undefined) updateData.start_price = Number(body.start_price);
-    // min_increment is fixed at $5, not editable
     if (body.is_closed !== undefined) updateData.is_closed = Boolean(body.is_closed);
-    // Only include category if it's a non-empty string (skip if empty to avoid errors if column doesn't exist yet)
     if (body.category !== undefined && body.category && body.category.trim()) {
       updateData.category = body.category.trim();
     }
 
-    // Validate with partial schema
     const partialSchema = ItemSchema.partial();
     const parsed = partialSchema.safeParse(updateData);
 
@@ -54,7 +48,6 @@ export async function PATCH(req, { params }) {
 
     const s = supabaseServer();
 
-    // If vendor admin, check ownership
     if (vendorAdminId && !isSuperAdmin) {
       const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
       if (!ownsItem) {
@@ -62,7 +55,6 @@ export async function PATCH(req, { params }) {
       }
     }
 
-    // Check if slug change conflicts with existing
     if (updateData.slug) {
       const { data: existing } = await s
         .from('items')
@@ -83,9 +75,7 @@ export async function PATCH(req, { params }) {
       .select()
       .single();
 
-    // If error is about missing column (category), retry without it
     if (error && error.message && error.message.includes('column') && error.message.includes('category')) {
-      // Remove category from update and retry
       const { category, ...updateDataWithoutCategory } = updateData;
       const retryResult = await s
         .from('items')
@@ -103,7 +93,6 @@ export async function PATCH(req, { params }) {
     }
 
     if (error) {
-      // Log error server-side only, don't expose details to client
       if (process.env.NODE_ENV === 'development') {
         console.error('Update error:', error);
       }
@@ -116,10 +105,82 @@ export async function PATCH(req, { params }) {
 
     return Response.json({ ok: true, item });
   } catch (error) {
-    // Log error server-side only, don't expose details to client
     if (process.env.NODE_ENV === 'development') {
       console.error('Update item error:', error);
     }
     return new Response('Internal server error', { status: 500 });
   }
 }
+
+export async function DELETE(_req, { params }) {
+  const headersList = await headers();
+  const vendorAdminId = headersList.get('x-vendor-admin-id');
+  const isSuperAdmin = checkBasicAuth(headersList);
+
+  if (!isSuperAdmin && !vendorAdminId) {
+    return new Response('Unauthorized', {
+      status: 401,
+      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
+    });
+  }
+
+  try {
+    const { id } = await params;
+    const s = supabaseServer();
+
+    if (vendorAdminId && !isSuperAdmin) {
+      const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
+      if (!ownsItem) {
+        return new Response('Unauthorized: You can only delete your own items', { status: 403 });
+      }
+    }
+
+    const { data: existingItem, error: fetchError } = await s
+      .from('items')
+      .select('id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (fetchError) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Fetch item before delete error:', fetchError);
+      }
+      return new Response('Failed to delete item', { status: 500 });
+    }
+
+    if (!existingItem) {
+      return new Response('Item not found', { status: 404 });
+    }
+
+    const { data: existingBid } = await s
+      .from('bids')
+      .select('id')
+      .eq('item_id', id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingBid) {
+      return new Response('This item already has bids and cannot be deleted.', { status: 400 });
+    }
+
+    const { error: deleteError } = await s
+      .from('items')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Delete item error:', deleteError);
+      }
+      return new Response('Failed to delete item', { status: 500 });
+    }
+
+    return Response.json({ ok: true });
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Delete item error:', error);
+    }
+    return new Response('Internal server error', { status: 500 });
+  }
+}
+
