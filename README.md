@@ -49,7 +49,11 @@ npm install
    - Check that "Enable Realtime" is toggled ON in the table settings
    - Alternatively, ensure Realtime is enabled for your project: **Project Settings → API → Realtime**
 
-7. **Set up Supabase Keep-Alive (Prevent Free Tier Pausing):**
+7. **Optional: Auction open time** – To set when bidding opens (admin-configurable):
+   - Run the contents of `supabase-auction-start-migration.sql` in the SQL Editor
+   - This adds an `auction_start` column to the settings table
+
+8. **Set up Supabase Keep-Alive (Prevent Free Tier Pausing):**
    - Go to **SQL Editor** in your Supabase dashboard
    - Run the contents of `supabase-heartbeat-migration.sql` to create the heartbeat table
    - This creates a simple table that GitHub Actions can ping to keep your Supabase project active

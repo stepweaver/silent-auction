@@ -253,7 +253,9 @@ export default function ItemPage({ params }) {
 
   const now = new Date();
   const deadline = settings?.auction_deadline ? new Date(settings.auction_deadline) : null;
+  const auctionStart = settings?.auction_start ? new Date(settings.auction_start) : null;
   const deadlinePassed = deadline && now >= deadline;
+  const notYetOpen = auctionStart && now < auctionStart;
   // auction_closed is the primary control - if auction is open, check item status
   const closed = settings?.auction_closed || deadlinePassed || item.is_closed;
 
@@ -314,7 +316,27 @@ export default function ItemPage({ params }) {
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">{item.title}</h1>
                 {item.description && <p className="text-sm text-gray-600 leading-relaxed mt-2">{item.description}</p>}
 
-                {!closed ? (
+                {notYetOpen ? (
+                  <div
+                    className='mt-4 rounded-lg p-4 border'
+                    style={{
+                      backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                      borderColor: 'rgba(59, 130, 246, 0.3)',
+                    }}
+                  >
+                    <h3 className='font-bold text-sm sm:text-base mb-2' style={{ color: '#2563eb' }}>
+                      Bidding Opens Soon
+                    </h3>
+                    <p className='text-xs sm:text-sm text-gray-700'>
+                      All items open and bidding begins{' '}
+                      {auctionStart.toLocaleString(undefined, {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
+                      .
+                    </p>
+                  </div>
+                ) : !closed ? (
                   <>
                     {hasBids ? (
                       <div className="mt-4 grid grid-cols-2 gap-3">

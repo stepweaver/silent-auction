@@ -90,6 +90,15 @@ export async function POST(req) {
       return new Response('Bidding closed - auction is manually closed', { status: 400 });
     }
 
+    const auctionStart = settings?.auction_start ? new Date(settings.auction_start) : null;
+    if (auctionStart && now < auctionStart) {
+      const formatted = auctionStart.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+      return new Response(`Bidding not yet open. Auction opens ${formatted}.`, { status: 400 });
+    }
+
     if (deadline && now >= deadline) {
       return new Response('Bidding closed - deadline passed', { status: 400 });
     }

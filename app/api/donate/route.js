@@ -40,7 +40,7 @@ export async function POST(req) {
     // Check auction is not closed
     const { data: settings, error: settingsError } = await s
       .from('settings')
-      .select('auction_closed, auction_deadline')
+      .select('auction_closed, auction_deadline, auction_start')
       .eq('id', 1)
       .maybeSingle();
 
@@ -53,6 +53,15 @@ export async function POST(req) {
     }
 
     const now = new Date();
+    const auctionStart = settings?.auction_start ? new Date(settings.auction_start) : null;
+    if (auctionStart && now < auctionStart) {
+      const formatted = auctionStart.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+      return new Response(`The auction has not opened yet. Donations open ${formatted}.`, { status: 400 });
+    }
+
     const deadline = settings?.auction_deadline ? new Date(settings.auction_deadline) : null;
     if (deadline && now >= deadline) {
       return new Response('The auction deadline has passed. Donations are no longer being accepted.', { status: 400 });

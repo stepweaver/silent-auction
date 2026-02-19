@@ -6,6 +6,142 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { formatDollar } from '@/lib/money';
 
+function SetAuctionStart({ onSet, currentStart }) {
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    if (currentStart) {
+      const d = new Date(currentStart);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      setDate(`${year}-${month}-${day}`);
+      setTime(`${hours}:${minutes}`);
+    }
+  }, [currentStart]);
+
+  async function handleSet(e) {
+    e.preventDefault();
+    if (!date || !time) {
+      setMsg('Please enter both date and time');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMsg('');
+
+    try {
+      const start = new Date(`${date}T${time}`);
+      if (isNaN(start.getTime())) {
+        setMsg('Invalid date/time');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auction_start: start.toISOString(),
+        }),
+      });
+
+      if (res.ok) {
+        setMsg('Auction start updated!');
+        setTimeout(() => onSet(), 500);
+      } else {
+        setMsg('Error setting auction start');
+      }
+    } catch (err) {
+      setMsg('Error setting auction start');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleClear() {
+    setIsSubmitting(true);
+    setMsg('');
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auction_start: null }),
+      });
+      if (res.ok) {
+        setMsg('Auction start cleared (bidding open immediately)');
+        setDate('');
+        setTime('');
+        setTimeout(() => onSet(), 500);
+      } else {
+        setMsg('Error clearing auction start');
+      }
+    } catch (err) {
+      setMsg('Error clearing auction start');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSet} className='space-y-2 w-full'>
+      <div className='flex flex-col sm:flex-row gap-2 sm:items-end w-full'>
+        <div className='flex-1 min-w-0' style={{ flexBasis: 0 }}>
+          <label className='block text-xs font-semibold text-yellow-900 mb-1'>Date</label>
+          <input
+            type='date'
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className='border rounded pl-2 pr-9 py-1.5 text-sm w-full'
+            style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', minWidth: 0 }}
+            disabled={isSubmitting}
+          />
+        </div>
+        <div className='flex-1 min-w-0' style={{ flexBasis: 0 }}>
+          <label className='block text-xs font-semibold text-yellow-900 mb-1'>Time</label>
+          <input
+            type='time'
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className='border rounded pl-2 pr-9 py-1.5 text-sm w-full'
+            style={{ boxSizing: 'border-box', width: '100%', maxWidth: '100%', minWidth: 0 }}
+            disabled={isSubmitting}
+          />
+        </div>
+        <div className='flex gap-2 shrink-0'>
+          <button
+            type='submit'
+            className='px-3 py-1.5 sm:py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm disabled:opacity-50 whitespace-nowrap'
+            disabled={isSubmitting}
+          >
+            Set
+          </button>
+          {currentStart && (
+            <button
+              type='button'
+              onClick={handleClear}
+              className='px-3 py-1.5 sm:py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm disabled:opacity-50 whitespace-nowrap'
+              disabled={isSubmitting}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+      {msg && (
+        <p className={`text-xs ${msg.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
+          {msg}
+        </p>
+      )}
+    </form>
+  );
+}
+
 function SetDeadline({ onSet, currentDeadline }) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -280,6 +416,12 @@ export default function AdminDashboard() {
             <b>Deadline:</b> {deadline ? deadline.toLocaleString() : 'Not set'}
           </p>
           <p>
+            <b>Auction opens:</b>{' '}
+            {settings?.auction_start
+              ? new Date(settings.auction_start).toLocaleString()
+              : 'Immediately (no restriction)'}
+          </p>
+          <p>
             <b>Status:</b>{' '}
             {closed ? (
               <span className='text-red-600 font-semibold'>
@@ -313,6 +455,18 @@ export default function AdminDashboard() {
           )}
         </div>
         <div className='mt-3 space-y-2'>
+          <div className='p-2 sm:p-3 bg-white border rounded w-full' style={{ overflowX: 'hidden', maxWidth: '100%' }}>
+            <p className='text-sm font-semibold mb-2'>
+              {settings?.auction_start ? 'Update Auction Open Time' : 'Set Auction Open Time'}
+            </p>
+            <p className='text-xs text-gray-600 mb-2'>
+              When set, bidding is not allowed before this date/time. Leave unset for immediate access.
+            </p>
+            <SetAuctionStart
+              onSet={load}
+              currentStart={settings?.auction_start}
+            />
+          </div>
           <div className='p-2 sm:p-3 bg-white border rounded w-full' style={{ overflowX: 'hidden', maxWidth: '100%' }}>
             <p className='text-sm font-semibold mb-2'>
               {deadline ? 'Update Deadline' : 'Set Deadline'}

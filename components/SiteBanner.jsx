@@ -6,6 +6,7 @@ import { supabaseBrowser } from '@/lib/supabaseClient';
 export default function SiteBanner({ deadlineISO = null }) {
   const [now, setNow] = useState(null);
   const [deadlineISOState, setDeadlineISOState] = useState(deadlineISO);
+  const [auctionStartISO, setAuctionStartISO] = useState(null);
   const [auctionClosed, setAuctionClosed] = useState(false);
 
   // Fetch deadline from database on mount and subscribe to real-time updates
@@ -17,7 +18,7 @@ export default function SiteBanner({ deadlineISO = null }) {
       try {
         const { data, error } = await s
           .from('settings')
-          .select('auction_deadline, auction_closed')
+          .select('auction_deadline, auction_closed, auction_start')
           .eq('id', 1)
           .maybeSingle();
 
@@ -26,6 +27,7 @@ export default function SiteBanner({ deadlineISO = null }) {
             setDeadlineISOState(data.auction_deadline);
           }
           setAuctionClosed(data?.auction_closed || false);
+          setAuctionStartISO(data?.auction_start || null);
         }
       } catch (err) {
         console.error('Error fetching deadline:', err);
@@ -54,6 +56,9 @@ export default function SiteBanner({ deadlineISO = null }) {
           if (payload.new?.auction_closed !== undefined) {
             setAuctionClosed(payload.new.auction_closed);
           }
+          if (payload.new?.auction_start !== undefined) {
+            setAuctionStartISO(payload.new.auction_start || null);
+          }
         }
       )
       .subscribe();
@@ -71,37 +76,28 @@ export default function SiteBanner({ deadlineISO = null }) {
   }, []);
 
   const deadline = useMemo(() => {
-    if (!deadlineISOState) {
-      return null;
-    }
-
+    if (!deadlineISOState) return null;
     const parsed = new Date(deadlineISOState);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }, [deadlineISOState]);
 
-  useEffect(() => {
-    if (!deadline) {
-      return undefined;
-    }
+  const auctionStart = useMemo(() => {
+    if (!auctionStartISO) return null;
+    const parsed = new Date(auctionStartISO);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, [auctionStartISO]);
 
+  useEffect(() => {
     const updateNow = () => setNow(new Date());
 
     updateNow();
 
-    if (deadline <= new Date()) {
-      return undefined;
-    }
-
     const intervalId = window.setInterval(() => {
-      const current = new Date();
-      setNow(current);
-      if (current >= deadline) {
-        window.clearInterval(intervalId);
-      }
+      setNow(new Date());
     }, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [deadline]);
+  }, []);
 
   // If auction is manually closed, show closed message
   if (auctionClosed) {
@@ -122,16 +118,32 @@ export default function SiteBanner({ deadlineISO = null }) {
     );
   }
 
-  if (!deadline) {
-    return null;
-  }
-
   const hasHydrated = now !== null;
-  const isClosed = hasHydrated && now >= deadline;
+  const notYetOpen = hasHydrated && auctionStart && now < auctionStart;
+  const isClosed = hasHydrated && deadline && now >= deadline;
 
   const message = (() => {
     if (!hasHydrated) {
       return 'Countdown updating...';
+    }
+
+    if (notYetOpen) {
+      const msRemaining = Math.max(0, auctionStart.getTime() - now.getTime());
+      const totalSeconds = Math.floor(msRemaining / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      const parts = [];
+      if (days > 0) parts.push(`${days}d`);
+      parts.push(
+        `${hours.toString().padStart(2, '0')}h`,
+        `${minutes.toString().padStart(2, '0')}m`,
+        `${seconds.toString().padStart(2, '0')}s`
+      );
+
+      return `Opens in ${parts.join(' ')}`;
     }
 
     if (isClosed) {
@@ -147,27 +159,31 @@ export default function SiteBanner({ deadlineISO = null }) {
       )}`;
     }
 
-    const msRemaining = Math.max(0, deadline.getTime() - now.getTime());
-    const totalSeconds = Math.floor(msRemaining / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+    if (deadline) {
+      const msRemaining = Math.max(0, deadline.getTime() - now.getTime());
+      const totalSeconds = Math.floor(msRemaining / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
 
-    const parts = [];
+      const parts = [];
+      if (days > 0) parts.push(`${days}d`);
+      parts.push(
+        `${hours.toString().padStart(2, '0')}h`,
+        `${minutes.toString().padStart(2, '0')}m`,
+        `${seconds.toString().padStart(2, '0')}s`
+      );
 
-    if (days > 0) {
-      parts.push(`${days}d`);
+      return `Closes in ${parts.join(' ')}`;
     }
 
-    parts.push(
-      `${hours.toString().padStart(2, '0')}h`,
-      `${minutes.toString().padStart(2, '0')}m`,
-      `${seconds.toString().padStart(2, '0')}s`
-    );
-
-    return `Closes in ${parts.join(' ')}`;
+    return null;
   })();
+
+  if (!message) {
+    return null;
+  }
 
   return (
     <section className='no-print px-3 sm:px-4 mt-3 sm:mt-4' aria-live='polite'>
@@ -176,7 +192,9 @@ export default function SiteBanner({ deadlineISO = null }) {
           className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium shadow-sm ${
             isClosed
               ? 'border-amber-200/70 bg-amber-50 text-amber-900'
-              : 'border-emerald-200/70 bg-emerald-50 text-emerald-900'
+              : notYetOpen
+                ? 'border-blue-200/70 bg-blue-50 text-blue-900'
+                : 'border-emerald-200/70 bg-emerald-50 text-emerald-900'
           }`}
           role='status'
         >
@@ -184,10 +202,12 @@ export default function SiteBanner({ deadlineISO = null }) {
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] sm:text-xs font-semibold tracking-wide ${
               isClosed
                 ? 'bg-amber-100 text-amber-900'
-                : 'bg-emerald-100 text-emerald-900'
+                : notYetOpen
+                  ? 'bg-blue-100 text-blue-900'
+                  : 'bg-emerald-100 text-emerald-900'
             }`}
           >
-            {isClosed ? 'Auction Closed' : 'Auction Countdown'}
+            {isClosed ? 'Auction Closed' : notYetOpen ? 'Opens Soon' : 'Auction Countdown'}
           </span>
           <span className='flex-1 min-w-0 whitespace-nowrap'>{message}</span>
         </div>
