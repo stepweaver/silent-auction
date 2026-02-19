@@ -113,12 +113,24 @@ export async function POST(req) {
 
     const hasBids = topBid && typeof topBid.amount !== 'undefined';
     const current = hasBids ? Number(topBid.amount) : Number(item.start_price);
-    const minIncrement = Number(item.min_increment ?? 1);
+    // Enforce a fixed $5 bid increment across all items
+    const minIncrement = 5;
     const needed = hasBids ? (Number(current) + minIncrement) : Number(item.start_price);
     const bidAmount = Number(amount);
 
+    // Basic range check
     if (bidAmount < needed) {
       return new Response(`Minimum allowed bid: ${needed.toFixed(2)}`, { status: 400 });
+    }
+
+    // Enforce whole-dollar bids in fixed $5 increments
+    const cents = Math.round(bidAmount * 100);
+    if (!Number.isFinite(bidAmount) || cents <= 0) {
+      return new Response('Invalid bid amount', { status: 400 });
+    }
+
+    if (cents % 500 !== 0) {
+      return new Response('Bids must be in $5 increments (e.g., $5, $10, $15).', { status: 400 });
     }
 
     // Require existing user alias with email and name

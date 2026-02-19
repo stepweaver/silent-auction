@@ -77,7 +77,7 @@ export async function POST(req) {
       description: data.description || null,
       photo_url: data.photo_url || null,
       start_price: Number(data.start_price),
-      min_increment: 1, // Fixed at $1 for all items
+      min_increment: 5, // Fixed at $5 for all items
       is_closed: data.is_closed || false,
     };
     

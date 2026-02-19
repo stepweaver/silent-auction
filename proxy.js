@@ -35,7 +35,7 @@ const isAuthorized = (request) => {
   );
 };
 
-export function middleware(request) {
+export function proxy(request) {
   const pathname = request.nextUrl.pathname;
   const requiresAuth =
     pathname.startsWith('/admin') || pathname.startsWith('/api/admin');

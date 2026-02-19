@@ -260,7 +260,7 @@ export default function ItemPage({ params }) {
   const hasBids = Array.isArray(bids) && bids.length > 0;
   const topBidAmount = hasBids && bids[0] ? Number(bids[0].amount) : null;
   const current = hasBids && topBidAmount ? topBidAmount : Number(item.start_price);
-  const minIncrement = Number(item.min_increment ?? 1);
+  const minIncrement = 5;
   const nextMin = hasBids ? (current + minIncrement) : Number(item.start_price);
   const winner = bids?.[0];
 

@@ -4,6 +4,7 @@ import { useState, useId } from 'react';
 import { formatDollar } from '@/lib/money';
 
 const STORAGE_KEY = 'auction_bidder_info';
+const BID_INCREMENT = 5;
 
 export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }) {
   const [amount, setAmount] = useState('');
@@ -27,7 +28,7 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
 
   const currentHigh = Number(item.current_high_bid ?? item.start_price);
   const hasBids = item.current_high_bid != null && Number(item.current_high_bid) > Number(item.start_price);
-  const minIncrement = Number(item.min_increment ?? 1);
+  const minIncrement = BID_INCREMENT;
   const nextMin = hasBids ? (currentHigh + minIncrement) : Number(item.start_price);
 
   async function handleSubmit(e) {
@@ -51,6 +52,20 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
       }
       bidderName = bidderName || userAlias?.alias || 'Anonymous';
 
+      const amountNumber = Number(amount);
+
+      if (!amount || Number.isNaN(amountNumber) || amountNumber < nextMin) {
+        setMessage(`Minimum bid is ${formatDollar(nextMin)}`);
+        return;
+      }
+
+      // Enforce $5 increments and whole-dollar bids
+      const cents = Math.round(amountNumber * 100);
+      if (cents % 500 !== 0) {
+        setMessage('Bids must be in $5 increments (e.g., $5, $10, $15).');
+        return;
+      }
+
       const res = await fetch('/api/bid', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,7 +74,7 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
           slug: item.slug,
           email,
           bidder_name: bidderName,
-          amount: Number(amount),
+          amount: amountNumber,
         }),
       });
 
@@ -100,7 +115,7 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
           <input
             id={amountInputId}
             type="number"
-            step="0.01"
+            step={BID_INCREMENT}
             min={nextMin}
             className="input input-bordered input-sm w-full pl-7 border-2 focus:border-primary focus:outline-none"
             placeholder={formatDollar(nextMin)}
@@ -114,7 +129,7 @@ export default function DashboardBidForm({ item, userAlias, email, onBidPlaced }
         </div>
         <label htmlFor={amountInputId} className="label pt-1">
           <span id={helperTextId} className="label-text-alt text-xs">
-            Min: <span className="font-semibold text-primary">{formatDollar(nextMin)}</span>
+            Min: <span className="font-semibold text-primary">{formatDollar(nextMin)}</span> in $5 increments.
           </span>
         </label>
       </div>

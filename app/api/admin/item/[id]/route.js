@@ -37,7 +37,7 @@ export async function PATCH(req, { params }) {
     if (body.description !== undefined) updateData.description = body.description || null;
     if (body.photo_url !== undefined) updateData.photo_url = body.photo_url || null;
     if (body.start_price !== undefined) updateData.start_price = Number(body.start_price);
-    // min_increment is fixed at $1, not editable
+    // min_increment is fixed at $5, not editable
     if (body.is_closed !== undefined) updateData.is_closed = Boolean(body.is_closed);
     // Only include category if it's a non-empty string (skip if empty to avoid errors if column doesn't exist yet)
     if (body.category !== undefined && body.category && body.category.trim()) {

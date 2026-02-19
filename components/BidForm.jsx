@@ -7,6 +7,7 @@ import AliasAvatar from '@/components/AliasAvatar';
 
 const STORAGE_KEY = 'auction_bidder_info';
 const ENROLLMENT_KEY = 'auction_enrolled';
+const BID_INCREMENT = 5;
 
 export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, message }) {
   const router = useRouter();
@@ -88,8 +89,17 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
       return;
     }
 
-    if (!form.amount || Number(form.amount) < nextMin) {
+    const amountNumber = Number(form.amount);
+
+    if (!form.amount || Number.isNaN(amountNumber) || amountNumber < nextMin) {
       setMsg(`Minimum bid is ${formatDollar(nextMin)}`);
+      return;
+    }
+
+    // Enforce $5 increments and whole-dollar bids
+    const cents = Math.round(amountNumber * 100);
+    if (cents % 500 !== 0) {
+      setMsg('Bids must be in $5 increments (e.g., $5, $10, $15).');
       return;
     }
 
@@ -116,7 +126,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
         item_id: itemId, 
         email: email, 
         bidder_name: bidderName,
-        amount: Number(form.amount) 
+        amount: amountNumber 
       });
       // Clear amount and message but keep email/alias
       setForm({ amount: '' });
@@ -217,7 +227,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
                 <input
                   id={amountInputId}
                   type="number"
-                  step="0.01"
+                  step={BID_INCREMENT}
                   min={nextMin}
                   className="w-full px-3 pl-8 py-3 border-2 border-gray-200 rounded-lg outline-none transition-all text-base"
                   style={{
@@ -241,7 +251,7 @@ export default function BidForm({ slug, itemId, nextMin, deadline, onSubmit, mes
                 />
               </div>
               <p id={helperTextId} className='mt-1 text-xs text-gray-500'>
-                Minimum bid: <span className="font-semibold" style={{ color: 'var(--primary-500)' }}>{formatDollar(nextMin)}</span>
+                Minimum bid: <span className="font-semibold" style={{ color: 'var(--primary-500)' }}>{formatDollar(nextMin)}</span> in $5 increments.
               </p>
             </div>
             {deadline && (

@@ -11,7 +11,7 @@ export default function ItemCard({ item, priority = false }) {
   const hasBids = item._hasBids !== undefined 
     ? item._hasBids 
     : (item.current_high_bid != null && Number(item.current_high_bid) > Number(item.start_price));
-  const minIncrement = Number(item.min_increment ?? 1);
+  const minIncrement = 5;
   const nextMin = hasBids ? (current + minIncrement) : Number(item.start_price);
   const url = `/i/${item.slug}`;
   
