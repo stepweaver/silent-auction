@@ -34,6 +34,7 @@ if (supabaseUrl) {
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    unoptimized: true, // Disable Vercel image optimization to avoid transformation limits
     remotePatterns,
     formats: ['image/avif', 'image/webp'],
   },

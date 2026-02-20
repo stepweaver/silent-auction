@@ -143,7 +143,7 @@ export default function EditItemPage({ params }) {
   }
 
   async function handlePhotoUpload(file) {
-    if (!file) return null;
+    if (!file) return { url: null, thumbnailUrl: null };
 
     setUploadingPhoto(true);
     try {
@@ -160,11 +160,11 @@ export default function EditItemPage({ params }) {
         throw new Error(text || 'Upload failed');
       }
 
-      const { url } = await res.json();
-      return url;
+      const { url, thumbnailUrl } = await res.json();
+      return { url, thumbnailUrl };
     } catch (err) {
       setMsg(`Photo upload error: ${err.message}`);
-      return null;
+      return { url: null, thumbnailUrl: null };
     } finally {
       setUploadingPhoto(false);
     }
@@ -192,19 +192,21 @@ export default function EditItemPage({ params }) {
     try {
       // Upload photo first if provided
       let photoUrl = form.photo_url;
+      let thumbnailUrl = form.thumbnail_url;
       if (photoFile) {
-        const uploadedUrl = await handlePhotoUpload(photoFile);
-        if (!uploadedUrl) {
+        const uploadResult = await handlePhotoUpload(photoFile);
+        if (!uploadResult.url) {
           setIsSubmitting(false);
           return;
         }
-        photoUrl = uploadedUrl;
+        photoUrl = uploadResult.url;
+        thumbnailUrl = uploadResult.thumbnailUrl || null;
       }
 
       const res = await fetch(`/api/admin/item/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, photo_url: photoUrl }),
+        body: JSON.stringify({ ...form, photo_url: photoUrl, thumbnail_url: thumbnailUrl }),
       });
 
       if (!res.ok) {

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 
@@ -40,28 +39,28 @@ export default function ItemCard({ item, priority = false }) {
         {isClosed && (
           <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-[1px]" />
         )}
-        {item.photo_url ? (
+        {item.thumbnail_url || item.photo_url ? (
           <div className="relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem]">
-            <Image
-              src={item.photo_url}
+            <img
+              src={item.thumbnail_url || item.photo_url}
               alt={item.title}
-              fill
-              sizes="(max-width: 640px) 100vw, 192px"
-              className={`object-contain p-2 ${isClosed ? 'opacity-80' : ''}`}
-              priority={priority}
-              loading={priority ? 'eager' : undefined}
+              width={300}
+              height={300}
+              className={`w-full h-full object-contain p-2 ${isClosed ? 'opacity-80' : ''}`}
+              loading={priority ? 'eager' : 'lazy'}
+              decoding="async"
             />
           </div>
         ) : (
-          <div className="relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem] bg-white">
-            <Image
+          <div className="relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem] bg-white flex items-center justify-center">
+            <img
               src="/logo-with-glow.png"
               alt={item.title}
-              fill
-              sizes="(max-width: 640px) 100vw, 192px"
-              className={`object-contain p-4 ${isClosed ? 'opacity-80' : 'opacity-60'}`}
-              priority={priority}
-              loading={priority ? 'eager' : undefined}
+              width={192}
+              height={192}
+              className={`object-contain p-4 max-w-full max-h-full ${isClosed ? 'opacity-80' : 'opacity-60'}`}
+              loading={priority ? 'eager' : 'lazy'}
+              decoding="async"
             />
           </div>
         )}
@@ -126,12 +125,14 @@ export default function ItemCard({ item, priority = false }) {
             {isClosed ? 'View details' : 'Preview & bid →'}
           </span>
           <div className="flex items-center gap-2">
-            <Image
+            <img
               alt={`QR code linking to ${item.title}`}
               src={qrUrl}
               width={40}
               height={40}
               className="rounded border border-gray-200"
+              loading="lazy"
+              decoding="async"
             />
             <span className="text-[10px] text-gray-500">Scan</span>
           </div>

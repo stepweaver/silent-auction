@@ -451,14 +451,16 @@ export default function DashboardPage() {
                           {/* Item Info */}
                           <div className="flex-1">
                             <div className="flex items-start gap-2 sm:gap-3">
-                              {item.photo_url && (
+                              {(item.thumbnail_url || item.photo_url) && (
                                 <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
-                                  <Image
-                                    src={item.photo_url}
+                                  <img
+                                    src={item.thumbnail_url || item.photo_url}
                                     alt={item.title}
-                                    fill
-                                    sizes="64px"
-                                    className="rounded-lg object-cover"
+                                    width={64}
+                                    height={64}
+                                    className="w-full h-full rounded-lg object-cover"
+                                    loading="lazy"
+                                    decoding="async"
                                   />
                                 </div>
                               )}

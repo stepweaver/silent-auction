@@ -177,7 +177,7 @@ export default function VendorEditItemPage({ params }) {
   }
 
   async function handlePhotoUpload(file) {
-    if (!file) return null;
+    if (!file) return { url: null, thumbnailUrl: null };
 
     setUploadingPhoto(true);
     try {
@@ -197,11 +197,11 @@ export default function VendorEditItemPage({ params }) {
         throw new Error(text || 'Upload failed');
       }
 
-      const { url } = await res.json();
-      return url;
+      const { url, thumbnailUrl } = await res.json();
+      return { url, thumbnailUrl };
     } catch (err) {
       setMsg(`Photo upload error: ${err.message}`);
-      return null;
+      return { url: null, thumbnailUrl: null };
     } finally {
       setUploadingPhoto(false);
     }
@@ -227,13 +227,15 @@ export default function VendorEditItemPage({ params }) {
 
     try {
       let photoUrl = form.photo_url;
+      let thumbnailUrl = form.thumbnail_url;
       if (photoFile) {
-        const uploadedUrl = await handlePhotoUpload(photoFile);
-        if (!uploadedUrl) {
+        const uploadResult = await handlePhotoUpload(photoFile);
+        if (!uploadResult.url) {
           setIsSubmitting(false);
           return;
         }
-        photoUrl = uploadedUrl;
+        photoUrl = uploadResult.url;
+        thumbnailUrl = uploadResult.thumbnailUrl || null;
       }
 
       const res = await fetch(`/api/vendor/item/${id}`, {
@@ -242,7 +244,7 @@ export default function VendorEditItemPage({ params }) {
           'Content-Type': 'application/json',
           'x-vendor-admin-id': vendorAdminId || '',
         },
-        body: JSON.stringify({ ...form, photo_url: photoUrl }),
+        body: JSON.stringify({ ...form, photo_url: photoUrl, thumbnail_url: thumbnailUrl }),
       });
 
       if (!res.ok) {

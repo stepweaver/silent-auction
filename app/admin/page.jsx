@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
-import Image from 'next/image';
 import { formatDollar } from '@/lib/money';
 
 function SetAuctionStart({ onSet, currentStart }) {
@@ -542,14 +541,16 @@ export default function AdminDashboard() {
                   <div className='p-3 flex gap-3'>
                     {/* Small Preview Image */}
                     <div className='shrink-0'>
-                      {item.photo_url ? (
+                      {item.thumbnail_url || item.photo_url ? (
                         <div className='w-16 h-16 bg-gray-100 rounded overflow-hidden relative'>
-                          <Image
-                            src={item.photo_url}
+                          <img
+                            src={item.thumbnail_url || item.photo_url}
                             alt={item.title}
-                            fill
-                            sizes='64px'
-                            className='object-contain'
+                            width={64}
+                            height={64}
+                            className='w-full h-full object-contain'
+                            loading='lazy'
+                            decoding='async'
                           />
                         </div>
                       ) : (
@@ -570,12 +571,14 @@ export default function AdminDashboard() {
                             {item.slug}
                           </p>
                         </div>
-                        <Image
+                        <img
                           alt='QR'
                           src={qrUrl}
                           width={48}
                           height={48}
                           className='shrink-0 ml-2 rounded border border-gray-200'
+                          loading='lazy'
+                          decoding='async'
                         />
                       </div>
                       <div className='grid grid-cols-2 gap-2 text-xs'>
@@ -635,14 +638,16 @@ export default function AdminDashboard() {
                       }}
                     >
                       <td className='border p-2'>
-                        {item.photo_url ? (
+                        {item.thumbnail_url || item.photo_url ? (
                           <div className='w-20 h-20 bg-gray-100 rounded overflow-hidden relative'>
-                            <Image
-                              src={item.photo_url}
+                            <img
+                              src={item.thumbnail_url || item.photo_url}
                               alt={item.title}
-                              fill
-                              sizes='80px'
-                              className='object-contain'
+                              width={80}
+                              height={80}
+                              className='w-full h-full object-contain'
+                              loading='lazy'
+                              decoding='async'
                             />
                           </div>
                         ) : (
@@ -672,12 +677,14 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td className='border p-2'>
-                        <Image
+                        <img
                           alt='QR'
                           src={qrUrl}
                           width={64}
                           height={64}
                           className='rounded border border-gray-200'
+                          loading='lazy'
+                          decoding='async'
                         />
                       </td>
                     </tr>

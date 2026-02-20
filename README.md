@@ -53,7 +53,12 @@ npm install
    - Run the contents of `supabase-auction-start-migration.sql` in the SQL Editor
    - This adds an `auction_start` column to the settings table
 
-8. **Set up Supabase Keep-Alive (Prevent Free Tier Pausing):**
+8. **Add thumbnail support** (to avoid Vercel image optimization limits):
+   - Run the contents of `supabase-thumbnail-migration.sql` in the SQL Editor
+   - This adds a `thumbnail_url` column to the `items` table
+   - See the [Image Optimization](#image-optimization) section below for details
+
+9. **Set up Supabase Keep-Alive (Prevent Free Tier Pausing):**
    - Go to **SQL Editor** in your Supabase dashboard
    - Run the contents of `supabase-heartbeat-migration.sql` to create the heartbeat table
    - This creates a simple table that GitHub Actions can ping to keep your Supabase project active
@@ -300,6 +305,66 @@ To change how often it pings, edit `.github/workflows/supabase-keepalive.yml` an
 - `"0 */12 * * *"` = Every 12 hours
 
 See [GitHub Actions cron syntax](https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions#onschedule) for more options.
+
+## Image Optimization
+
+### Why We Disabled Vercel Image Optimization
+
+This project uses pre-generated thumbnails instead of Vercel's image optimization service to avoid hitting Vercel's free-tier limit of 5,000 image transformations per month. When displaying many auction items in a grid, each image transformation counts against this limit.
+
+### How Thumbnails Are Generated
+
+1. **On Upload**: When an image is uploaded through the admin interface:
+   - The original image is stored in Supabase Storage
+   - A thumbnail (480px max width, WebP format, 75% quality) is automatically generated using `sharp`
+   - Both the original URL (`photo_url`) and thumbnail URL (`thumbnail_url`) are saved to the database
+
+2. **Rendering**:
+   - **Grid/List Views**: Use `thumbnail_url` (or fall back to `photo_url` if thumbnail doesn't exist) with plain `<img>` tags
+   - **Detail Views**: Use the original `photo_url` with plain `<img>` tags
+   - All images use native browser loading (`loading="lazy"`, `decoding="async"`) instead of Next.js Image optimization
+
+3. **Configuration**: Image optimization is disabled globally in `next.config.js`:
+   ```js
+   images: {
+     unoptimized: true, // Prevents any Vercel transformations
+   }
+   ```
+
+### Backfilling Thumbnails for Existing Images
+
+If you have existing items with `photo_url` but no `thumbnail_url`, you can generate thumbnails for them:
+
+1. **Run the migration** (if you haven't already):
+   ```sql
+   -- Run supabase-thumbnail-migration.sql in Supabase SQL Editor
+   ```
+
+2. **Run the backfill script**:
+   ```bash
+   # Make sure your .env.local has SUPABASE_SERVICE_ROLE_KEY set
+   node scripts/backfill-thumbnails.js
+   ```
+
+   The script will:
+   - Find all items with `photo_url` but no `thumbnail_url`
+   - Download each original image
+   - Generate a thumbnail using the same settings as new uploads
+   - Upload the thumbnail to Supabase Storage
+   - Update the item record with the `thumbnail_url`
+
+3. **Safety**: The script is safe to run multiple times:
+   - It skips items that already have `thumbnail_url`
+   - It includes rate limiting (500ms delay between items)
+   - It logs progress and errors for monitoring
+
+### Thumbnail Specifications
+
+- **Size**: Maximum 480px width or height (maintains aspect ratio)
+- **Format**: WebP (better compression than JPEG/PNG)
+- **Quality**: 75% (good balance between file size and visual quality)
+- **Storage**: Same Supabase Storage bucket (`item-photos`) as originals
+- **Naming**: `{timestamp}-{random}-thumb.webp` (paired with `{timestamp}-{random}-original.{ext}`)
 
 ## Future Enhancements
 

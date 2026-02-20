@@ -2,7 +2,6 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import BidForm from '@/components/BidForm';
@@ -284,26 +283,26 @@ export default function ItemPage({ params }) {
             <figure className="bg-gray-100">
               {item.photo_url ? (
                 <div className="relative aspect-[4/3] w-full">
-                  <Image
+                  <img
                     src={item.photo_url}
                     alt={item.title}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 50vw"
-                    className="object-contain p-2 sm:p-4"
-                    priority
+                    width={800}
+                    height={600}
+                    className="w-full h-full object-contain p-2 sm:p-4"
                     loading="eager"
+                    decoding="async"
                   />
                 </div>
               ) : (
-                <div className="relative aspect-[4/3] w-full bg-white">
-                  <Image
+                <div className="relative aspect-[4/3] w-full bg-white flex items-center justify-center">
+                  <img
                     src="/logo-with-glow.png"
                     alt={item.title}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 50vw"
-                    className="object-contain p-6 sm:p-10 opacity-60"
-                    priority
+                    width={400}
+                    height={400}
+                    className="object-contain p-6 sm:p-10 opacity-60 max-w-full max-h-full"
                     loading="eager"
+                    decoding="async"
                   />
                 </div>
               )}
