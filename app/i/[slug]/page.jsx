@@ -284,22 +284,16 @@ export default function ItemPage({ params }) {
             <figure className="bg-gray-100">
               {item.photo_url ? (
                 isPdfUrl(item.photo_url) ? (
-                  <div className="relative aspect-[4/3] w-full min-h-[280px] flex flex-col">
-                    <iframe
-                      src={item.photo_url}
-                      title={item.title}
-                      className="flex-1 w-full min-h-[280px] sm:min-h-[360px] border-0"
-                    />
-                    <div className="flex-shrink-0 p-2 sm:p-3 bg-gray-50 border-t border-gray-200">
-                      <a
-                        href={item.photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium text-blue-600 hover:underline"
-                      >
-                        Open PDF in new tab
-                      </a>
-                    </div>
+                  <div className="relative aspect-[4/3] w-full bg-gray-100 flex items-center justify-center p-6">
+                    <a
+                      href={item.photo_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-lg font-medium text-white hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: 'var(--primary-500)' }}
+                    >
+                      View PDF
+                    </a>
                   </div>
                 ) : (
                   <div className="relative aspect-[4/3] w-full">
