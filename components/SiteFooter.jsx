@@ -19,35 +19,52 @@ export default function SiteFooter() {
     const scrollContainer =
       document.getElementById('main-content') || window;
 
+    const SCROLL_DELTA = 28;       // px scroll before toggling (reduces jitter)
+    const SCROLL_COOLDOWN_MS = 450; // don't flip again for this long after a toggle
+
     let lastScrollTop =
       scrollContainer === window
         ? window.scrollY
         : scrollContainer.scrollTop;
-
+    let lastScrollToggleAt = 0;
+    let rafId = null;
     let focusedInputCount = 0;
+    let keyboardCloseTimeout = null;
 
     const handleScroll = () => {
-      const currentScrollTop =
-        scrollContainer === window
-          ? window.scrollY
-          : scrollContainer.scrollTop;
-
-      const delta = currentScrollTop - lastScrollTop;
-
-      // Always show near the very top
-      if (currentScrollTop <= 16) {
-        setIsScrollHidden(false);
-      } else {
-        if (delta > 4) {
-          // scrolling down
-          setIsScrollHidden(true);
-        } else if (delta < -4) {
-          // scrolling up
-          setIsScrollHidden(false);
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        // Don't react to scroll while an input is focused (keyboard open) to avoid layout feedback
+        if (focusedInputCount > 0) {
+          lastScrollTop =
+            scrollContainer === window
+              ? window.scrollY
+              : scrollContainer.scrollTop;
+          return;
         }
-      }
+        const currentScrollTop =
+          scrollContainer === window
+            ? window.scrollY
+            : scrollContainer.scrollTop;
+        const delta = currentScrollTop - lastScrollTop;
+        const now = Date.now();
 
-      lastScrollTop = currentScrollTop;
+        if (currentScrollTop <= 20) {
+          setIsScrollHidden(false);
+          lastScrollToggleAt = now;
+        } else if (now - lastScrollToggleAt >= SCROLL_COOLDOWN_MS) {
+          if (delta > SCROLL_DELTA) {
+            setIsScrollHidden(true);
+            lastScrollToggleAt = now;
+          } else if (delta < -SCROLL_DELTA) {
+            setIsScrollHidden(false);
+            lastScrollToggleAt = now;
+          }
+        }
+
+        lastScrollTop = currentScrollTop;
+      });
     };
 
     const handleFocusIn = (event) => {
@@ -74,12 +91,13 @@ export default function SiteFooter() {
         focusedInputCount = Math.max(0, focusedInputCount - 1);
 
         if (focusedInputCount === 0) {
-          // Small delay to allow keyboard close animation
-          setTimeout(() => {
+          if (keyboardCloseTimeout) clearTimeout(keyboardCloseTimeout);
+          keyboardCloseTimeout = setTimeout(() => {
+            keyboardCloseTimeout = null;
             if (focusedInputCount === 0) {
               setIsKeyboardOpen(false);
             }
-          }, 250);
+          }, 280);
         }
       }
     };
@@ -98,6 +116,8 @@ export default function SiteFooter() {
     document.addEventListener('focusout', handleFocusOut);
 
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      if (keyboardCloseTimeout) clearTimeout(keyboardCloseTimeout);
       if (scrollContainer === window) {
         window.removeEventListener('scroll', handleScroll);
       } else {

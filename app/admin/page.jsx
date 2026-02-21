@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
@@ -266,6 +267,8 @@ function SetDeadline({ onSet, currentDeadline }) {
 
 export default function AdminDashboard() {
   const s = supabaseBrowser();
+  const pathname = usePathname();
+  const prevPathRef = useRef(pathname);
   const [settings, setSettings] = useState(null);
   const [items, setItems] = useState([]);
   const [donations, setDonations] = useState([]);
@@ -294,6 +297,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     load();
   }, []);
+
+  // Refetch when navigating back to dashboard (e.g. after editing an item) so list shows saved changes
+  useEffect(() => {
+    if (pathname === '/admin' && prevPathRef.current !== '/admin') {
+      load();
+    }
+    prevPathRef.current = pathname;
+  }, [pathname]);
 
   async function extendDeadline() {
     if (!settings?.auction_deadline) return;
