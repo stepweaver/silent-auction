@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Field from '@/components/Field';
+import { isPdfUrl } from '@/lib/itemMedia';
 
 const DEFAULT_CATEGORIES = [
   'Sports',
@@ -114,8 +115,10 @@ export default function NewItemPage() {
     if (!file) return;
 
     setPhotoFile(file);
-
-    // Create preview
+    if (file.type === 'application/pdf') {
+      setPhotoPreview('');
+      return;
+    }
     const reader = new FileReader();
     reader.onloadend = () => {
       setPhotoPreview(reader.result);
@@ -244,7 +247,7 @@ export default function NewItemPage() {
           <div className="space-y-2">
             <input
               type="file"
-              accept="image/jpeg,image/jpg,image/png,image/webp"
+              accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
               className="border rounded px-3 py-2 w-full"
               onChange={handlePhotoChange}
               disabled={isSubmitting || uploadingPhoto}
@@ -284,16 +287,36 @@ export default function NewItemPage() {
                 <p className="text-xs text-gray-500 mt-1">Preview (will upload on save)</p>
               </div>
             )}
+            {photoFile && photoFile.type === 'application/pdf' && (
+              <div className="mt-2 rounded border border-gray-200 bg-gray-50 px-3 py-2 max-w-xs">
+                <p className="text-sm font-medium text-gray-700">PDF selected: {photoFile.name}</p>
+                <p className="text-xs text-gray-500 mt-1">Will upload on save</p>
+              </div>
+            )}
             {form.photo_url && !photoFile && !photoPreview && (
               <div className="mt-2">
-                <Image
-                  src={form.photo_url}
-                  alt="Current"
-                  width={320}
-                  height={240}
-                  className="w-full max-w-xs rounded border"
-                  style={{ height: 'auto' }}
-                />
+                {isPdfUrl(form.photo_url) ? (
+                  <div className="max-w-xs rounded border border-gray-200 bg-gray-50 px-3 py-4 text-center">
+                    <p className="text-sm text-gray-600">Current file: PDF</p>
+                    <a
+                      href={form.photo_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline mt-1 inline-block"
+                    >
+                      Open PDF
+                    </a>
+                  </div>
+                ) : (
+                  <Image
+                    src={form.photo_url}
+                    alt="Current"
+                    width={320}
+                    height={240}
+                    className="w-full max-w-xs rounded border"
+                    style={{ height: 'auto' }}
+                  />
+                )}
               </div>
             )}
             {uploadingPhoto && <p className="text-xs text-blue-600">Uploading photo...</p>}

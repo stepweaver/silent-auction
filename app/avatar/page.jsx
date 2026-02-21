@@ -7,6 +7,8 @@ import Image from 'next/image';
 import AliasAvatar from '@/components/AliasAvatar';
 import DashboardBidForm from '@/components/DashboardBidForm';
 import { formatDollar } from '@/lib/money';
+import { FileText } from 'lucide-react';
+import { isPdfUrl } from '@/lib/itemMedia';
 
 const STORAGE_KEY = 'auction_bidder_info';
 const ENROLLMENT_KEY = 'auction_enrolled';
@@ -452,16 +454,20 @@ export default function DashboardPage() {
                           <div className="flex-1">
                             <div className="flex items-start gap-2 sm:gap-3">
                               {(item.thumbnail_url || item.photo_url) && (
-                                <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
-                                  <img
-                                    src={item.thumbnail_url || item.photo_url}
-                                    alt={item.title}
-                                    width={64}
-                                    height={64}
-                                    className="w-full h-full rounded-lg object-cover"
-                                    loading="lazy"
-                                    decoding="async"
-                                  />
+                                <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center">
+                                  {isPdfUrl(item.thumbnail_url || item.photo_url) ? (
+                                    <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-gray-500" strokeWidth={1.5} />
+                                  ) : (
+                                    <img
+                                      src={item.thumbnail_url || item.photo_url}
+                                      alt={item.title}
+                                      width={64}
+                                      height={64}
+                                      className="w-full h-full object-cover"
+                                      loading="lazy"
+                                      decoding="async"
+                                    />
+                                  )}
                                 </div>
                               )}
                               <div className="flex-1 min-w-0">

@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
+import { FileText } from 'lucide-react';
+import { isPdfUrl } from '@/lib/itemMedia';
 
 function SetAuctionStart({ onSet, currentStart }) {
   const [date, setDate] = useState('');
@@ -571,17 +573,23 @@ export default function AdminDashboard() {
                     {/* Small Preview Image */}
                     <div className='shrink-0'>
                       {item.thumbnail_url || item.photo_url ? (
-                        <div className='w-16 h-16 bg-gray-100 rounded overflow-hidden relative'>
-                          <img
-                            src={item.thumbnail_url || item.photo_url}
-                            alt={item.title}
-                            width={64}
-                            height={64}
-                            className='w-full h-full object-contain'
-                            loading='lazy'
-                            decoding='async'
-                          />
-                        </div>
+                        isPdfUrl(item.thumbnail_url || item.photo_url) ? (
+                          <div className='w-16 h-16 bg-gray-100 rounded grid place-items-center text-gray-500'>
+                            <FileText className='w-6 h-6' strokeWidth={1.5} />
+                          </div>
+                        ) : (
+                          <div className='w-16 h-16 bg-gray-100 rounded overflow-hidden relative'>
+                            <img
+                              src={item.thumbnail_url || item.photo_url}
+                              alt={item.title}
+                              width={64}
+                              height={64}
+                              className='w-full h-full object-contain'
+                              loading='lazy'
+                              decoding='async'
+                            />
+                          </div>
+                        )
                       ) : (
                         <div className='w-16 h-16 bg-gray-100 rounded grid place-items-center text-gray-400 text-xs'>
                           No photo
@@ -668,17 +676,23 @@ export default function AdminDashboard() {
                     >
                       <td className='border p-2'>
                         {item.thumbnail_url || item.photo_url ? (
-                          <div className='w-20 h-20 bg-gray-100 rounded overflow-hidden relative'>
-                            <img
-                              src={item.thumbnail_url || item.photo_url}
-                              alt={item.title}
-                              width={80}
-                              height={80}
-                              className='w-full h-full object-contain'
-                              loading='lazy'
-                              decoding='async'
-                            />
-                          </div>
+                          isPdfUrl(item.thumbnail_url || item.photo_url) ? (
+                            <div className='w-20 h-20 bg-gray-100 rounded grid place-items-center text-gray-500'>
+                              <FileText className='w-8 h-8' strokeWidth={1.5} />
+                            </div>
+                          ) : (
+                            <div className='w-20 h-20 bg-gray-100 rounded overflow-hidden relative'>
+                              <img
+                                src={item.thumbnail_url || item.photo_url}
+                                alt={item.title}
+                                width={80}
+                                height={80}
+                                className='w-full h-full object-contain'
+                                loading='lazy'
+                                decoding='async'
+                              />
+                            </div>
+                          )
                         ) : (
                           <div className='w-20 h-20 bg-gray-100 rounded grid place-items-center text-gray-400 text-xs'>
                             No photo

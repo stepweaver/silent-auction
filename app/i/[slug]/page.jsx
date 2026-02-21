@@ -7,6 +7,7 @@ import Link from 'next/link';
 import BidForm from '@/components/BidForm';
 import AliasAvatar from '@/components/AliasAvatar';
 import { formatDollar } from '@/lib/money';
+import { isPdfUrl } from '@/lib/itemMedia';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 
@@ -282,17 +283,37 @@ export default function ItemPage({ params }) {
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
             <figure className="bg-gray-100">
               {item.photo_url ? (
-                <div className="relative aspect-[4/3] w-full">
-                  <img
-                    src={item.photo_url}
-                    alt={item.title}
-                    width={800}
-                    height={600}
-                    className="w-full h-full object-contain p-2 sm:p-4"
-                    loading="eager"
-                    decoding="async"
-                  />
-                </div>
+                isPdfUrl(item.photo_url) ? (
+                  <div className="relative aspect-[4/3] w-full min-h-[280px] flex flex-col">
+                    <iframe
+                      src={item.photo_url}
+                      title={item.title}
+                      className="flex-1 w-full min-h-[280px] sm:min-h-[360px] border-0"
+                    />
+                    <div className="flex-shrink-0 p-2 sm:p-3 bg-gray-50 border-t border-gray-200">
+                      <a
+                        href={item.photo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-blue-600 hover:underline"
+                      >
+                        Open PDF in new tab
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative aspect-[4/3] w-full">
+                    <img
+                      src={item.photo_url}
+                      alt={item.title}
+                      width={800}
+                      height={600}
+                      className="w-full h-full object-contain p-2 sm:p-4"
+                      loading="eager"
+                      decoding="async"
+                    />
+                  </div>
+                )
               ) : (
                 <div className="relative aspect-[4/3] w-full bg-white flex items-center justify-center">
                   <img
