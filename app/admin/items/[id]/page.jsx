@@ -217,11 +217,34 @@ export default function EditItemPage({ params }) {
         return;
       }
 
+      const json = await res.json().catch(() => ({}));
+      const savedItem = json?.item;
+
+      if (savedItem) {
+        setItem(savedItem);
+        setForm({
+          title: savedItem.title || '',
+          slug: savedItem.slug || '',
+          description: savedItem.description || '',
+          photo_url: savedItem.photo_url || '',
+          thumbnail_url: savedItem.thumbnail_url || '',
+          start_price: String(savedItem.start_price ?? 0),
+          is_closed: savedItem.is_closed || false,
+          category: savedItem.category || '',
+        });
+      } else {
+        await loadItem();
+      }
+
       setMsg('Item updated!');
       setPhotoFile(null);
       setPhotoPreview('');
-      await loadItem();
-      
+      if (!savedItem) await loadItem();
+
+      try {
+        window.dispatchEvent(new CustomEvent('admin-item-saved'));
+      } catch (_) {}
+
       // Refresh bids after update
       const { data: bidsData } = await s
         .from('bids')

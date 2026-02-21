@@ -306,6 +306,24 @@ export default function AdminDashboard() {
     prevPathRef.current = pathname;
   }, [pathname]);
 
+  // Refetch when user switches back to this tab (e.g. edited in another tab) so list is never stale
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === 'visible' && pathname === '/admin') load();
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [pathname]);
+
+  // Refetch when another tab saves an item (edit page broadcasts this)
+  useEffect(() => {
+    function onItemSaved() {
+      if (pathname === '/admin') load();
+    }
+    window.addEventListener('admin-item-saved', onItemSaved);
+    return () => window.removeEventListener('admin-item-saved', onItemSaved);
+  }, [pathname]);
+
   async function extendDeadline() {
     if (!settings?.auction_deadline) return;
 
