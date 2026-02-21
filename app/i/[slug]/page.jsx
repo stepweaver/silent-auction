@@ -7,7 +7,6 @@ import Link from 'next/link';
 import BidForm from '@/components/BidForm';
 import AliasAvatar from '@/components/AliasAvatar';
 import { formatDollar } from '@/lib/money';
-import { isPdfUrl } from '@/lib/itemMedia';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 
@@ -283,31 +282,17 @@ export default function ItemPage({ params }) {
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
             <figure className="bg-gray-100">
               {item.photo_url ? (
-                isPdfUrl(item.photo_url) ? (
-                  <div className="relative aspect-[4/3] w-full bg-gray-100 flex items-center justify-center p-6">
-                    <a
-                      href={item.photo_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-3 rounded-lg font-medium text-white hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: 'var(--primary-500)' }}
-                    >
-                      View PDF
-                    </a>
-                  </div>
-                ) : (
-                  <div className="relative aspect-[4/3] w-full">
-                    <img
-                      src={item.photo_url}
-                      alt={item.title}
-                      width={800}
-                      height={600}
-                      className="w-full h-full object-contain p-2 sm:p-4"
-                      loading="eager"
-                      decoding="async"
-                    />
-                  </div>
-                )
+                <div className="relative aspect-[4/3] w-full">
+                  <img
+                    src={item.photo_url}
+                    alt={item.title}
+                    width={800}
+                    height={600}
+                    className="w-full h-full object-contain p-2 sm:p-4"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
               ) : (
                 <div className="relative aspect-[4/3] w-full bg-white flex items-center justify-center">
                   <img

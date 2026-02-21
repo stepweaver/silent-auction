@@ -8,7 +8,6 @@ import Image from 'next/image';
 import Field from '@/components/Field';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
-import { isPdfUrl } from '@/lib/itemMedia';
 
 const DEFAULT_CATEGORIES = [
   'Sports',
@@ -178,10 +177,8 @@ export default function EditItemPage({ params }) {
     if (!file) return;
 
     setPhotoFile(file);
-    if (file.type === 'application/pdf') {
-      setPhotoPreview('');
-      return;
-    }
+
+    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPhotoPreview(reader.result);
@@ -426,7 +423,7 @@ export default function EditItemPage({ params }) {
             <div className="space-y-2">
               <input
                 type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
                 className="border rounded px-3 py-2 w-full"
                 onChange={handlePhotoChange}
                 disabled={isSubmitting || uploadingPhoto}
@@ -474,39 +471,17 @@ export default function EditItemPage({ params }) {
                   <p className="text-xs text-gray-500 mt-1">Preview (will upload on save)</p>
                 </div>
               )}
-              {photoFile && photoFile.type === 'application/pdf' && (
-                <div className="mt-2 rounded border border-gray-200 bg-gray-50 px-3 py-2 max-w-xs">
-                  <p className="text-sm font-medium text-gray-700">PDF selected: {photoFile.name}</p>
-                  <p className="text-xs text-gray-500 mt-1">Will upload on save</p>
-                </div>
-              )}
               {form.photo_url && !photoFile && !photoPreview && (
                 <div className="mt-2">
-                  {isPdfUrl(form.photo_url) ? (
-                    <div className="max-w-xs rounded border border-gray-200 bg-gray-50 px-3 py-4 text-center">
-                      <p className="text-sm text-gray-600">Current file: PDF</p>
-                      <a
-                        href={form.photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline mt-1 inline-block"
-                      >
-                        Open PDF
-                      </a>
-                    </div>
-                  ) : (
-                    <>
-                      <Image
-                        src={form.photo_url}
-                        alt="Current"
-                        width={320}
-                        height={240}
-                        className="w-full max-w-xs rounded border"
-                        style={{ height: 'auto' }}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Current photo</p>
-                    </>
-                  )}
+                  <Image
+                    src={form.photo_url}
+                    alt="Current"
+                    width={320}
+                    height={240}
+                    className="w-full max-w-xs rounded border"
+                    style={{ height: 'auto' }}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Current photo</p>
                 </div>
               )}
               {uploadingPhoto && <p className="text-xs text-blue-600">Uploading photo...</p>}
@@ -576,27 +551,14 @@ export default function EditItemPage({ params }) {
             <h3 className="font-semibold mb-2 text-sm">Preview</h3>
             <div className="border rounded-lg p-3">
               {form.photo_url && (
-                isPdfUrl(form.photo_url) ? (
-                  <div className="rounded mb-2 bg-gray-100 flex items-center justify-center py-6">
-                    <a
-                      href={form.photo_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      View PDF
-                    </a>
-                  </div>
-                ) : (
-                  <Image
-                    src={form.photo_url}
-                    alt=""
-                    width={320}
-                    height={256}
-                    className="w-full rounded mb-2 object-contain"
-                    style={{ height: 'auto', maxHeight: '8rem' }}
-                  />
-                )
+                <Image
+                  src={form.photo_url}
+                  alt=""
+                  width={320}
+                  height={256}
+                  className="w-full rounded mb-2 object-contain"
+                  style={{ height: 'auto', maxHeight: '8rem' }}
+                />
               )}
               <h4 className="font-medium text-sm">{form.title || 'Item title'}</h4>
               <p className="mt-1 text-xs text-gray-600">

@@ -24,13 +24,11 @@ export async function POST(req) {
       return new Response('No file provided', { status: 400 });
     }
 
-    // Validate file type (images + PDF)
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      return new Response('Invalid file type. Only JPEG, PNG, WebP, and PDF are allowed.', { status: 400 });
+      return new Response('Invalid file type. Only JPEG, PNG, and WebP are allowed.', { status: 400 });
     }
-
-    const isPdf = file.type === 'application/pdf';
 
     // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB
@@ -50,7 +48,7 @@ export async function POST(req) {
     const originalFileName = `${baseFileName}-original.${fileExt}`;
     const originalFilePath = `item-photos/${originalFileName}`;
     
-    // Thumbnail file path (webp for images only)
+    // Thumbnail file path (always webp for consistency and smaller size)
     const thumbnailFileName = `${baseFileName}-thumb.webp`;
     const thumbnailFilePath = `item-photos/${thumbnailFileName}`;
 
@@ -58,7 +56,7 @@ export async function POST(req) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload original file to Supabase Storage
+    // Upload original image to Supabase Storage
     const { data: originalData, error: originalError } = await s.storage
       .from('item-photos')
       .upload(originalFilePath, buffer, {
@@ -74,42 +72,40 @@ export async function POST(req) {
       return new Response('Failed to upload file', { status: 500 });
     }
 
-    // Generate thumbnail using sharp (images only; PDFs have no thumbnail)
+    // Generate thumbnail using sharp
     let thumbnailUrl = null;
     let thumbnailPath = null;
-    if (!isPdf) {
-      try {
-        const thumbnailBuffer = await sharp(buffer)
-          .resize(480, 480, {
-            fit: 'inside',
-            withoutEnlargement: true,
-          })
-          .webp({ quality: 75 })
-          .toBuffer();
+    try {
+      const thumbnailBuffer = await sharp(buffer)
+        .resize(480, 480, {
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 75 })
+        .toBuffer();
 
-        // Upload thumbnail to Supabase Storage
-        const { error: thumbnailError } = await s.storage
+      // Upload thumbnail to Supabase Storage
+      const { data: thumbnailData, error: thumbnailError } = await s.storage
+        .from('item-photos')
+        .upload(thumbnailFilePath, thumbnailBuffer, {
+          contentType: 'image/webp',
+          upsert: false,
+        });
+
+      if (!thumbnailError) {
+        const { data: thumbnailUrlData } = s.storage
           .from('item-photos')
-          .upload(thumbnailFilePath, thumbnailBuffer, {
-            contentType: 'image/webp',
-            upsert: false,
-          });
-
-        if (!thumbnailError) {
-          const { data: thumbnailUrlData } = s.storage
-            .from('item-photos')
-            .getPublicUrl(thumbnailFilePath);
-          thumbnailUrl = thumbnailUrlData.publicUrl;
-          thumbnailPath = thumbnailFilePath;
-        } else {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('Thumbnail generation failed:', thumbnailError);
-          }
-        }
-      } catch (thumbnailGenError) {
+          .getPublicUrl(thumbnailFilePath);
+        thumbnailUrl = thumbnailUrlData.publicUrl;
+        thumbnailPath = thumbnailFilePath;
+      } else {
         if (process.env.NODE_ENV === 'development') {
-          console.warn('Thumbnail generation error:', thumbnailGenError);
+          console.warn('Thumbnail generation failed:', thumbnailError);
         }
+      }
+    } catch (thumbnailGenError) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Thumbnail generation error:', thumbnailGenError);
       }
     }
 

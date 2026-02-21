@@ -366,6 +366,16 @@ If you have existing items with `photo_url` but no `thumbnail_url`, you can gene
 - **Storage**: Same Supabase Storage bucket (`item-photos`) as originals
 - **Naming**: `{timestamp}-{random}-thumb.webp` (paired with `{timestamp}-{random}-original.{ext}`)
 
+### Converting PDFs to images
+
+Item photos must be **JPEG, PNG, or WebP** (no PDFs). To use a PDF as an item image, convert it to one of those formats first:
+
+- **Quick (browser):** Use a free site like [Adobe PDF to JPG](https://www.adobe.com/acrobat/online/pdf-to-jpg.html) or [Smallpdf PDF to JPG](https://smallpdf.com/pdf-to-jpg). Upload the PDF, choose “Convert entire pages” or “Extract images,” download the resulting image(s), then upload the image in the item form.
+- **Windows (built-in):** Open the PDF in **Microsoft Edge**, take a screenshot (Win+Shift+S) of the page, paste into Paint, then **Save as** PNG or JPEG. Or use **Snipping Tool** to capture the page and save as PNG.
+- **Windows (one-time install):** Install [ImageMagick](https://imagemagick.org/script/download.php#windows); then in a terminal: `magick convert -density 150 yourfile.pdf yourfile.jpg` (creates one JPG per page; use `yourfile-0.jpg` for the first page).
+
+Use the first page (or a single exported image) and upload it as the item photo.
+
 ## Future Enhancements
 
 - Soft-close (extend deadline on late bids)

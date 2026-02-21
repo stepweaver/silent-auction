@@ -1,9 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FileText } from 'lucide-react';
 import { formatDollar } from '@/lib/money';
-import { isPdfUrl } from '@/lib/itemMedia';
 
 export default function ItemCard({ item, priority = false }) {
   const current = Number(item.current_high_bid ?? item.start_price);
@@ -42,38 +40,17 @@ export default function ItemCard({ item, priority = false }) {
           <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-[1px]" />
         )}
         {item.thumbnail_url || item.photo_url ? (
-          (() => {
-            const mediaUrl = item.thumbnail_url || item.photo_url;
-            if (isPdfUrl(mediaUrl)) {
-              return (
-                <div className={`relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem] flex items-center justify-center bg-gray-100 p-4 ${isClosed ? 'opacity-80' : ''}`}>
-                  <a
-                    href={item.photo_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-2 text-gray-600 hover:text-gray-900"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FileText className="w-10 h-10 sm:w-12 sm:h-12" strokeWidth={1.5} />
-                    <span className="text-xs font-medium">PDF</span>
-                  </a>
-                </div>
-              );
-            }
-            return (
-              <div className="relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem]">
-                <img
-                  src={mediaUrl}
-                  alt={item.title}
-                  width={300}
-                  height={300}
-                  className={`w-full h-full object-contain p-2 ${isClosed ? 'opacity-80' : ''}`}
-                  loading={priority ? 'eager' : 'lazy'}
-                  decoding="async"
-                />
-              </div>
-            );
-          })()
+          <div className="relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem]">
+            <img
+              src={item.thumbnail_url || item.photo_url}
+              alt={item.title}
+              width={300}
+              height={300}
+              className={`w-full h-full object-contain p-2 ${isClosed ? 'opacity-80' : ''}`}
+              loading={priority ? 'eager' : 'lazy'}
+              decoding="async"
+            />
+          </div>
         ) : (
           <div className="relative aspect-[4/3] sm:aspect-auto sm:h-full w-full min-h-[10rem] bg-white flex items-center justify-center">
             <img
