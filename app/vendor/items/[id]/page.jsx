@@ -33,6 +33,7 @@ export default function VendorEditItemPage({ params }) {
     slug: '',
     description: '',
     photo_url: '',
+    thumbnail_url: '',
     start_price: '0',
     is_closed: false,
     category: '',
@@ -107,6 +108,7 @@ export default function VendorEditItemPage({ params }) {
         slug: data.slug || '',
         description: data.description || '',
         photo_url: data.photo_url || '',
+        thumbnail_url: data.thumbnail_url || '',
         start_price: String(data.start_price || 0),
         is_closed: data.is_closed || false,
         category: data.category || '',
@@ -525,6 +527,22 @@ export default function VendorEditItemPage({ params }) {
                         disabled={isSubmitting || uploadingPhoto}
                         placeholder="https://..."
                       />
+                      {(form.photo_url || photoPreview || photoFile) && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm((f) => ({ ...f, photo_url: '', thumbnail_url: '' }));
+                              setPhotoFile(null);
+                              setPhotoPreview('');
+                            }}
+                            disabled={isSubmitting || uploadingPhoto}
+                            className="text-sm text-red-600 hover:text-red-700 underline disabled:opacity-50"
+                          >
+                            Remove photo (use default)
+                          </button>
+                        </div>
+                      )}
                       {photoPreview && (
                         <div className="mt-2">
                           <Image
