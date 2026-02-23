@@ -8,7 +8,7 @@ export default function SiteFooter() {
     'auction@stepweaver.dev';
 
   return (
-    <footer className="no-print mt-auto border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    <footer className="no-print border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <div className="max-w-7xl mx-auto px-3 py-2 sm:px-4 sm:py-3">
         <nav
           className="flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600"

@@ -130,8 +130,8 @@ export default async function RootLayout({ children }) {
         >
           <SiteBanner deadlineISO={auctionDeadline} />
           {children}
+          <SiteFooter />
         </div>
-        <SiteFooter />
       </body>
     </html>
   );
