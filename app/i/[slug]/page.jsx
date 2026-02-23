@@ -414,7 +414,8 @@ export default function ItemPage({ params }) {
 
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
               <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">Top Bids</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Top Bids</h2>
+                <p className="text-xs text-gray-500 mb-3">Bidders shown by alias only; &quot;Anonymous Bidder&quot; when none — for privacy.</p>
                 <div className="h-px bg-gray-200 mb-3"></div>
                 {bids.length > 0 ? (
                   <div className="space-y-2">

@@ -3,8 +3,129 @@
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import LeaderboardItem from '@/components/LeaderboardItem';
+import Link from 'next/link';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { formatDollar } from '@/lib/money';
+import AliasAvatar from '@/components/AliasAvatar';
 import BidNotification from '@/components/BidNotification';
+
+// --- Helpers ---
+function clamp(n, min, max) {
+  return Math.min(Math.max(n, min), max);
+}
+function secondsAgo(iso) {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return null;
+  return (Date.now() - t) / 1000;
+}
+function formatAgoShort(sec) {
+  if (sec == null || sec < 0) return '';
+  if (sec < 5) return 'just now';
+  if (sec < 60) return `${Math.round(sec)}s`;
+  if (sec < 3600) return `${Math.round(sec / 60)}m`;
+  return `${Math.round(sec / 3600)}h`;
+}
+function useCountdown(targetIso) {
+  const [msLeft, setMsLeft] = useState(null);
+  useEffect(() => {
+    if (!targetIso) {
+      setMsLeft(null);
+      return;
+    }
+    const target = new Date(targetIso).getTime();
+    const tick = () => {
+      const now = Date.now();
+      setMsLeft(target > now ? target - now : 0);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [targetIso]);
+  return msLeft;
+}
+function HeatBar({ heat, label, reducedMotion }) {
+  const pct = Math.round((heat ?? 0) * 100);
+  return (
+    <div className="w-full">
+      {label && <span className="text-xs text-gray-500">{label}</span>}
+      <motion.div
+        className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
+        initial={false}
+      >
+        <motion.div
+          className="h-full rounded-full"
+          style={{
+            background: 'linear-gradient(90deg, #22c55e, #eab308, #ef4444)',
+            width: `${pct}%`
+          }}
+          transition={{ duration: reducedMotion ? 0 : 0.3 }}
+          initial={false}
+          animate={{ width: `${pct}%` }}
+        />
+      </motion.div>
+    </div>
+  );
+}
+function Ticker({ items }) {
+  if (!items || items.length === 0) return <div className="h-8 w-full overflow-hidden" aria-hidden />;
+  const duplicated = [...items, ...items];
+  return (
+    <div className="relative h-8 w-full overflow-hidden border-t border-b border-gray-200 bg-gray-50/80">
+      <div className="ticker-track flex h-full items-center gap-8 whitespace-nowrap">
+        {duplicated.map((x, i) => (
+          <span key={i} className="inline-flex items-center gap-2 text-sm text-gray-700">
+            {x.emoji && <span>{x.emoji}</span>}
+            {x.text}
+          </span>
+        ))}
+      </div>
+      <style jsx>{`
+        .ticker-track {
+          animation: ticker 22s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ticker-track {
+            animation: none;
+          }
+        }
+        @keyframes ticker {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
+}
+function Badge({ children, tone }) {
+  const classes = {
+    hot: 'bg-red-100 text-red-800',
+    war: 'bg-amber-100 text-amber-800',
+    move: 'bg-sky-100 text-sky-800',
+    new: 'bg-emerald-100 text-emerald-800'
+  };
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${classes[tone] || classes.new}`}>
+      {children}
+    </span>
+  );
+}
+function CardGlow({ active }) {
+  if (!active) return null;
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="pointer-events-none absolute inset-0 rounded-xl opacity-40"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.4 }}
+        exit={{ opacity: 0 }}
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(239,68,68,0.3), transparent 70%), radial-gradient(ellipse at 30% 30%, rgba(234,179,8,0.2), transparent 50%)'
+        }}
+      />
+    </AnimatePresence>
+  );
+}
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 const ALL_CATEGORIES = '__all__';
@@ -21,9 +142,11 @@ export default function LeaderboardPage() {
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [activeFilter, setActiveFilter] = useState(ALL_CATEGORIES);
+  const [deadlineIso, setDeadlineIso] = useState(null);
   const prevItemsStateRef = useRef({}); // Track previous state for change detection
   const prevPositionsRef = useRef({}); // Track previous positions for animation
   const prevBidCountsRef = useRef({}); // Track previous bid counts
+  const reducedMotion = useReducedMotion();
   const s = supabaseBrowser();
 
   // Check enrollment status
@@ -38,14 +161,36 @@ export default function LeaderboardPage() {
     }
   }, [router]);
 
+  // Retry a promise on 503/network errors (e.g. Supabase overload)
+  async function withRetry(fn, maxAttempts = 3) {
+    let lastErr;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastErr = err;
+        const isRetryable = err?.message?.includes('503') || err?.message?.includes('timeout') || err?.message?.includes('fetch');
+        if (attempt < maxAttempts && isRetryable) {
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw lastErr;
+  }
+
   async function loadLeaderboard() {
     try {
+      await withRetry(async () => {
       // Get settings to check deadline
       const { data: settings } = await s
         .from('settings')
         .select('auction_deadline')
         .eq('id', 1)
         .maybeSingle();
+
+      setDeadlineIso(settings?.auction_deadline ?? null);
 
       const deadline = settings?.auction_deadline
         ? new Date(settings.auction_deadline)
@@ -64,164 +209,128 @@ export default function LeaderboardPage() {
 
       // Filter out items if deadline passed (though they should all close together)
       const openItems = (itemsData || []).filter(item => !deadlinePassed);
+      const itemIds = openItems.map(i => i.id);
 
       setItems(openItems);
 
-      // Fetch bid counts and top bids for each item
-      const bidsPromises = openItems.map(async (item) => {
-        // Get total bid count
-        const { count: totalBidCount, error: countError } = await s
-          .from('bids')
-          .select('*', { count: 'exact', head: true })
-          .eq('item_id', item.id);
+      if (itemIds.length === 0) {
+        setItems([]);
+        setSortedItems([]);
+        setTopBids({});
+        setRecentBids({});
+        setBidCounts({});
+        return;
+      }
 
-        // Get all bids for top bid and recent activity
-        const { data: bidsData, error: bidsError } = await s
+      // Batch 1: Fetch all bids for all items in one or two queries (no per-item HEAD/GET)
+      const BATCH_SIZE = 80;
+      let allBids = [];
+      for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
+        const chunk = itemIds.slice(i, i + BATCH_SIZE);
+        const { data: bidsChunk, error: bidsError } = await s
           .from('bids')
           .select('*')
-          .eq('item_id', item.id)
+          .in('item_id', chunk)
           .order('amount', { ascending: false })
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(1500);
 
-        if (bidsError) {
-          console.error(`Error fetching bids for item ${item.id}:`, bidsError);
-          return { 
-            itemId: item.id, 
-            topBid: null, 
-            recentBids: [], 
-            bidCount: countError ? 0 : (totalBidCount || 0)
-          };
-        }
+        if (bidsError) throw bidsError;
+        if (bidsChunk?.length) allBids = allBids.concat(bidsChunk);
+      }
 
-        const topBid = bidsData && bidsData.length > 0 ? bidsData[0] : null;
+      // Group bids by item_id; derive top bid, count, and recent per item
+      const bidsByItem = {};
+      for (const bid of allBids) {
+        if (!bidsByItem[bid.item_id]) bidsByItem[bid.item_id] = [];
+        bidsByItem[bid.item_id].push(bid);
+      }
 
-        // Fetch aliases for bids that have alias_id
-        const aliasIds = (bidsData || [])
-          .map(bid => bid.alias_id)
-          .filter(id => id !== null);
+      const topBidByItem = {};
+      const recentBidsByItem = {};
+      const bidCountByItem = {};
+      const allAliasIds = new Set();
+      const emailsForFallback = new Set();
 
-        let aliasesMap = {};
-        if (aliasIds.length > 0) {
-          // Select alias fields
-          const { data: aliasesData, error: aliasesError } = await s
-            .from('user_aliases')
-            .select('id, alias, color, animal')
-            .in('id', aliasIds);
-
-          if (aliasesError) {
-            console.error(`Error fetching aliases for item ${item.id}:`, aliasesError);
-          } else if (aliasesData) {
-            aliasesMap = aliasesData.reduce((acc, alias) => {
-              acc[alias.id] = alias;
-              return acc;
-            }, {});
-            
-            // Log if any alias_ids weren't found (data integrity issue)
-            const foundIds = new Set(aliasesData.map(a => a.id));
-            const missingIds = aliasIds.filter(id => !foundIds.has(id));
-            if (missingIds.length > 0) {
-              console.warn(`[Leaderboard] Missing aliases for alias_ids: ${missingIds.join(', ')} on item ${item.id}`);
-            }
-          }
-        }
-
-        // Join aliases with top bid
-        // If alias_id lookup failed, try to find alias by email as fallback
-        let topBidAlias = null;
+      for (const item of openItems) {
+        const list = bidsByItem[item.id] || [];
+        bidCountByItem[item.id] = list.length;
+        const topBid = list[0] || null;
         if (topBid) {
-          if (topBid.alias_id) {
-            topBidAlias = aliasesMap[topBid.alias_id];
-            
-            // Fallback: If alias_id lookup failed but we have an email, try to find alias by email
-            if (!topBidAlias && topBid.email) {
-              const { data: emailAliasData } = await s
-                .from('user_aliases')
-                .select('id, alias, color, animal')
-                .eq('email', topBid.email)
-                .maybeSingle();
-              
-              if (emailAliasData) {
-                topBidAlias = emailAliasData;
-                // Log this recovery for monitoring
-                console.warn(`[Leaderboard] Recovered alias for bid ${topBid.id} by email lookup. alias_id was ${topBid.alias_id} but not found, recovered alias: ${emailAliasData.alias}`);
-              }
-            }
-          }
+          topBidByItem[item.id] = topBid;
+          if (topBid.alias_id) allAliasIds.add(topBid.alias_id);
         }
-
-        const topBidWithAlias = topBid ? {
-          ...topBid,
-          user_aliases: topBidAlias
-        } : null;
-
-        // Get recent bids (last 60 seconds for bidding war detection) with aliases
-        const recentBidsFiltered = (bidsData || []).filter(bid => {
-          const bidTime = new Date(bid.created_at);
-          return now - bidTime < 60000; // 60 seconds
+        const recent = list.filter(bid => (now - new Date(bid.created_at)) < 60000);
+        recentBidsByItem[item.id] = recent;
+        recent.forEach(bid => {
+          if (bid.alias_id) allAliasIds.add(bid.alias_id);
         });
+      }
 
-        // For recent bids missing aliases, try email-based fallback lookup
-        const recentBidsMissingAliases = recentBidsFiltered.filter(
-          bid => bid.alias_id && !aliasesMap[bid.alias_id] && bid.email
-        );
+      // Batch 2: Fetch all aliases by id in one or few queries
+      const aliasIdsArr = [...allAliasIds];
+      const aliasesMap = {};
+      const ALIAS_BATCH = 100;
+      for (let i = 0; i < aliasIdsArr.length; i += ALIAS_BATCH) {
+        const chunk = aliasIdsArr.slice(i, i + ALIAS_BATCH);
+        const { data: aliasesData, error: aliasesError } = await s
+          .from('user_aliases')
+          .select('id, alias, color, animal')
+          .in('id', chunk);
 
-        // Batch lookup aliases by email for missing ones
-        let emailAliasesMap = {};
-        if (recentBidsMissingAliases.length > 0) {
-          const missingEmails = [...new Set(recentBidsMissingAliases.map(bid => bid.email))];
-          const { data: emailAliasesData } = await s
-            .from('user_aliases')
-            .select('id, alias, color, animal, email')
-            .in('email', missingEmails);
-
-          if (emailAliasesData) {
-            emailAliasesMap = emailAliasesData.reduce((acc, alias) => {
-              acc[alias.email] = alias;
-              return acc;
-            }, {});
-          }
+        if (aliasesError) throw aliasesError;
+        if (aliasesData) {
+          aliasesData.forEach(a => { aliasesMap[a.id] = a; });
         }
+      }
 
-        const recentBidsList = recentBidsFiltered.map(bid => {
-          let bidAlias = bid.alias_id ? aliasesMap[bid.alias_id] : null;
-          
-          // Fallback: If alias_id lookup failed, try email lookup
-          if (!bidAlias && bid.email && emailAliasesMap[bid.email]) {
-            bidAlias = emailAliasesMap[bid.email];
-          }
-          
-          return {
-            ...bid,
-            user_aliases: bidAlias
-          };
+      // Emails for fallback: bids with alias_id not found
+      for (const item of openItems) {
+        const topBid = topBidByItem[item.id];
+        if (topBid?.alias_id && !aliasesMap[topBid.alias_id] && topBid.email) emailsForFallback.add(topBid.email);
+        (recentBidsByItem[item.id] || []).forEach(bid => {
+          if (bid.alias_id && !aliasesMap[bid.alias_id] && bid.email) emailsForFallback.add(bid.email);
         });
+      }
 
-        return {
-          itemId: item.id,
-          topBid: topBidWithAlias,
-          recentBids: recentBidsList,
-          bidCount: totalBidCount || 0
-        };
-      });
+      // Batch 3: Fallback alias lookup by email (one query)
+      const emailAliasesMap = {};
+      if (emailsForFallback.size > 0) {
+        const emails = [...emailsForFallback];
+        const { data: emailAliasesData } = await s
+          .from('user_aliases')
+          .select('id, alias, color, animal, email')
+          .in('email', emails);
 
-      const bidsResults = await Promise.all(bidsPromises);
+        if (emailAliasesData) {
+          emailAliasesData.forEach(a => { emailAliasesMap[a.email] = a; });
+        }
+      }
 
-      // Build maps
+      // Build topBids and recentBids with aliases attached
       const newTopBids = {};
       const newRecentBids = {};
       const newBidCounts = {};
 
-      bidsResults.forEach(({ itemId, topBid, recentBids: recent, bidCount }) => {
-        if (topBid) {
-          newTopBids[itemId] = topBid;
-        }
-        if (recent.length > 0) {
-          newRecentBids[itemId] = recent;
-        }
-        newBidCounts[itemId] = bidCount;
-      });
+      for (const item of openItems) {
+        const topBid = topBidByItem[item.id];
+        let topBidAlias = topBid?.alias_id ? aliasesMap[topBid.alias_id] : null;
+        if (!topBidAlias && topBid?.email) topBidAlias = emailAliasesMap[topBid.email] || null;
 
-      // Sort items by bid count (descending), then by title
+        newTopBids[item.id] = topBid ? { ...topBid, user_aliases: topBidAlias } : null;
+        if (!topBid) delete newTopBids[item.id];
+
+        const recentList = (recentBidsByItem[item.id] || []).map(bid => {
+          let bidAlias = bid.alias_id ? aliasesMap[bid.alias_id] : null;
+          if (!bidAlias && bid.email) bidAlias = emailAliasesMap[bid.email] || null;
+          return { ...bid, user_aliases: bidAlias };
+        });
+        if (recentList.length > 0) newRecentBids[item.id] = recentList;
+
+        newBidCounts[item.id] = bidCountByItem[item.id] ?? 0;
+      }
+
+      // Stable sort: category then title (no reordering when bid counts change — reduces flashing)
       // Also update current_high_bid from actual top bids
       const itemsWithBidCounts = openItems.map(item => {
         const topBid = newTopBids[item.id];
@@ -233,10 +342,14 @@ export default function LeaderboardPage() {
           current_high_bid: actualCurrentBid !== null ? actualCurrentBid : item.current_high_bid,
         };
       }).sort((a, b) => {
-        if (b.bidCount !== a.bidCount) {
-          return b.bidCount - a.bidCount; // Most bids first
+        const catA = (a.category || '').trim() || UNCATEGORIZED;
+        const catB = (b.category || '').trim() || UNCATEGORIZED;
+        if (catA !== catB) {
+          if (catA === UNCATEGORIZED) return 1;
+          if (catB === UNCATEGORIZED) return -1;
+          return catA.localeCompare(catB);
         }
-        return a.title.localeCompare(b.title); // Then alphabetically
+        return (a.title || '').localeCompare(b.title || '');
       });
 
       // Detect position changes and new bids for notifications
@@ -304,6 +417,7 @@ export default function LeaderboardPage() {
       setTopBids(newTopBids);
       setRecentBids(newRecentBids);
       setBidCounts(newBidCounts);
+      }); // end withRetry
     } catch (err) {
       console.error('Error loading leaderboard:', err);
     } finally {
@@ -316,26 +430,34 @@ export default function LeaderboardPage() {
 
     loadLeaderboard();
 
-    // Set up real-time subscription
+    // Set up real-time subscription (debounced so rapid bids don't trigger many reloads)
+    let reloadTimer = null;
     const channel = s
       .channel('rt-leaderboard-bids')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bids' },
         () => {
-          loadLeaderboard();
+          if (reloadTimer) clearTimeout(reloadTimer);
+          reloadTimer = setTimeout(() => {
+            loadLeaderboard();
+            reloadTimer = null;
+          }, 1500);
         }
       )
       .subscribe();
 
-    // Polling backup every 2 seconds
+    // Polling backup every 8 seconds (reduced from 2s to avoid hammering Supabase)
     const pollInterval = setInterval(() => {
-      loadLeaderboard();
-    }, 2000);
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadLeaderboard();
+      }
+    }, 8000);
 
     return () => {
       s.removeChannel(channel);
       clearInterval(pollInterval);
+      if (reloadTimer) clearTimeout(reloadTimer);
     };
   }, [checkingEnrollment]);
 
@@ -344,7 +466,7 @@ export default function LeaderboardPage() {
     prevItemsStateRef.current = { ...topBids };
   }, [topBids]);
 
-  // Calculate hot items, bidding wars, and position changes
+  // Calculate hot items, bidding wars, position changes, heat, lastBidSec
   const itemStates = useMemo(() => {
     const now = Date.now();
     const states = {};
@@ -376,6 +498,20 @@ export default function LeaderboardPage() {
       const positionChanged = prevIndex !== undefined && prevIndex !== index;
       const movedUp = positionChanged && prevIndex > index;
 
+      // lastBidSec: seconds since most recent bid
+      const lastBidAt = itemRecentBids.length > 0
+        ? itemRecentBids.reduce((latest, b) => {
+            const t = new Date(b.created_at).getTime();
+            return t > latest ? t : latest;
+          }, 0)
+        : null;
+      const lastBidSec = lastBidAt != null ? (now - lastBidAt) / 1000 : null;
+
+      // heat: bid velocity + recency (0..1)
+      const bidVelocity = clamp(itemRecentBids.length / 6, 0, 1);
+      const recencyBoost = lastBidSec != null ? clamp(1 - lastBidSec / 60, 0, 1) : 0;
+      const heat = bidVelocity * 0.65 + recencyBoost * 0.35;
+
       states[item.id] = {
         isHot,
         hasBiddingWar,
@@ -383,7 +519,9 @@ export default function LeaderboardPage() {
         positionChanged,
         movedUp,
         currentPosition: index,
-        previousPosition: prevIndex
+        previousPosition: prevIndex,
+        lastBidSec,
+        heat
       };
     });
 
@@ -415,6 +553,38 @@ export default function LeaderboardPage() {
       return item.category?.trim() === activeFilter;
     });
   }, [sortedItems, activeFilter]);
+
+  // Ranked summary for "All" view: hot, wars, movers, most bids, tickerItems
+  const rankedSummary = useMemo(() => {
+    if (activeFilter !== ALL_CATEGORIES || filteredItems.length === 0) return null;
+    const hotItems = filteredItems.filter((item) => itemStates[item.id]?.isHot);
+    const warItems = filteredItems.filter((item) => itemStates[item.id]?.hasBiddingWar);
+    const movers = filteredItems.filter((item) => itemStates[item.id]?.movedUp).slice(0, 6);
+    const topByBids = [...filteredItems]
+      .sort((a, b) => (bidCounts[b.id] || 0) - (bidCounts[a.id] || 0))
+      .filter((item) => (bidCounts[item.id] || 0) > 0)
+      .slice(0, 8);
+    const tickerItems = [];
+    hotItems.slice(0, 5).forEach((item) => {
+      const topBid = topBids[item.id];
+      tickerItems.push({ emoji: '🔥', text: `Hot: ${item.title} ${topBid ? formatDollar(topBid.amount) : ''}` });
+    });
+    warItems.slice(0, 5).forEach((item) => {
+      const topBid = topBids[item.id];
+      tickerItems.push({ emoji: '⚔️', text: `War: ${item.title} ${topBid ? formatDollar(topBid.amount) : ''}` });
+    });
+    movers.forEach((item) => {
+      tickerItems.push({ emoji: '📈', text: `${item.title} moved up` });
+    });
+    if (tickerItems.length === 0 && topByBids.length > 0) {
+      topByBids.slice(0, 5).forEach((item) => {
+        const count = bidCounts[item.id] || 0;
+        tickerItems.push({ emoji: '📊', text: `Most bids: ${item.title} (${count})` });
+      });
+    }
+    if (hotItems.length === 0 && warItems.length === 0 && topByBids.length === 0 && movers.length === 0) return null;
+    return { hotItems, warItems, movers, topByBids, tickerItems };
+  }, [activeFilter, filteredItems, itemStates, bidCounts, topBids]);
 
   if (checkingEnrollment || loading) {
     return (
@@ -454,192 +624,132 @@ export default function LeaderboardPage() {
         ))}
       </div>
 
-      {/* Desktop/Tablet View - Optimized for projector */}
-      <main className='hidden md:block w-full min-h-screen px-4 py-4 lg:px-6 lg:py-6 bg-gray-50'>
-        {/* Header - desktop */}
-        <section className='mb-4 lg:mb-6'>
-          <div className='bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden'>
-            <div className='px-4 py-4 lg:px-6 lg:py-6 text-center'>
-              <h1
-                className='text-3xl lg:text-4xl font-bold mb-1'
-                style={{ color: 'var(--primary-500)' }}
-              >
-                🏆 Live Leaderboard
-              </h1>
-              <p className='text-base lg:text-lg text-gray-600'>
-                {activeFilter === ALL_CATEGORIES
-                  ? 'Current leaders for all auction items'
-                  : `Showing ${activeFilter} items`}
-              </p>
-              {categories.length > 0 && (
-                <div className='mt-3 flex justify-center'>
-                  <div className='relative inline-block w-64'>
-                    <select
-                      value={activeFilter}
-                      onChange={(e) => setActiveFilter(e.target.value)}
-                      className='w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-2 pr-10 text-sm font-semibold text-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2'
-                      style={{ '--tw-ring-color': 'var(--primary-500)' }}
-                    >
-                      <option value={ALL_CATEGORIES}>All Categories</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                      {hasUncategorized && (
-                        <option value={UNCATEGORIZED}>{UNCATEGORIZED}</option>
-                      )}
-                    </select>
-                    <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
-                      <svg
-                        className='h-4 w-4 text-gray-500'
-                        xmlns='http://www.w3.org/2000/svg'
-                        viewBox='0 0 20 20'
-                        fill='currentColor'
-                      >
-                        <path
-                          fillRule='evenodd'
-                          d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z'
-                          clipRule='evenodd'
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Leaderboard grid - desktop optimized for many items */}
-        {items.length === 0 ? (
-          <div className='bg-white rounded-xl shadow-xl border border-gray-200'>
-            <div className='px-6 py-12 text-center'>
-              <p className='text-lg text-gray-600'>No open items available.</p>
-            </div>
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className='bg-white rounded-xl shadow-xl border border-gray-200'>
-            <div className='px-6 py-12 text-center'>
-              <p className='text-lg text-gray-600'>No items in this category.</p>
-            </div>
-          </div>
-        ) : (
-          <div className='grid gap-3 lg:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'>
-            {filteredItems.map((item, index) => {
-              const state = itemStates[item.id] || {};
-              return (
-                <LeaderboardItem
-                  key={item.id}
-                  item={item}
-                  topBid={topBids[item.id] || null}
-                  bidCount={bidCounts[item.id] || 0}
-                  isHot={state.isHot}
-                  hasBiddingWar={state.hasBiddingWar}
-                  leaderChanged={state.leaderChanged}
-                  positionChanged={state.positionChanged}
-                  movedUp={state.movedUp}
-                  currentPosition={state.currentPosition}
-                  previousPosition={state.previousPosition}
-                  priority={index < 12}
-                />
-              );
-            })}
-          </div>
-        )}
-      </main>
-
-      {/* Mobile View */}
-      <main className='md:hidden w-full min-h-screen px-2 py-2 bg-gray-50'>
-        {/* Header - mobile */}
-        <section className='mb-3'>
+      {/* Single broadcast-style layout: projector-first, responsive */}
+      <main className='w-full min-h-screen px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 bg-gray-50'>
+        {/* Header: title, subtitle, privacy, category, countdown, ticker */}
+        <section className='mb-2 sm:mb-3'>
           <div className='bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden'>
-            <div className='px-3 py-3 text-center'>
-              <h1
-                className='text-xl font-bold mb-1'
-                style={{ color: 'var(--primary-500)' }}
-              >
+            <div className='px-3 py-2.5 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-center'>
+              <h1 className='text-lg sm:text-2xl lg:text-3xl font-bold mb-0.5' style={{ color: 'var(--primary-500)' }}>
                 🏆 Live Leaderboard
               </h1>
-              <p className='text-xs text-gray-600'>
-                {activeFilter === ALL_CATEGORIES
-                  ? 'Current leaders for all auction items'
-                  : `Showing ${activeFilter} items`}
+              <p className='text-xs sm:text-sm lg:text-base text-gray-600'>
+                {activeFilter === ALL_CATEGORIES ? 'Current leaders for all auction items' : `Showing ${activeFilter} items`}
               </p>
-              {categories.length > 0 && (
-                <div className='mt-2 flex justify-center'>
-                  <div className='relative inline-block w-full'>
+              <div className='mt-1.5 sm:mt-2 flex flex-wrap items-center justify-center gap-2'>
+                {categories.length > 0 && (
+                  <div className='relative inline-block w-48 sm:w-64'>
                     <select
                       value={activeFilter}
                       onChange={(e) => setActiveFilter(e.target.value)}
-                      className='w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-xs font-semibold text-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2'
+                      className='w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 sm:px-4 sm:py-2 pr-10 text-xs sm:text-sm font-semibold text-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2'
                       style={{ '--tw-ring-color': 'var(--primary-500)' }}
                     >
                       <option value={ALL_CATEGORIES}>All Categories</option>
                       {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
+                        <option key={cat} value={cat}>{cat}</option>
                       ))}
-                      {hasUncategorized && (
-                        <option value={UNCATEGORIZED}>{UNCATEGORIZED}</option>
-                      )}
+                      {hasUncategorized && <option value={UNCATEGORIZED}>{UNCATEGORIZED}</option>}
                     </select>
-                    <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2'>
-                      <svg
-                        className='h-3.5 w-3.5 text-gray-500'
-                        xmlns='http://www.w3.org/2000/svg'
-                        viewBox='0 0 20 20'
-                        fill='currentColor'
-                      >
-                        <path
-                          fillRule='evenodd'
-                          d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z'
-                          clipRule='evenodd'
-                        />
+                    <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3'>
+                      <svg className='h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'>
+                        <path fillRule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clipRule='evenodd' />
                       </svg>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
+            <Ticker items={rankedSummary?.tickerItems ?? []} />
           </div>
         </section>
 
-        {/* Leaderboard grid - mobile compact */}
         {items.length === 0 ? (
           <div className='bg-white rounded-lg shadow-md border border-gray-200'>
-            <div className='px-4 py-8 text-center'>
-              <p className='text-sm text-gray-600'>No open items available.</p>
-            </div>
+            <div className='px-4 py-8 text-center'><p className='text-sm sm:text-base text-gray-600'>No open items available.</p></div>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className='bg-white rounded-lg shadow-md border border-gray-200'>
-            <div className='px-4 py-8 text-center'>
-              <p className='text-sm text-gray-600'>No items in this category.</p>
-            </div>
+            <div className='px-4 py-8 text-center'><p className='text-sm sm:text-base text-gray-600'>No items in this category.</p></div>
           </div>
         ) : (
-          <div className='grid gap-2 grid-cols-1'>
-            {filteredItems.map((item, index) => {
-              const state = itemStates[item.id] || {};
-              return (
-                <LeaderboardItem
-                  key={item.id}
-                  item={item}
-                  topBid={topBids[item.id] || null}
-                  bidCount={bidCounts[item.id] || 0}
-                  isHot={state.isHot}
-                  hasBiddingWar={state.hasBiddingWar}
-                  leaderChanged={state.leaderChanged}
-                  positionChanged={state.positionChanged}
-                  movedUp={state.movedUp}
-                  currentPosition={state.currentPosition}
-                  previousPosition={state.previousPosition}
-                  priority={index < 4}
-                />
-              );
-            })}
+          <div className='space-y-3 sm:space-y-4'>
+            {/* 3-panel summary when All Categories and rankedSummary */}
+            {activeFilter === ALL_CATEGORIES && rankedSummary && (
+              <motion.div
+                layout={!reducedMotion}
+                transition={{ duration: reducedMotion ? 0 : 0.2 }}
+                className='bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden'
+              >
+                <h2 className='px-3 py-2 sm:px-4 sm:py-2.5 text-sm font-bold border-b border-gray-200' style={{ color: 'var(--primary-500)' }}>
+                  What&apos;s happening
+                </h2>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4 p-3 sm:p-4'>
+                  <div className='min-w-0'>
+                    <h3 className='text-xs font-semibold text-red-600 mb-1.5 flex items-center gap-1'><span className={reducedMotion ? '' : 'animate-pulse'}>🔥</span> Hot right now</h3>
+                    <ul className='space-y-1.5'>
+                      {(rankedSummary.hotItems.length > 0 ? rankedSummary.hotItems : rankedSummary.topByBids.slice(0, 4)).map((item) => {
+                        const topBid = topBids[item.id];
+                        const aliasName = topBid?.user_aliases?.alias ?? 'Anonymous Bidder';
+                        return (
+                          <li key={item.id} className='rounded-md border border-gray-200 bg-gray-50/60 px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 min-w-0'>
+                            <Link href={`/i/${item.slug}`} className='font-medium hover:underline text-sm sm:text-base flex-1 min-w-0 leading-snug' style={{ color: 'var(--primary-600)' }}>{item.title}</Link>
+                            <span className='flex items-center gap-1.5 flex-shrink-0 text-xs'>
+                              {topBid?.user_aliases ? <AliasAvatar alias={topBid.user_aliases.alias} color={topBid.user_aliases.color} animal={topBid.user_aliases.animal} size="sm" /> : <div className='w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium flex-shrink-0'>A</div>}
+                              <span className='text-gray-700 whitespace-nowrap'>{aliasName}</span>
+                              <span className='text-gray-800 font-semibold'>{topBid ? formatDollar(topBid.amount) : '—'}</span>
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                  <div className='min-w-0'>
+                    <h3 className='text-xs font-semibold text-amber-700 mb-1.5'>⚔️ Bidder wars</h3>
+                    <ul className='space-y-1.5'>
+                      {(rankedSummary.warItems.length > 0 ? rankedSummary.warItems : rankedSummary.topByBids.slice(0, 4)).map((item) => {
+                        const topBid = topBids[item.id];
+                        const aliasName = topBid?.user_aliases?.alias ?? 'Anonymous Bidder';
+                        return (
+                          <li key={item.id} className='rounded-md border border-gray-200 bg-gray-50/60 px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 min-w-0'>
+                            <Link href={`/i/${item.slug}`} className='font-medium hover:underline text-sm sm:text-base flex-1 min-w-0 leading-snug' style={{ color: 'var(--primary-600)' }}>{item.title}</Link>
+                            <span className='flex items-center gap-1.5 flex-shrink-0 text-xs'>
+                              {topBid?.user_aliases ? <AliasAvatar alias={topBid.user_aliases.alias} color={topBid.user_aliases.color} animal={topBid.user_aliases.animal} size="sm" /> : <div className='w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium flex-shrink-0'>A</div>}
+                              <span className='text-gray-700 whitespace-nowrap'>{aliasName}</span>
+                              <span className='text-gray-800 font-semibold'>{topBid ? formatDollar(topBid.amount) : '—'}</span>
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                  <div className='min-w-0'>
+                    <h3 className='text-xs font-semibold text-sky-700 mb-1.5'>📈 Movers</h3>
+                    <ul className='space-y-1.5'>
+                      {(rankedSummary.movers?.length > 0 ? rankedSummary.movers : rankedSummary.topByBids.slice(0, 4)).map((item) => {
+                        const topBid = topBids[item.id];
+                        const aliasName = topBid?.user_aliases?.alias ?? 'Anonymous Bidder';
+                        return (
+                          <li key={item.id} className='rounded-md border border-gray-200 bg-gray-50/60 px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 min-w-0'>
+                            <Link href={`/i/${item.slug}`} className='font-medium hover:underline text-sm sm:text-base flex-1 min-w-0 leading-snug' style={{ color: 'var(--primary-600)' }}>{item.title}</Link>
+                            <span className='flex items-center gap-1.5 flex-shrink-0 text-xs'>
+                              {topBid?.user_aliases ? <AliasAvatar alias={topBid.user_aliases.alias} color={topBid.user_aliases.color} animal={topBid.user_aliases.animal} size="sm" /> : <div className='w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium flex-shrink-0'>A</div>}
+                              <span className='text-gray-700 whitespace-nowrap'>{aliasName}</span>
+                              <span className='text-gray-800 font-semibold'>{topBid ? formatDollar(topBid.amount) : '—'}</span>
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* When a category is selected, prompt to view highlights (no full item list) */}
+            {activeFilter !== ALL_CATEGORIES && filteredItems.length > 0 && (
+              <p className='text-center text-xs sm:text-sm text-gray-500 py-4'>Select All Categories to see activity highlights.</p>
+            )}
           </div>
         )}
       </main>
