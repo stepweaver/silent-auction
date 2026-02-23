@@ -229,6 +229,43 @@ html {
   75% { transform: translateY(-2px) rotate(5deg); }
 }
 
+/* Leaderboard: hot item – flame flicker */
+@keyframes flameFlicker {
+  0%, 100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  25% { opacity: 0.9; transform: scale(1.08); filter: brightness(1.15); }
+  50% { opacity: 1; transform: scale(0.98); filter: brightness(0.95); }
+  75% { opacity: 0.95; transform: scale(1.05); filter: brightness(1.1); }
+}
+
+.animate-flame-flicker {
+  animation: flameFlicker 0.6s ease-in-out infinite;
+}
+
+/* Leaderboard: bidder war – swords clashing */
+@keyframes swordClashLeft {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20% { transform: translateX(4px) rotate(-8deg); }
+  40% { transform: translateX(-2px) rotate(2deg); }
+  60% { transform: translateX(2px) rotate(-4deg); }
+  80% { transform: translateX(-1px) rotate(1deg); }
+}
+
+@keyframes swordClashRight {
+  0%, 100% { transform: translateX(0) rotate(0deg) scaleX(-1); }
+  20% { transform: translateX(-4px) rotate(8deg) scaleX(-1); }
+  40% { transform: translateX(2px) rotate(-2deg) scaleX(-1); }
+  60% { transform: translateX(-2px) rotate(4deg) scaleX(-1); }
+  80% { transform: translateX(1px) rotate(-1deg) scaleX(-1); }
+}
+
+.animate-sword-clash-left {
+  animation: swordClashLeft 0.5s ease-in-out infinite;
+}
+
+.animate-sword-clash-right {
+  animation: swordClashRight 0.5s ease-in-out infinite;
+}
+
 @media print {
   .no-print {
     display: none !important;

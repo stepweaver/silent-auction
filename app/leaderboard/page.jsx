@@ -1,14 +1,12 @@
 'use client';
 
 import { supabaseBrowser } from '@/lib/supabaseClient';
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useReducedMotion } from 'framer-motion';
-import { formatDollar } from '@/lib/money';
-import { withRetry, clamp, secondsAgo, formatAgoShort } from '@/lib/utils';
-import BidNotification from '@/components/BidNotification';
+import { withRetry } from '@/lib/utils';
 import GoalMeter from '@/components/GoalMeter';
-import LeaderboardSummaryPanel from '@/components/LeaderboardSummaryPanel';
+import LeaderboardItemRow from '@/components/LeaderboardSummaryPanel';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 const UNCATEGORIZED = 'Other'; // sort key for items with no category
@@ -23,11 +21,7 @@ export default function LeaderboardPage() {
   const [recentBids, setRecentBids] = useState({});
   const [loading, setLoading] = useState(true);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
-  const [notifications, setNotifications] = useState([]);
   const [deadlineIso, setDeadlineIso] = useState(null);
-  const prevItemsStateRef = useRef({}); // Track previous state for change detection
-  const prevPositionsRef = useRef({}); // Track previous positions for animation
-  const prevBidCountsRef = useRef({}); // Track previous bid counts
   const reducedMotion = useReducedMotion();
 
   // Check enrollment status
@@ -241,66 +235,6 @@ export default function LeaderboardPage() {
           return (a.title || '').localeCompare(b.title || '');
         });
 
-        // Detect position changes and new bids for notifications
-        const prevPositions = prevPositionsRef.current;
-        const prevBidCounts = prevBidCountsRef.current;
-        const newNotifications = [];
-
-        itemsWithBidCounts.forEach((item, newIndex) => {
-          const prevIndex = prevPositions[item.id];
-          const prevCount = prevBidCounts[item.id] || 0;
-          const currentCount = newBidCounts[item.id] || 0;
-
-          // Check for new bid
-          if (currentCount > prevCount && prevCount > 0) {
-            const topBid = newTopBids[item.id];
-            if (topBid) {
-              newNotifications.push({
-                id: `${item.id}-${Date.now()}`,
-                type: 'new_bid',
-                itemTitle: item.title,
-                bidderName: topBid.bidder_name,
-                bidAmount: topBid.amount,
-                alias: topBid.user_aliases?.alias,
-                color: topBid.user_aliases?.color,
-                animal: topBid.user_aliases?.animal
-              });
-            }
-          }
-
-          // Check for leader change
-          const currentLeaderId = newTopBids[item.id]?.alias_id || newTopBids[item.id]?.bidder_name;
-          const prevLeaderId = prevItemsStateRef.current[item.id]?.alias_id || prevItemsStateRef.current[item.id]?.bidder_name;
-          if (currentLeaderId && currentLeaderId !== prevLeaderId && prevLeaderId !== null && prevLeaderId !== undefined) {
-            const topBid = newTopBids[item.id];
-            if (topBid) {
-              newNotifications.push({
-                id: `${item.id}-leader-${Date.now()}`,
-                type: 'leader_change',
-                itemTitle: item.title,
-                bidderName: topBid.bidder_name,
-                bidAmount: topBid.amount,
-                alias: topBid.user_aliases?.alias,
-                color: topBid.user_aliases?.color,
-                animal: topBid.user_aliases?.animal
-              });
-            }
-          }
-        });
-
-        // Add new notifications
-        if (newNotifications.length > 0) {
-          setNotifications(prev => [...prev, ...newNotifications]);
-        }
-
-        // Update positions
-        const newPositions = {};
-        itemsWithBidCounts.forEach((item, index) => {
-          newPositions[item.id] = index;
-        });
-        prevPositionsRef.current = newPositions;
-        prevBidCountsRef.current = { ...newBidCounts };
-
         setItems(openItems);
         setSortedItems(itemsWithBidCounts);
         setTopBids(newTopBids);
@@ -352,88 +286,47 @@ export default function LeaderboardPage() {
     };
   }, [checkingEnrollment, loadLeaderboard]);
 
-  // Update ref when topBids changes (for leader change detection)
-  useEffect(() => {
-    prevItemsStateRef.current = { ...topBids };
-  }, [topBids]);
-
-  // Calculate hot items, bidding wars, position changes, heat, lastBidSec
-  const itemStates = useMemo(() => {
+  // Compact "What's happening" buckets: hot, wars, most bids, top $. No long list.
+  const rankedSummary = useMemo(() => {
     const now = Date.now();
-    const states = {};
-    const prevPositions = prevPositionsRef.current;
+    const HOT_MS = 30000;
+    const WAR_MS = 60000;
+    const CAP = 4;
 
-    sortedItems.forEach((item, index) => {
-      // Re-apply 60s window at render time so wars expire without waiting for next fetch
+    const withBids = sortedItems.filter((item) => topBids[item.id]);
+    if (withBids.length === 0) return { hotItems: [], warItems: [], topByBidCount: [], topByDollar: [] };
+
+    const withFlags = withBids.map((item) => {
       const itemRecentBids = (recentBids[item.id] || []).filter(
-        (b) => now - new Date(b.created_at).getTime() < 60000
+        (b) => now - new Date(b.created_at).getTime() < WAR_MS
       );
-
-      // Hot: bids within last 30 seconds
-      const hotBids = itemRecentBids.filter(bid => {
-        const bidTime = new Date(bid.created_at).getTime();
-        return now - bidTime < 30000; // 30 seconds
-      });
-      const isHot = hotBids.length > 0;
-
-      // Bidding war: 2+ different bidders in last 60 seconds
+      const hotBids = itemRecentBids.filter(
+        (b) => now - new Date(b.created_at).getTime() < HOT_MS
+      );
       const uniqueBidders = new Set(
-        itemRecentBids.map(bid => bid.alias_id || bid.bidder_name)
+        itemRecentBids.map((b) => b.alias_id ?? b.bidder_name)
       );
-      const hasBiddingWar = uniqueBidders.size >= 2;
-
-      // Leader changed: compare with previous state (from ref)
-      const currentLeaderId = topBids[item.id]?.alias_id || topBids[item.id]?.bidder_name;
-      const prevLeaderId = prevItemsStateRef.current[item.id]?.alias_id || prevItemsStateRef.current[item.id]?.bidder_name;
-      const leaderChanged = currentLeaderId && currentLeaderId !== prevLeaderId && prevLeaderId !== null && prevLeaderId !== undefined;
-
-      // Position change detection
-      const prevIndex = prevPositions[item.id];
-      const positionChanged = prevIndex !== undefined && prevIndex !== index;
-      const movedUp = positionChanged && prevIndex > index;
-
-      // lastBidSec: seconds since most recent bid
-      const lastBidAt = itemRecentBids.length > 0
-        ? itemRecentBids.reduce((latest, b) => {
-          const t = new Date(b.created_at).getTime();
-          return t > latest ? t : latest;
-        }, 0)
-        : null;
-      const lastBidSec = lastBidAt != null ? (now - lastBidAt) / 1000 : null;
-
-      // heat: bid velocity + recency (0..1)
-      const bidVelocity = clamp(itemRecentBids.length / 6, 0, 1);
-      const recencyBoost = lastBidSec != null ? clamp(1 - lastBidSec / 60, 0, 1) : 0;
-      const heat = bidVelocity * 0.65 + recencyBoost * 0.35;
-
-      states[item.id] = {
-        isHot,
-        hasBiddingWar,
-        leaderChanged,
-        positionChanged,
-        movedUp,
-        currentPosition: index,
-        previousPosition: prevIndex,
-        lastBidSec,
-        heat
+      return {
+        item,
+        topBid: topBids[item.id],
+        secondBid: secondTopBids[item.id] ?? null,
+        isHot: hotBids.length > 0,
+        hasBiddingWar: uniqueBidders.size >= 2,
+        bidCount: bidCounts[item.id] || 0
       };
     });
 
-    return states;
-  }, [sortedItems, topBids, recentBids]);
+    const hotItems = withFlags.filter((x) => x.isHot).slice(0, CAP);
+    const warItems = withFlags.filter((x) => x.hasBiddingWar).slice(0, CAP);
+    const topByBidCount = [...withFlags]
+      .sort((a, b) => b.bidCount - a.bidCount || (a.item.title || '').localeCompare(b.item.title || ''))
+      .slice(0, 3);
+    const topByDollar = [...withFlags]
+      .sort((a, b) => (b.topBid?.amount ?? 0) - (a.topBid?.amount ?? 0) || (a.item.title || '').localeCompare(b.item.title || ''))
+      .slice(0, 3);
 
-  // Ranked summary: hot, wars, topByBids (fallback when no hot/war)
-  const rankedSummary = useMemo(() => {
-    if (sortedItems.length === 0) return null;
-    const hotItems = sortedItems.filter((item) => itemStates[item.id]?.isHot);
-    const warItems = sortedItems.filter((item) => itemStates[item.id]?.hasBiddingWar);
-    const topByBids = [...sortedItems]
-      .sort((a, b) => (bidCounts[b.id] || 0) - (bidCounts[a.id] || 0))
-      .filter((item) => (bidCounts[item.id] || 0) > 0)
-      .slice(0, 8);
-    if (hotItems.length === 0 && warItems.length === 0 && topByBids.length === 0) return null;
-    return { hotItems, warItems, topByBids };
-  }, [sortedItems, itemStates, bidCounts, topBids]);
+    return { hotItems, warItems, topByBidCount, topByDollar };
+  }, [sortedItems, topBids, secondTopBids, recentBids, bidCounts]);
 
   if (checkingEnrollment || loading) {
     return (
@@ -448,78 +341,121 @@ export default function LeaderboardPage() {
     );
   }
 
-  // Notification handler
-  const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
   return (
-    <>
-      {/* Notifications - stack from top */}
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md">
-        {notifications.map((notification) => (
-          <BidNotification
-            key={notification.id}
-            notification={notification}
-            onClose={() => removeNotification(notification.id)}
-          />
-        ))}
-      </div>
-
-      {/* Single broadcast-style layout: projector-first, responsive */}
-      <main className='w-full min-h-screen px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 bg-gray-50'>
-        {/* Header: title, subtitle, privacy, category, countdown, ticker */}
-        <section className='mb-2 sm:mb-3'>
-          <div className='bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden'>
-            <div className='px-3 py-2.5 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-center'>
-              <h1 className='text-lg sm:text-2xl lg:text-3xl font-bold mb-0.5' style={{ color: 'var(--primary-500)' }}>
-                🏆 Live Leaderboard
-              </h1>
-            </div>
+    <main className='w-full min-h-screen px-2 py-1.5 sm:px-4 sm:py-2 lg:px-6 lg:py-3 bg-gray-50'>
+      <section className='mb-1.5'>
+        <div className='bg-white rounded-lg shadow border border-gray-200 overflow-hidden'>
+          <div className='px-2 py-1.5 sm:px-3 sm:py-2 text-center'>
+            <h1 className='text-base sm:text-xl font-bold' style={{ color: 'var(--primary-500)' }}>
+              🏆 Live Leaderboard
+            </h1>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <GoalMeter />
+      <GoalMeter />
 
-        {items.length === 0 ? (
-          <div className='bg-white rounded-lg shadow-md border border-gray-200'>
-            <div className='px-4 py-8 text-center'><p className='text-sm sm:text-base text-gray-600'>No open items available.</p></div>
+      {items.length === 0 ? (
+        <div className='bg-white rounded-lg shadow-md border border-gray-200'>
+          <div className='px-4 py-8 text-center'>
+            <p className='text-sm sm:text-base text-gray-600'>No open items available.</p>
           </div>
-        ) : (
-          <div className='space-y-3 sm:space-y-4'>
-            {/* 3-panel summary when All Categories and rankedSummary */}
-            {rankedSummary && (
-              <div className='bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden'>
-                <h2 className='px-3 py-2 sm:px-4 sm:py-2.5 text-sm font-bold border-b border-gray-200' style={{ color: 'var(--primary-500)' }}>
-                  What&apos;s happening
-                </h2>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 p-3 sm:p-4'>
-                  <LeaderboardSummaryPanel
-                    title="Hot right now"
-                    icon="🔥"
-                    iconPulse={!reducedMotion}
-                    titleClassName="text-red-600"
-                    items={rankedSummary.hotItems.length > 0 ? rankedSummary.hotItems : rankedSummary.topByBids.slice(0, 4)}
-                    topBids={topBids}
-                  />
-                  <LeaderboardSummaryPanel
-                    title="Bidder wars"
-                    icon="⚔️"
-                    titleClassName="text-amber-700"
-                    variant="war"
-                    items={rankedSummary.warItems.length > 0 ? rankedSummary.warItems : rankedSummary.topByBids.slice(0, 4)}
-                    topBids={topBids}
-                    secondTopBids={secondTopBids}
-                    recentBids={recentBids}
-                    reducedMotion={!!reducedMotion}
-                  />
-                </div>
+        </div>
+      ) : (
+        <section className='bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden'>
+          <div className='px-2 py-1.5 border-b border-gray-100'>
+            <h2 className='text-xs font-semibold text-gray-700'>What&apos;s happening</h2>
+          </div>
+          <div className='px-2 py-1.5 space-y-3'>
+            {rankedSummary.hotItems.length > 0 && (
+              <div>
+                <h3 className='text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1'>Hot right now</h3>
+                <ul className='space-y-1'>
+                  {rankedSummary.hotItems.map(({ item, topBid, secondBid, hasBiddingWar }) => (
+                    <LeaderboardItemRow
+                      key={item.id}
+                      item={item}
+                      topBid={topBid}
+                      secondBid={secondBid}
+                      isHot={true}
+                      hasWar={hasBiddingWar}
+                      reducedMotion={!!reducedMotion}
+                      compact
+                    />
+                  ))}
+                </ul>
+              </div>
+            )}
+            {rankedSummary.warItems.length > 0 && (
+              <div>
+                <h3 className='text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1'>Bidder wars</h3>
+                <ul className='space-y-1'>
+                  {rankedSummary.warItems.map(({ item, topBid, secondBid }) => (
+                    <LeaderboardItemRow
+                      key={item.id}
+                      item={item}
+                      topBid={topBid}
+                      secondBid={secondBid}
+                      isHot={false}
+                      hasWar={true}
+                      reducedMotion={!!reducedMotion}
+                      compact
+                    />
+                  ))}
+                </ul>
+              </div>
+            )}
+            {rankedSummary.topByBidCount.length > 0 && (
+              <div>
+                <h3 className='text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1'>Most Popular</h3>
+                <ul className='space-y-1'>
+                  {rankedSummary.topByBidCount.map(({ item, topBid, secondBid, bidCount }) => (
+                    <LeaderboardItemRow
+                      key={item.id}
+                      item={item}
+                      topBid={topBid}
+                      secondBid={secondBid}
+                      isHot={false}
+                      hasWar={false}
+                      reducedMotion={!!reducedMotion}
+                      badge={bidCount > 0 ? `${bidCount} bid${bidCount !== 1 ? 's' : ''}` : null}
+                      compact
+                    />
+                  ))}
+                </ul>
+              </div>
+            )}
+            {rankedSummary.topByDollar.length > 0 && (
+              <div>
+                <h3 className='text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1'>Top earners</h3>
+                <ul className='space-y-1'>
+                  {rankedSummary.topByDollar.map(({ item, topBid, secondBid }) => (
+                    <LeaderboardItemRow
+                      key={item.id}
+                      item={item}
+                      topBid={topBid}
+                      secondBid={secondBid}
+                      isHot={false}
+                      hasWar={false}
+                      reducedMotion={!!reducedMotion}
+                      compact
+                    />
+                  ))}
+                </ul>
+              </div>
+            )}
+            {rankedSummary.hotItems.length === 0 &&
+             rankedSummary.warItems.length === 0 &&
+             rankedSummary.topByBidCount.length === 0 &&
+             rankedSummary.topByDollar.length === 0 && (
+              <div className='py-2 text-center'>
+                <p className='text-xs text-gray-600'>No bids yet.</p>
               </div>
             )}
           </div>
-        )}
-      </main>
-    </>
+        </section>
+      )}
+    </main>
   );
 }
 
