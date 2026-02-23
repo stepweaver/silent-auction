@@ -130,31 +130,22 @@ export default function SiteFooter() {
 
   const isHidden = isKeyboardOpen || isScrollHidden;
 
-  // Fixed-height slot so showing/hiding the footer never changes layout (avoids
-  // jumpiness when scrolling, especially on filtered catalog with less content).
-  const FOOTER_HEIGHT = '6rem';
-
   return (
     <footer
-      className="no-print relative mt-auto shrink-0 overflow-hidden"
-      style={{ height: FOOTER_HEIGHT, minHeight: FOOTER_HEIGHT }}
+      className={`no-print mt-auto border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 transition-[max-height,opacity,padding,border-color] duration-300 ease-in-out overflow-hidden ${
+        isHidden
+          ? 'opacity-0 pointer-events-none border-t-transparent'
+          : 'opacity-100'
+      }`}
+      style={{
+        maxHeight: isHidden ? 0 : '6rem',
+        minHeight: isHidden ? 0 : undefined,
+        paddingTop: isHidden ? 0 : undefined,
+        paddingBottom: isHidden ? 0 : undefined,
+      }}
       aria-hidden={isHidden}
     >
-      <div
-        className={`absolute inset-x-0 top-0 border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 transition-[transform,opacity,border-color] duration-300 ease-in-out ${
-          isHidden
-            ? 'pointer-events-none border-t-transparent'
-            : ''
-        }`}
-        style={{
-          height: FOOTER_HEIGHT,
-          minHeight: FOOTER_HEIGHT,
-          transform: isHidden ? 'translateY(100%)' : 'translateY(0)',
-          opacity: isHidden ? 0 : 1,
-          transition: 'transform 0.3s ease-in-out, opacity 0.25s ease-in-out',
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-3 py-2 sm:px-4 sm:py-3 min-h-0 h-full flex items-center">
+      <div className="max-w-7xl mx-auto px-3 py-2 sm:px-4 sm:py-3 min-h-0">
         <nav
           className="flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600"
           aria-label="Footer"
@@ -185,7 +176,6 @@ export default function SiteFooter() {
             </a>
           </div>
         </nav>
-        </div>
       </div>
     </footer>
   );

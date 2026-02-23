@@ -363,9 +363,6 @@ export default function LeaderboardPage() {
         </div>
       ) : (
         <section className='bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden'>
-          <div className='px-2 py-1.5 border-b border-gray-100'>
-            <h2 className='text-xs font-semibold text-gray-700'>What&apos;s happening</h2>
-          </div>
           <div className='px-2 py-1.5 space-y-3'>
             {rankedSummary.hotItems.length > 0 && (
               <div>
