@@ -136,12 +136,12 @@ export default function SiteFooter() {
 
   return (
     <footer
-      className="no-print mt-auto shrink-0 overflow-hidden"
+      className="no-print relative mt-auto shrink-0 overflow-hidden"
       style={{ height: FOOTER_HEIGHT, minHeight: FOOTER_HEIGHT }}
       aria-hidden={isHidden}
     >
       <div
-        className={`border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 transition-[transform,opacity,border-color] duration-300 ease-in-out ${
+        className={`absolute inset-x-0 top-0 border-t border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 transition-[transform,opacity,border-color] duration-300 ease-in-out ${
           isHidden
             ? 'pointer-events-none border-t-transparent'
             : ''
