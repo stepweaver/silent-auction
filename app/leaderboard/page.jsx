@@ -1,153 +1,34 @@
 'use client';
 
 import { supabaseBrowser } from '@/lib/supabaseClient';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { formatDollar } from '@/lib/money';
-import AliasAvatar from '@/components/AliasAvatar';
+import { withRetry, clamp, secondsAgo, formatAgoShort } from '@/lib/utils';
 import BidNotification from '@/components/BidNotification';
 
-// --- Helpers ---
-function clamp(n, min, max) {
-  return Math.min(Math.max(n, min), max);
-}
-function secondsAgo(iso) {
-  if (!iso) return null;
-  const t = new Date(iso).getTime();
-  if (isNaN(t)) return null;
-  return (Date.now() - t) / 1000;
-}
-function formatAgoShort(sec) {
-  if (sec == null || sec < 0) return '';
-  if (sec < 5) return 'just now';
-  if (sec < 60) return `${Math.round(sec)}s`;
-  if (sec < 3600) return `${Math.round(sec / 60)}m`;
-  return `${Math.round(sec / 3600)}h`;
-}
-function useCountdown(targetIso) {
-  const [msLeft, setMsLeft] = useState(null);
-  useEffect(() => {
-    if (!targetIso) {
-      setMsLeft(null);
-      return;
-    }
-    const target = new Date(targetIso).getTime();
-    const tick = () => {
-      const now = Date.now();
-      setMsLeft(target > now ? target - now : 0);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [targetIso]);
-  return msLeft;
-}
-function HeatBar({ heat, label, reducedMotion }) {
-  const pct = Math.round((heat ?? 0) * 100);
-  return (
-    <div className="w-full">
-      {label && <span className="text-xs text-gray-500">{label}</span>}
-      <motion.div
-        className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
-        initial={false}
-      >
-        <motion.div
-          className="h-full rounded-full"
-          style={{
-            background: 'linear-gradient(90deg, #22c55e, #eab308, #ef4444)',
-            width: `${pct}%`
-          }}
-          transition={{ duration: reducedMotion ? 0 : 0.3 }}
-          initial={false}
-          animate={{ width: `${pct}%` }}
-        />
-      </motion.div>
-    </div>
-  );
-}
-function Ticker({ items }) {
-  if (!items || items.length === 0) return <div className="h-8 w-full overflow-hidden" aria-hidden />;
-  const duplicated = [...items, ...items];
-  return (
-    <div className="relative h-8 w-full overflow-hidden border-t border-b border-gray-200 bg-gray-50/80">
-      <div className="ticker-track flex h-full items-center gap-8 whitespace-nowrap">
-        {duplicated.map((x, i) => (
-          <span key={i} className="inline-flex items-center gap-2 text-sm text-gray-700">
-            {x.emoji && <span>{x.emoji}</span>}
-            {x.text}
-          </span>
-        ))}
-      </div>
-      <style jsx>{`
-        .ticker-track {
-          animation: ticker 22s linear infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .ticker-track {
-            animation: none;
-          }
-        }
-        @keyframes ticker {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
-    </div>
-  );
-}
-function Badge({ children, tone }) {
-  const classes = {
-    hot: 'bg-red-100 text-red-800',
-    war: 'bg-amber-100 text-amber-800',
-    move: 'bg-sky-100 text-sky-800',
-    new: 'bg-emerald-100 text-emerald-800'
-  };
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${classes[tone] || classes.new}`}>
-      {children}
-    </span>
-  );
-}
-function CardGlow({ active }) {
-  if (!active) return null;
-  return (
-    <AnimatePresence>
-      <motion.div
-        className="pointer-events-none absolute inset-0 rounded-xl opacity-40"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
-        exit={{ opacity: 0 }}
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(239,68,68,0.3), transparent 70%), radial-gradient(ellipse at 30% 30%, rgba(234,179,8,0.2), transparent 50%)'
-        }}
-      />
-    </AnimatePresence>
-  );
-}
+import Ticker from '@/components/Ticker';
+import LeaderboardSummaryPanel from '@/components/LeaderboardSummaryPanel';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
-const ALL_CATEGORIES = '__all__';
-const UNCATEGORIZED = 'Other';
+const UNCATEGORIZED = 'Other'; // sort key for items with no category
 
 export default function LeaderboardPage() {
   const router = useRouter();
   const [items, setItems] = useState([]);
-  const [sortedItems, setSortedItems] = useState([]); // Items sorted by bid count
-  const [topBids, setTopBids] = useState({}); // item_id -> top bid data
-  const [bidCounts, setBidCounts] = useState({}); // item_id -> total bid count
-  const [recentBids, setRecentBids] = useState({}); // item_id -> array of recent bids
+  const [sortedItems, setSortedItems] = useState([]);
+  const [topBids, setTopBids] = useState({});
+  const [bidCounts, setBidCounts] = useState({});
+  const [recentBids, setRecentBids] = useState({});
   const [loading, setLoading] = useState(true);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [notifications, setNotifications] = useState([]);
-  const [activeFilter, setActiveFilter] = useState(ALL_CATEGORIES);
   const [deadlineIso, setDeadlineIso] = useState(null);
   const prevItemsStateRef = useRef({}); // Track previous state for change detection
   const prevPositionsRef = useRef({}); // Track previous positions for animation
   const prevBidCountsRef = useRef({}); // Track previous bid counts
   const reducedMotion = useReducedMotion();
-  const s = supabaseBrowser();
 
   // Check enrollment status
   useEffect(() => {
@@ -161,26 +42,8 @@ export default function LeaderboardPage() {
     }
   }, [router]);
 
-  // Retry a promise on 503/network errors (e.g. Supabase overload)
-  async function withRetry(fn, maxAttempts = 3) {
-    let lastErr;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        return await fn();
-      } catch (err) {
-        lastErr = err;
-        const isRetryable = err?.message?.includes('503') || err?.message?.includes('timeout') || err?.message?.includes('fetch');
-        if (attempt < maxAttempts && isRetryable) {
-          await new Promise(r => setTimeout(r, 1000 * attempt));
-        } else {
-          throw err;
-        }
-      }
-    }
-    throw lastErr;
-  }
-
-  async function loadLeaderboard() {
+  const loadLeaderboard = useCallback(async () => {
+    const s = supabaseBrowser();
     try {
       await withRetry(async () => {
       // Get settings to check deadline
@@ -423,13 +286,14 @@ export default function LeaderboardPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     if (checkingEnrollment) return;
 
     loadLeaderboard();
 
+    const s = supabaseBrowser();
     // Set up real-time subscription (debounced so rapid bids don't trigger many reloads)
     let reloadTimer = null;
     const channel = s
@@ -459,7 +323,7 @@ export default function LeaderboardPage() {
       clearInterval(pollInterval);
       if (reloadTimer) clearTimeout(reloadTimer);
     };
-  }, [checkingEnrollment]);
+  }, [checkingEnrollment, loadLeaderboard]);
 
   // Update ref when topBids changes (for leader change detection)
   useEffect(() => {
@@ -528,39 +392,13 @@ export default function LeaderboardPage() {
     return states;
   }, [sortedItems, topBids, recentBids]);
 
-  // Derive unique category list from loaded items
-  const categories = useMemo(() => {
-    const catSet = new Set();
-    items.forEach((item) => {
-      const cat = item.category?.trim();
-      if (cat) catSet.add(cat);
-    });
-    return [...catSet].sort((a, b) => a.localeCompare(b));
-  }, [items]);
-
-  const hasUncategorized = useMemo(
-    () => items.some((item) => !item.category?.trim()),
-    [items]
-  );
-
-  // Filter sorted items by active category
-  const filteredItems = useMemo(() => {
-    if (activeFilter === ALL_CATEGORIES) return sortedItems;
-    return sortedItems.filter((item) => {
-      if (activeFilter === UNCATEGORIZED) {
-        return !item.category?.trim();
-      }
-      return item.category?.trim() === activeFilter;
-    });
-  }, [sortedItems, activeFilter]);
-
-  // Ranked summary for "All" view: hot, wars, movers, most bids, tickerItems
+  // Ranked summary: hot, wars, movers, most bids, tickerItems
   const rankedSummary = useMemo(() => {
-    if (activeFilter !== ALL_CATEGORIES || filteredItems.length === 0) return null;
-    const hotItems = filteredItems.filter((item) => itemStates[item.id]?.isHot);
-    const warItems = filteredItems.filter((item) => itemStates[item.id]?.hasBiddingWar);
-    const movers = filteredItems.filter((item) => itemStates[item.id]?.movedUp).slice(0, 6);
-    const topByBids = [...filteredItems]
+    if (sortedItems.length === 0) return null;
+    const hotItems = sortedItems.filter((item) => itemStates[item.id]?.isHot);
+    const warItems = sortedItems.filter((item) => itemStates[item.id]?.hasBiddingWar);
+    const movers = sortedItems.filter((item) => itemStates[item.id]?.movedUp).slice(0, 6);
+    const topByBids = [...sortedItems]
       .sort((a, b) => (bidCounts[b.id] || 0) - (bidCounts[a.id] || 0))
       .filter((item) => (bidCounts[item.id] || 0) > 0)
       .slice(0, 8);
@@ -584,7 +422,7 @@ export default function LeaderboardPage() {
     }
     if (hotItems.length === 0 && warItems.length === 0 && topByBids.length === 0 && movers.length === 0) return null;
     return { hotItems, warItems, movers, topByBids, tickerItems };
-  }, [activeFilter, filteredItems, itemStates, bidCounts, topBids]);
+  }, [sortedItems, itemStates, bidCounts, topBids]);
 
   if (checkingEnrollment || loading) {
     return (
@@ -608,19 +446,12 @@ export default function LeaderboardPage() {
     <>
       {/* Notifications - stack from top */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md">
-        {notifications.map((notification, index) => (
-          <div
+        {notifications.map((notification) => (
+          <BidNotification
             key={notification.id}
-            style={{
-              transform: `translateY(${index * 0}px)`,
-              zIndex: 50 + notifications.length - index
-            }}
-          >
-            <BidNotification
-              notification={notification}
-              onClose={() => removeNotification(notification.id)}
-            />
-          </div>
+            notification={notification}
+            onClose={() => removeNotification(notification.id)}
+          />
         ))}
       </div>
 
@@ -633,32 +464,6 @@ export default function LeaderboardPage() {
               <h1 className='text-lg sm:text-2xl lg:text-3xl font-bold mb-0.5' style={{ color: 'var(--primary-500)' }}>
                 🏆 Live Leaderboard
               </h1>
-              <p className='text-xs sm:text-sm lg:text-base text-gray-600'>
-                {activeFilter === ALL_CATEGORIES ? 'Current leaders for all auction items' : `Showing ${activeFilter} items`}
-              </p>
-              <div className='mt-1.5 sm:mt-2 flex flex-wrap items-center justify-center gap-2'>
-                {categories.length > 0 && (
-                  <div className='relative inline-block w-48 sm:w-64'>
-                    <select
-                      value={activeFilter}
-                      onChange={(e) => setActiveFilter(e.target.value)}
-                      className='w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 sm:px-4 sm:py-2 pr-10 text-xs sm:text-sm font-semibold text-gray-700 shadow-sm focus:border-transparent focus:outline-none focus:ring-2'
-                      style={{ '--tw-ring-color': 'var(--primary-500)' }}
-                    >
-                      <option value={ALL_CATEGORIES}>All Categories</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                      {hasUncategorized && <option value={UNCATEGORIZED}>{UNCATEGORIZED}</option>}
-                    </select>
-                    <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3'>
-                      <svg className='h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'>
-                        <path fillRule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clipRule='evenodd' />
-                      </svg>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
             <Ticker items={rankedSummary?.tickerItems ?? []} />
           </div>
@@ -668,14 +473,10 @@ export default function LeaderboardPage() {
           <div className='bg-white rounded-lg shadow-md border border-gray-200'>
             <div className='px-4 py-8 text-center'><p className='text-sm sm:text-base text-gray-600'>No open items available.</p></div>
           </div>
-        ) : filteredItems.length === 0 ? (
-          <div className='bg-white rounded-lg shadow-md border border-gray-200'>
-            <div className='px-4 py-8 text-center'><p className='text-sm sm:text-base text-gray-600'>No items in this category.</p></div>
-          </div>
         ) : (
           <div className='space-y-3 sm:space-y-4'>
             {/* 3-panel summary when All Categories and rankedSummary */}
-            {activeFilter === ALL_CATEGORIES && rankedSummary && (
+            {rankedSummary && (
               <motion.div
                 layout={!reducedMotion}
                 transition={{ duration: reducedMotion ? 0 : 0.2 }}
@@ -685,70 +486,30 @@ export default function LeaderboardPage() {
                   What&apos;s happening
                 </h2>
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-4 p-3 sm:p-4'>
-                  <div className='min-w-0'>
-                    <h3 className='text-xs font-semibold text-red-600 mb-1.5 flex items-center gap-1'><span className={reducedMotion ? '' : 'animate-pulse'}>🔥</span> Hot right now</h3>
-                    <ul className='space-y-1.5'>
-                      {(rankedSummary.hotItems.length > 0 ? rankedSummary.hotItems : rankedSummary.topByBids.slice(0, 4)).map((item) => {
-                        const topBid = topBids[item.id];
-                        const aliasName = topBid?.user_aliases?.alias ?? 'Anonymous Bidder';
-                        return (
-                          <li key={item.id} className='rounded-md border border-gray-200 bg-gray-50/60 px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 min-w-0'>
-                            <Link href={`/i/${item.slug}`} className='font-medium hover:underline text-sm sm:text-base flex-1 min-w-0 leading-snug' style={{ color: 'var(--primary-600)' }}>{item.title}</Link>
-                            <span className='flex items-center gap-1.5 flex-shrink-0 text-xs'>
-                              {topBid?.user_aliases ? <AliasAvatar alias={topBid.user_aliases.alias} color={topBid.user_aliases.color} animal={topBid.user_aliases.animal} size="sm" /> : <div className='w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium flex-shrink-0'>A</div>}
-                              <span className='text-gray-700 whitespace-nowrap'>{aliasName}</span>
-                              <span className='text-gray-800 font-semibold'>{topBid ? formatDollar(topBid.amount) : '—'}</span>
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                  <div className='min-w-0'>
-                    <h3 className='text-xs font-semibold text-amber-700 mb-1.5'>⚔️ Bidder wars</h3>
-                    <ul className='space-y-1.5'>
-                      {(rankedSummary.warItems.length > 0 ? rankedSummary.warItems : rankedSummary.topByBids.slice(0, 4)).map((item) => {
-                        const topBid = topBids[item.id];
-                        const aliasName = topBid?.user_aliases?.alias ?? 'Anonymous Bidder';
-                        return (
-                          <li key={item.id} className='rounded-md border border-gray-200 bg-gray-50/60 px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 min-w-0'>
-                            <Link href={`/i/${item.slug}`} className='font-medium hover:underline text-sm sm:text-base flex-1 min-w-0 leading-snug' style={{ color: 'var(--primary-600)' }}>{item.title}</Link>
-                            <span className='flex items-center gap-1.5 flex-shrink-0 text-xs'>
-                              {topBid?.user_aliases ? <AliasAvatar alias={topBid.user_aliases.alias} color={topBid.user_aliases.color} animal={topBid.user_aliases.animal} size="sm" /> : <div className='w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium flex-shrink-0'>A</div>}
-                              <span className='text-gray-700 whitespace-nowrap'>{aliasName}</span>
-                              <span className='text-gray-800 font-semibold'>{topBid ? formatDollar(topBid.amount) : '—'}</span>
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                  <div className='min-w-0'>
-                    <h3 className='text-xs font-semibold text-sky-700 mb-1.5'>📈 Movers</h3>
-                    <ul className='space-y-1.5'>
-                      {(rankedSummary.movers?.length > 0 ? rankedSummary.movers : rankedSummary.topByBids.slice(0, 4)).map((item) => {
-                        const topBid = topBids[item.id];
-                        const aliasName = topBid?.user_aliases?.alias ?? 'Anonymous Bidder';
-                        return (
-                          <li key={item.id} className='rounded-md border border-gray-200 bg-gray-50/60 px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 min-w-0'>
-                            <Link href={`/i/${item.slug}`} className='font-medium hover:underline text-sm sm:text-base flex-1 min-w-0 leading-snug' style={{ color: 'var(--primary-600)' }}>{item.title}</Link>
-                            <span className='flex items-center gap-1.5 flex-shrink-0 text-xs'>
-                              {topBid?.user_aliases ? <AliasAvatar alias={topBid.user_aliases.alias} color={topBid.user_aliases.color} animal={topBid.user_aliases.animal} size="sm" /> : <div className='w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium flex-shrink-0'>A</div>}
-                              <span className='text-gray-700 whitespace-nowrap'>{aliasName}</span>
-                              <span className='text-gray-800 font-semibold'>{topBid ? formatDollar(topBid.amount) : '—'}</span>
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
+                  <LeaderboardSummaryPanel
+                    title="Hot right now"
+                    icon="🔥"
+                    iconPulse={!reducedMotion}
+                    titleClassName="text-red-600"
+                    items={rankedSummary.hotItems.length > 0 ? rankedSummary.hotItems : rankedSummary.topByBids.slice(0, 4)}
+                    topBids={topBids}
+                  />
+                  <LeaderboardSummaryPanel
+                    title="Bidder wars"
+                    icon="⚔️"
+                    titleClassName="text-amber-700"
+                    items={rankedSummary.warItems.length > 0 ? rankedSummary.warItems : rankedSummary.topByBids.slice(0, 4)}
+                    topBids={topBids}
+                  />
+                  <LeaderboardSummaryPanel
+                    title="Movers"
+                    icon="📈"
+                    titleClassName="text-sky-700"
+                    items={rankedSummary.movers?.length > 0 ? rankedSummary.movers : rankedSummary.topByBids.slice(0, 4)}
+                    topBids={topBids}
+                  />
                 </div>
               </motion.div>
-            )}
-
-            {/* When a category is selected, prompt to view highlights (no full item list) */}
-            {activeFilter !== ALL_CATEGORIES && filteredItems.length > 0 && (
-              <p className='text-center text-xs sm:text-sm text-gray-500 py-4'>Select All Categories to see activity highlights.</p>
             )}
           </div>
         )}
