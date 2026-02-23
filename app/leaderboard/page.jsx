@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { formatDollar } from '@/lib/money';
 import { withRetry, clamp, secondsAgo, formatAgoShort } from '@/lib/utils';
 import BidNotification from '@/components/BidNotification';
-
+import GoalMeter from '@/components/GoalMeter';
 import Ticker from '@/components/Ticker';
 import LeaderboardSummaryPanel from '@/components/LeaderboardSummaryPanel';
 
@@ -468,6 +468,8 @@ export default function LeaderboardPage() {
             <Ticker items={rankedSummary?.tickerItems ?? []} />
           </div>
         </section>
+
+        <GoalMeter />
 
         {items.length === 0 ? (
           <div className='bg-white rounded-lg shadow-md border border-gray-200'>
