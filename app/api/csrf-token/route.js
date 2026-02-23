@@ -1,5 +1,7 @@
 import { generateSignedCSRFToken } from '@/lib/csrf';
 import { headers } from 'next/headers';
+import { jsonError } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
 /**
  * GET - Generate a CSRF token for the client
@@ -21,11 +23,8 @@ export async function GET() {
       // Token expires in 1 hour (matching verifySignedCSRFToken default)
     });
   } catch (error) {
-    // Log error server-side only, don't expose details to client
-    if (process.env.NODE_ENV === 'development') {
-      console.error('CSRF token generation error:', error);
-    }
-    return new Response('Internal server error', { status: 500 });
+    logError('CSRF token generation error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 

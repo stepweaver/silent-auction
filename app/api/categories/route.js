@@ -1,28 +1,26 @@
 import { supabaseServer } from '@/lib/serverSupabase';
+import { jsonError } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
-// GET /api/categories - Fetch all unique categories from items
 export async function GET() {
   try {
     const s = supabaseServer();
-    
-    // Get distinct categories from items table
+
     const { data, error } = await s
       .from('items')
       .select('category')
       .not('category', 'is', null)
       .not('category', 'eq', '');
-    
+
     if (error) {
-      console.error('Error fetching categories:', error);
-      return new Response('Failed to fetch categories', { status: 500 });
+      logError('Error fetching categories', error);
+      return jsonError('Failed to fetch categories', 500);
     }
-    
-    // Extract unique categories
+
     const uniqueCategories = [...new Set(data.map(item => item.category).filter(Boolean))];
-    
     return Response.json({ categories: uniqueCategories });
   } catch (error) {
-    console.error('Categories error:', error);
-    return new Response('Internal server error', { status: 500 });
+    logError('Categories error', error);
+    return jsonError('Internal server error', 500);
   }
 }

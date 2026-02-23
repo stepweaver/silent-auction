@@ -2,8 +2,9 @@ import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { checkBasicAuth } from '@/lib/auth';
 import { ItemSchema } from '@/lib/validation';
-
 import { vendorAdminOwnsItem } from '@/lib/vendorAuth';
+import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
 export async function PATCH(req, { params }) {
   const headersList = await headers();
@@ -11,10 +12,7 @@ export async function PATCH(req, { params }) {
   const isSuperAdmin = checkBasicAuth(headersList);
 
   if (!isSuperAdmin && !vendorAdminId) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
@@ -44,7 +42,7 @@ export async function PATCH(req, { params }) {
     const parsed = partialSchema.safeParse(updateData);
 
     if (!parsed.success) {
-      return new Response('Invalid update data', { status: 400 });
+      return jsonError('Invalid update data', 400);
     }
 
     const s = supabaseServer();
@@ -52,7 +50,7 @@ export async function PATCH(req, { params }) {
     if (vendorAdminId && !isSuperAdmin) {
       const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
       if (!ownsItem) {
-        return new Response('Unauthorized: You can only edit your own items', { status: 403 });
+        return jsonError('Unauthorized: You can only edit your own items', 403);
       }
     }
 
@@ -65,7 +63,7 @@ export async function PATCH(req, { params }) {
         .maybeSingle();
 
       if (existing) {
-        return new Response('Slug already exists', { status: 400 });
+        return jsonError('Slug already exists', 400);
       }
     }
 
@@ -84,7 +82,7 @@ export async function PATCH(req, { params }) {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (retryResult.error) {
         error = retryResult.error;
       } else {
@@ -94,22 +92,18 @@ export async function PATCH(req, { params }) {
     }
 
     if (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Update error:', error);
-      }
-      return new Response('Failed to update item', { status: 500 });
+      logError('Admin update item error', error);
+      return jsonError('Failed to update item', 500);
     }
 
     if (!item) {
-      return new Response('Item not found', { status: 404 });
+      return jsonError('Item not found', 404);
     }
 
     return Response.json({ ok: true, item });
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Update item error:', error);
-    }
-    return new Response('Internal server error', { status: 500 });
+    logError('Update item error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 
@@ -119,10 +113,7 @@ export async function DELETE(_req, { params }) {
   const isSuperAdmin = checkBasicAuth(headersList);
 
   if (!isSuperAdmin && !vendorAdminId) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
@@ -132,7 +123,7 @@ export async function DELETE(_req, { params }) {
     if (vendorAdminId && !isSuperAdmin) {
       const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
       if (!ownsItem) {
-        return new Response('Unauthorized: You can only delete your own items', { status: 403 });
+        return jsonError('Unauthorized: You can only delete your own items', 403);
       }
     }
 
@@ -143,14 +134,12 @@ export async function DELETE(_req, { params }) {
       .maybeSingle();
 
     if (fetchError) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Fetch item before delete error:', fetchError);
-      }
-      return new Response('Failed to delete item', { status: 500 });
+      logError('Fetch item before delete error', fetchError);
+      return jsonError('Failed to delete item', 500);
     }
 
     if (!existingItem) {
-      return new Response('Item not found', { status: 404 });
+      return jsonError('Item not found', 404);
     }
 
     const { data: existingBid } = await s
@@ -161,7 +150,7 @@ export async function DELETE(_req, { params }) {
       .maybeSingle();
 
     if (existingBid) {
-      return new Response('This item already has bids and cannot be deleted.', { status: 400 });
+      return jsonError('This item already has bids and cannot be deleted.', 400);
     }
 
     const { error: deleteError } = await s
@@ -170,18 +159,14 @@ export async function DELETE(_req, { params }) {
       .eq('id', id);
 
     if (deleteError) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Delete item error:', deleteError);
-      }
-      return new Response('Failed to delete item', { status: 500 });
+      logError('Delete item error', deleteError);
+      return jsonError('Failed to delete item', 500);
     }
 
     return Response.json({ ok: true });
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Delete item error:', error);
-    }
-    return new Response('Internal server error', { status: 500 });
+    logError('Delete item error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 

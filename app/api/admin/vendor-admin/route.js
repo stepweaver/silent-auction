@@ -3,6 +3,8 @@ import { supabaseServer } from '@/lib/serverSupabase';
 import { checkBasicAuth } from '@/lib/auth';
 import { generateEnrollmentToken } from '@/lib/enrollmentToken';
 import { sendVendorAdminEnrollmentEmail } from '@/lib/notifications';
+import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 import { z } from 'zod';
 
 const VendorAdminSchema = z.object({
@@ -10,14 +12,10 @@ const VendorAdminSchema = z.object({
   name: z.string().min(1),
 });
 
-// POST - Create new vendor admin (super admin only)
 export async function POST(req) {
   const headersList = await headers();
   if (!checkBasicAuth(headersList)) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
@@ -38,7 +36,7 @@ export async function POST(req) {
     const parsed = VendorAdminSchema.safeParse(body);
 
     if (!parsed.success) {
-      return new Response('Invalid vendor admin data', { status: 400 });
+      return jsonError('Invalid vendor admin data', 400);
     }
 
     const { email, name } = parsed.data;
@@ -52,7 +50,7 @@ export async function POST(req) {
       .maybeSingle();
 
     if (existing) {
-      return new Response('Donor with this email already exists', { status: 400 });
+      return jsonError('Donor with this email already exists', 400);
     }
 
     // Generate a simple password (in production, you'd want to email this or use a secure method)
@@ -69,29 +67,11 @@ export async function POST(req) {
       .single();
 
     if (error) {
-      // Log error server-side only, don't expose details to client
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Insert error:', error);
-      }
-      // Check if table doesn't exist
+      logError('Vendor admin insert error', error);
       if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        return new Response(
-          JSON.stringify({
-            error: 'Database table not found. Please create the vendor_admin_users table.'
-          }),
-          {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
+        return jsonError('Database table not found. Please create the vendor_admin_users table.', 500);
       }
-      return new Response(
-        JSON.stringify({ error: 'Failed to create donor' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+      return jsonError('Failed to create donor', 500);
     }
 
     // Generate enrollment token and link
@@ -182,10 +162,7 @@ export async function POST(req) {
         contactEmail,
       });
     } catch (emailError) {
-      // Log error server-side only, don't expose details to client
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to send enrollment email:', emailError);
-      }
+      logError('Failed to send enrollment email', emailError);
       // Continue even if email fails - we'll still return success
     }
 
@@ -197,28 +174,15 @@ export async function POST(req) {
       email_sent: true,
     });
   } catch (error) {
-    // Log error server-side only, don't expose details to client
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Create vendor admin error:', error);
-    }
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    logError('Create vendor admin error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 
-// GET - List all vendor admins (super admin only)
 export async function GET() {
   const headersList = await headers();
   if (!checkBasicAuth(headersList)) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
@@ -229,32 +193,13 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      // Log error server-side only, don't expose details to client
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Query error:', error);
-      }
-      // Check if table doesn't exist
+      logError('Vendor admins query error', error);
       if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        return new Response(
-          JSON.stringify({
-            error: 'Database table not found. Please create the vendor_admin_users table.'
-          }),
-          {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
+        return jsonError('Database table not found. Please create the vendor_admin_users table.', 500);
       }
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch vendor admins' }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+      return jsonError('Failed to fetch vendor admins', 500);
     }
 
-    // Fetch items for each vendor admin
     const vendorAdminsWithItems = await Promise.all(
       (vendorAdmins || []).map(async (admin) => {
         const { data: items, error: itemsError } = await s
@@ -263,9 +208,7 @@ export async function GET() {
           .eq('created_by', admin.id)
           .order('title', { ascending: true });
 
-        if (itemsError && process.env.NODE_ENV === 'development') {
-          console.error('Error fetching items for vendor admin:', itemsError);
-        }
+        if (itemsError) logError('Error fetching items for vendor admin', itemsError);
 
         return {
           ...admin,
@@ -277,17 +220,8 @@ export async function GET() {
 
     return Response.json({ ok: true, vendor_admins: vendorAdminsWithItems });
   } catch (error) {
-    // Log error server-side only, don't expose details to client
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Get vendor admins error:', error);
-    }
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    logError('Get vendor admins error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 

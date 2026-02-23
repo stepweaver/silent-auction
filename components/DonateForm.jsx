@@ -112,24 +112,16 @@ export default function DonateForm({ deadline }) {
       }
       donorName = donorName || userAlias?.alias || 'Anonymous';
 
-      // Get CSRF token
-      let csrfToken = '';
-      try {
-        const csrfRes = await fetch('/api/csrf-token');
-        if (csrfRes.ok) {
-          const csrfData = await csrfRes.json();
-          csrfToken = csrfData.token || '';
-        }
-      } catch (e) {
-        // Continue without CSRF token
+      const { getJsonHeadersWithCsrf } = await import('@/lib/clientCsrf');
+      const headers = await getJsonHeadersWithCsrf();
+      if (!headers['x-csrf-token']) {
+        setMsg('Security token missing. Please refresh the page and try again.');
+        return;
       }
 
       const res = await fetch('/api/donate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
-        },
+        headers,
         body: JSON.stringify({
           donor_name: donorName,
           email,
@@ -144,8 +136,10 @@ export default function DonateForm({ deadline }) {
         setAmount('');
         setMessage('');
       } else {
-        const text = await res.text();
-        setMsg(text || 'Failed to submit donation pledge.');
+        const contentType = res.headers.get('content-type');
+        const isJson = contentType && contentType.includes('application/json');
+        const errMsg = isJson ? (await res.json()).error : await res.text();
+        setMsg(errMsg || 'Failed to submit donation pledge.');
       }
     } catch (error) {
       setMsg('Error submitting donation. Please try again.');

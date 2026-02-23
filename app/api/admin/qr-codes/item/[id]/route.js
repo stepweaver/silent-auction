@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { checkBasicAuth } from '@/lib/auth';
+import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
 const getSiteUrl = () => {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
@@ -47,10 +49,7 @@ export async function GET(request, context = {}) {
   const headersList = await headers();
 
   if (!checkBasicAuth(headersList)) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   let { id } = params || {};
@@ -66,7 +65,7 @@ export async function GET(request, context = {}) {
   }
 
   if (!id) {
-    return new Response('Missing item id', { status: 400 });
+    return jsonError('Missing item id', 400);
   }
 
   try {
@@ -78,12 +77,12 @@ export async function GET(request, context = {}) {
       .maybeSingle();
 
     if (error) {
-      console.error('Failed to load item for QR export:', error);
-      return new Response('Failed to load item', { status: 500 });
+      logError('Failed to load item for QR export', error);
+      return jsonError('Failed to load item', 500);
     }
 
     if (!item) {
-      return new Response('Item not found', { status: 404 });
+      return jsonError('Item not found', 404);
     }
 
     const siteUrl = getSiteUrl();
@@ -154,7 +153,7 @@ export async function GET(request, context = {}) {
       });
       cursorY -= 24;
     } catch (err) {
-      console.error('Failed fetching QR image for item', item?.id, err);
+      logError('Failed fetching QR image for item', { itemId: item?.id, err });
       drawCentered(
         'Error generating QR code for this item.',
         fontBold,
@@ -235,8 +234,8 @@ export async function GET(request, context = {}) {
       },
     });
   } catch (error) {
-    console.error('Single QR code export failed:', error);
-    return new Response('Failed to generate QR export', { status: 500 });
+    logError('Single QR code export failed', error);
+    return jsonError('Failed to generate QR export', 500);
   }
 }
 

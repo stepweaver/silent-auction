@@ -170,12 +170,19 @@ export async function POST(req) {
       );
     }
 
-    // If user already has an alias, return error with existing alias info
+    // If user already has an alias, return error with only non-PII display fields (no email, name, id)
     if (existingUserAlias) {
       return Response.json(
         {
           error: 'This email already has an alias. Please use your existing alias or contact support to change it.',
-          existingAlias: existingUserAlias,
+          alreadyRegistered: true,
+          existingAlias: {
+            alias: existingUserAlias.alias,
+            color: existingUserAlias.color ?? null,
+            animal: existingUserAlias.animal ?? null,
+            icon: existingUserAlias.icon ?? null,
+            email_verified: true, // existing aliases were created only after verification
+          },
         },
         { status: 400 }
       );

@@ -56,8 +56,3 @@ export function proxy(request) {
   return NextResponse.next();
 }
 
-export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
-};
-
-

@@ -1,9 +1,12 @@
 import { closeAuction } from '@/lib/closeAuction';
+import { jsonError } from '@/lib/apiResponses';
+import { logError, logWarn } from '@/lib/logger';
 
+// Prefer x-auction-cron-secret header over query params so the secret doesn't appear in server logs or referrers.
 function isAuthorized(req) {
   const cronSecret = process.env.AUCTION_CRON_SECRET;
   if (!cronSecret) {
-    console.warn('close-check: AUCTION_CRON_SECRET not configured.');
+    logWarn('close-check: AUCTION_CRON_SECRET not configured.');
     return false;
   }
 
@@ -19,7 +22,7 @@ function isAuthorized(req) {
       return true;
     }
   } catch (error) {
-    console.error('close-check: failed to parse request url', error);
+    logError('close-check: failed to parse request url', error);
   }
 
   return false;
@@ -27,7 +30,7 @@ function isAuthorized(req) {
 
 async function handleRequest(req) {
   if (!isAuthorized(req)) {
-    return new Response('Unauthorized', { status: 401 });
+    return jsonError('Unauthorized', 401);
   }
 
   try {
@@ -35,13 +38,13 @@ async function handleRequest(req) {
 
     if (!result.ok) {
       const status = result.state === 'error' ? 500 : 400;
-      return Response.json(result, { status });
+      return Response.json(result, { status, headers: { 'Content-Type': 'application/json' } });
     }
 
     return Response.json(result);
   } catch (error) {
-    console.error('close-check: unexpected error', error);
-    return new Response('Internal server error', { status: 500 });
+    logError('close-check: unexpected error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 

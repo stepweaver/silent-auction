@@ -92,10 +92,16 @@ export default function IconAliasSelector({ email, onAliasSelected, initialAlias
 
     try {
       const alias = formatAlias(selectedColor, selectedIcon);
+      const { getJsonHeadersWithCsrf } = await import('@/lib/clientCsrf');
+      const headers = await getJsonHeadersWithCsrf();
+      if (!headers['x-csrf-token']) {
+        setError('Security token missing. Please refresh the page and try again.');
+        return;
+      }
       const response = await fetch('/api/alias/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        headers,
+        body: JSON.stringify({
           email,
           alias,
           color: selectedColor,

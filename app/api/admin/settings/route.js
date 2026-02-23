@@ -2,14 +2,13 @@ import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { checkBasicAuth } from '@/lib/auth';
 import { SettingsSchema } from '@/lib/validation';
+import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
 export async function PATCH(req) {
   const headersList = await headers();
   if (!checkBasicAuth(headersList)) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
@@ -17,7 +16,7 @@ export async function PATCH(req) {
     const parsed = SettingsSchema.safeParse(body);
 
     if (!parsed.success) {
-      return new Response('Invalid settings data', { status: 400 });
+      return jsonError('Invalid settings data', 400);
     }
 
     const updateData = parsed.data;
@@ -31,7 +30,6 @@ export async function PATCH(req) {
       .single();
 
     if (error) {
-      // If settings don't exist, create them
       if (error.code === 'PGRST116') {
         const { data: newSettings, error: insertError } = await s
           .from('settings')
@@ -40,19 +38,19 @@ export async function PATCH(req) {
           .single();
 
         if (insertError) {
-          console.error('Insert error:', insertError);
-          return new Response('Failed to create settings', { status: 500 });
+          logError('Settings insert error', insertError);
+          return jsonError('Failed to create settings', 500);
         }
         return Response.json({ ok: true, settings: newSettings });
       }
 
-      console.error('Update error:', error);
-      return new Response('Failed to update settings', { status: 500 });
+      logError('Settings update error', error);
+      return jsonError('Failed to update settings', 500);
     }
 
     return Response.json({ ok: true, settings });
   } catch (error) {
-    console.error('Update settings error:', error);
-    return new Response('Internal server error', { status: 500 });
+    logError('Update settings error', error);
+    return jsonError('Internal server error', 500);
   }
 }

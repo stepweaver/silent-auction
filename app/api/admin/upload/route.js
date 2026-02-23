@@ -2,18 +2,18 @@ import { headers } from 'next/headers';
 import { checkBasicAuth } from '@/lib/auth';
 import { supabaseServer } from '@/lib/serverSupabase';
 import sharp from 'sharp';
+import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
+import { logError, logWarn } from '@/lib/logger';
+
+const MIME_TO_EXT = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
 export async function POST(req) {
   const headersList = await headers();
   const vendorAdminId = headersList.get('x-vendor-admin-id');
   const isSuperAdmin = checkBasicAuth(headersList);
 
-  // Either super admin or vendor admin must be authenticated
   if (!isSuperAdmin && !vendorAdminId) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
@@ -21,30 +21,27 @@ export async function POST(req) {
     const file = formData.get('file');
 
     if (!file) {
-      return new Response('No file provided', { status: 400 });
+      return jsonError('No file provided', 400);
     }
 
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      return new Response('Invalid file type. Only JPEG, PNG, and WebP are allowed.', { status: 400 });
+      return jsonError('Invalid file type. Only JPEG, PNG, and WebP are allowed.', 400);
     }
 
-    // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      return new Response('File too large. Maximum size is 10MB.', { status: 400 });
+      return jsonError('File too large. Maximum size is 10MB.', 400);
     }
 
     const s = supabaseServer();
 
-    // Generate unique filename base
-    const fileExt = file.name.split('.').pop();
+    // Extension from MIME (not file.name) to avoid e.g. photo.jpg.exe
+    const fileExt = MIME_TO_EXT[file.type] || 'jpg';
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(7);
     const baseFileName = `${timestamp}-${randomStr}`;
-    
-    // Original file path
+
     const originalFileName = `${baseFileName}-original.${fileExt}`;
     const originalFilePath = `item-photos/${originalFileName}`;
     
@@ -65,11 +62,8 @@ export async function POST(req) {
       });
 
     if (originalError) {
-      // Log error server-side only, don't expose details to client
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Storage upload error:', originalError);
-      }
-      return new Response('Failed to upload file', { status: 500 });
+      logError('Storage upload error', originalError);
+      return jsonError('Failed to upload file', 500);
     }
 
     // Generate thumbnail using sharp
@@ -99,14 +93,10 @@ export async function POST(req) {
         thumbnailUrl = thumbnailUrlData.publicUrl;
         thumbnailPath = thumbnailFilePath;
       } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Thumbnail generation failed:', thumbnailError);
-        }
+        logWarn('Thumbnail generation failed', thumbnailError);
       }
     } catch (thumbnailGenError) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Thumbnail generation error:', thumbnailGenError);
-      }
+      logWarn('Thumbnail generation error', thumbnailGenError);
     }
 
     // Get public URL for original
@@ -119,10 +109,7 @@ export async function POST(req) {
       thumbnailPath: thumbnailPath,
     });
   } catch (error) {
-    // Log error server-side only, don't expose details to client
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Upload error:', error);
-    }
-    return new Response('Internal server error', { status: 500 });
+    logError('Upload error', error);
+    return jsonError('Internal server error', 500);
   }
 }

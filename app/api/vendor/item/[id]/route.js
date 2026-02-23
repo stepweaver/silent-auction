@@ -2,12 +2,14 @@ import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { ItemSchema } from '@/lib/validation';
 import { vendorAdminOwnsItem, getVendorAdminId } from '@/lib/vendorAuth';
+import { jsonError } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
 export async function PATCH(req, { params }) {
   const vendorAdminId = await getVendorAdminId();
 
   if (!vendorAdminId) {
-    return new Response('Unauthorized', { status: 401 });
+    return jsonError('Unauthorized', 401);
   }
 
   try {
@@ -44,7 +46,7 @@ export async function PATCH(req, { params }) {
 
     const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
     if (!ownsItem) {
-      return new Response('Unauthorized: You can only edit your own items', { status: 403 });
+      return jsonError('Unauthorized: You can only edit your own items', 403);
     }
 
     if (updateData.slug) {
@@ -85,18 +87,18 @@ export async function PATCH(req, { params }) {
     }
 
     if (error) {
-      console.error('Update error:', error);
-      return new Response('Failed to update item', { status: 500 });
+      logError('Vendor update item error', error);
+      return jsonError('Failed to update item', 500);
     }
 
     if (!item) {
-      return new Response('Item not found', { status: 404 });
+      return jsonError('Item not found', 404);
     }
 
     return Response.json({ ok: true, item });
   } catch (error) {
-    console.error('Update item error:', error);
-    return new Response('Internal server error', { status: 500 });
+    logError('Update item error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 
@@ -104,7 +106,7 @@ export async function DELETE(_req, { params }) {
   const vendorAdminId = await getVendorAdminId();
 
   if (!vendorAdminId) {
-    return new Response('Unauthorized', { status: 401 });
+    return jsonError('Unauthorized', 401);
   }
 
   try {
@@ -113,7 +115,7 @@ export async function DELETE(_req, { params }) {
 
     const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
     if (!ownsItem) {
-      return new Response('Unauthorized: You can only delete your own items', { status: 403 });
+      return jsonError('Unauthorized: You can only delete your own items', 403);
     }
 
     const { data: existingItem, error: fetchError } = await s
@@ -123,12 +125,12 @@ export async function DELETE(_req, { params }) {
       .maybeSingle();
 
     if (fetchError) {
-      console.error('Fetch item before delete error:', fetchError);
-      return new Response('Failed to delete item', { status: 500 });
+      logError('Fetch item before delete error', fetchError);
+      return jsonError('Failed to delete item', 500);
     }
 
     if (!existingItem) {
-      return new Response('Item not found', { status: 404 });
+      return jsonError('Item not found', 404);
     }
 
     const { data: existingBid } = await s
@@ -139,7 +141,7 @@ export async function DELETE(_req, { params }) {
       .maybeSingle();
 
     if (existingBid) {
-      return new Response('This item already has bids and cannot be deleted.', { status: 400 });
+      return jsonError('This item already has bids and cannot be deleted.', 400);
     }
 
     const { error: deleteError } = await s
@@ -148,14 +150,14 @@ export async function DELETE(_req, { params }) {
       .eq('id', id);
 
     if (deleteError) {
-      console.error('Delete item error:', deleteError);
-      return new Response('Failed to delete item', { status: 500 });
+      logError('Delete item error', deleteError);
+      return jsonError('Failed to delete item', 500);
     }
 
     return Response.json({ ok: true });
   } catch (error) {
-    console.error('Delete item error:', error);
-    return new Response('Internal server error', { status: 500 });
+    logError('Delete item error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 

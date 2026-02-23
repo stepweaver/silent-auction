@@ -3,6 +3,8 @@ import { supabaseServer } from '@/lib/serverSupabase';
 import { verifyEnrollmentToken } from '@/lib/enrollmentToken';
 import { generateVendorSessionToken, verifyVendorSessionToken } from '@/lib/jwt';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { jsonError } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 import { z } from 'zod';
 
 const AuthSchema = z.object({
@@ -54,7 +56,7 @@ export async function POST(req) {
     const parsed = AuthSchema.safeParse(body);
 
     if (!parsed.success) {
-      return new Response('Invalid request: provide either email or token', { status: 400 });
+      return jsonError('Invalid request: provide either email or token', 400);
     }
 
     const { email, token } = parsed.data;
@@ -65,7 +67,7 @@ export async function POST(req) {
     if (token) {
       const tokenData = verifyEnrollmentToken(token);
       if (!tokenData) {
-        return new Response('Invalid or expired enrollment token', { status: 401 });
+        return jsonError('Invalid or expired enrollment token', 401);
       }
 
       // Verify donor exists and matches token
@@ -77,20 +79,16 @@ export async function POST(req) {
         .maybeSingle();
 
       if (error) {
-        // Log error server-side only, don't expose details to client
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Query error:', error);
-        }
-        return new Response('Authentication error', { status: 500 });
+        logError('Vendor auth query error', error);
+        return jsonError('Authentication error', 500);
       }
 
       if (!data) {
-        return new Response('Donor not found', { status: 401 });
+        return jsonError('Donor not found', 401);
       }
 
       vendorAdmin = data;
     }
-    // Email-based authentication (legacy)
     else if (email) {
       const { data, error } = await s
         .from('vendor_admin_users')
@@ -99,20 +97,17 @@ export async function POST(req) {
         .maybeSingle();
 
       if (error) {
-        // Log error server-side only, don't expose details to client
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Query error:', error);
-        }
-        return new Response('Authentication error', { status: 500 });
+        logError('Vendor auth query error', error);
+        return jsonError('Authentication error', 500);
       }
 
       if (!data) {
-        return new Response('Donor not found', { status: 401 });
+        return jsonError('Donor not found', 401);
       }
 
       vendorAdmin = data;
     } else {
-      return new Response('Invalid request: provide either email or token', { status: 400 });
+      return jsonError('Invalid request: provide either email or token', 400);
     }
 
     // Generate JWT session token
@@ -126,11 +121,8 @@ export async function POST(req) {
       name: vendorAdmin.name,
     });
   } catch (error) {
-    // Log error server-side only, don't expose details to client
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Vendor auth error:', error);
-    }
-    return new Response('Internal server error', { status: 500 });
+    logError('Vendor auth error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 
@@ -151,7 +143,7 @@ export async function GET(req) {
   const vendorAdminId = headersList.get('x-vendor-admin-id');
   
   if (!tokenData && !vendorAdminId) {
-    return new Response('Unauthorized', { status: 401 });
+    return jsonError('Unauthorized', 401);
   }
 
   try {
@@ -168,12 +160,11 @@ export async function GET(req) {
         .maybeSingle();
 
       if (error || !data) {
-        return new Response('Unauthorized', { status: 401 });
+        return jsonError('Unauthorized', 401);
       }
 
       vendorAdmin = data;
     } else {
-      // Legacy header-based auth
       const { data, error } = await s
         .from('vendor_admin_users')
         .select('*')
@@ -181,7 +172,7 @@ export async function GET(req) {
         .maybeSingle();
 
       if (error || !data) {
-        return new Response('Unauthorized', { status: 401 });
+        return jsonError('Unauthorized', 401);
       }
 
       vendorAdmin = data;
@@ -192,11 +183,8 @@ export async function GET(req) {
       vendor_admin: vendorAdmin,
     });
   } catch (error) {
-    // Log error server-side only, don't expose details to client
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Verify vendor auth error:', error);
-    }
-    return new Response('Internal server error', { status: 500 });
+    logError('Verify vendor auth error', error);
+    return jsonError('Internal server error', 500);
   }
 }
 

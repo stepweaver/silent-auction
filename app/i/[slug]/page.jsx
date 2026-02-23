@@ -193,21 +193,22 @@ export default function ItemPage({ params }) {
   async function handleBidSubmit(data) {
     setMsg('');
     try {
+      const { getJsonHeadersWithCsrf } = await import('@/lib/clientCsrf');
+      const headers = await getJsonHeadersWithCsrf();
       const res = await fetch('/api/bid', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        setMsg(text || 'Error placing bid');
-        
-        // If avatar is missing, redirect to landing page
+        const contentType = res.headers.get('content-type');
+        const isJson = contentType && contentType.includes('application/json');
+        const errMsg = isJson ? (await res.json()).error : await res.text();
+        const text = errMsg || 'Error placing bid';
+        setMsg(text);
         if (text && (text.includes('create an avatar') || text.includes('avatar must have a name'))) {
-          setTimeout(() => {
-            router.push('/landing');
-          }, 2000);
+          setTimeout(() => router.push('/landing'), 2000);
         }
         return;
       }

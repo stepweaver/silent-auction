@@ -1,26 +1,28 @@
 import { headers } from 'next/headers';
 import { checkBasicAuth } from '@/lib/auth';
 import { closeAuction } from '@/lib/closeAuction';
+import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
 export async function POST(req) {
   const headersList = await headers();
   if (!checkBasicAuth(headersList)) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
     const result = await closeAuction({ force: true, triggeredBy: 'manual' });
 
     if (!result.ok) {
-      return Response.json(result, { status: 500 });
+      return Response.json({ ok: false, error: result.error || 'Close failed' }, {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     return Response.json(result);
   } catch (error) {
-    console.error('Close all error:', error);
-    return new Response('Internal server error', { status: 500 });
+    logError('Close all error', error);
+    return jsonError('Internal server error', 500);
   }
 }

@@ -2,18 +2,16 @@ import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { checkBasicAuth } from '@/lib/auth';
 import { ItemSchema } from '@/lib/validation';
+import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
 export async function POST(req) {
   const headersList = await headers();
   const vendorAdminId = headersList.get('x-vendor-admin-id');
   const isSuperAdmin = checkBasicAuth(headersList);
 
-  // Either super admin or vendor admin must be authenticated
   if (!isSuperAdmin && !vendorAdminId) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
@@ -21,7 +19,7 @@ export async function POST(req) {
     const parsed = ItemSchema.safeParse(body);
 
     if (!parsed.success) {
-      return new Response('Invalid item data', { status: 400 });
+      return jsonError('Invalid item data', 400);
     }
 
     const data = parsed.data;
@@ -48,7 +46,7 @@ export async function POST(req) {
       .replace(/^-|-$/g, '');
 
     if (!normalizedSlug) {
-      return new Response('Title is required to generate slug', { status: 400 });
+      return jsonError('Title is required to generate slug', 400);
     }
 
     const s = supabaseServer();
@@ -64,8 +62,7 @@ export async function POST(req) {
       slug = `${normalizedSlug}-${counter}`;
       counter++;
       if (counter > 100) {
-        // Safety limit
-        return new Response('Unable to generate unique slug', { status: 500 });
+        return jsonError('Unable to generate unique slug', 500);
       }
     }
 
@@ -99,19 +96,13 @@ export async function POST(req) {
       .single();
 
     if (error) {
-      // Log error server-side only, don't expose details to client
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Insert error:', error);
-      }
-      return new Response('Failed to create item', { status: 500 });
+      logError('Admin create item error', error);
+      return jsonError('Failed to create item', 500);
     }
 
     return Response.json({ ok: true, item });
   } catch (error) {
-    // Log error server-side only, don't expose details to client
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Create item error:', error);
-    }
-    return new Response('Internal server error', { status: 500 });
+    logError('Create item error', error);
+    return jsonError('Internal server error', 500);
   }
 }

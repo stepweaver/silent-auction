@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { checkBasicAuth } from '@/lib/auth';
+import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
+import { logError } from '@/lib/logger';
 
 const getSiteUrl = () => {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
@@ -37,10 +39,7 @@ export async function GET() {
   const headersList = await headers();
 
   if (!checkBasicAuth(headersList)) {
-    return new Response('Unauthorized', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin Area"' },
-    });
+    return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
@@ -51,12 +50,12 @@ export async function GET() {
       .order('title', { ascending: true });
 
     if (error) {
-      console.error('Failed to load items for QR export:', error);
-      return new Response('Failed to load items', { status: 500 });
+      logError('Failed to load items for QR export', error);
+      return jsonError('Failed to load items', 500);
     }
 
     if (!items || items.length === 0) {
-      return new Response('No items to export', { status: 400 });
+      return jsonError('No items to export', 400);
     }
 
     const siteUrl = getSiteUrl();
@@ -177,8 +176,8 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('QR code export failed:', error);
-    return new Response('Failed to generate QR export', { status: 500 });
+    logError('QR code export failed', error);
+    return jsonError('Failed to generate QR export', 500);
   }
 }
 
