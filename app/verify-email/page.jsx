@@ -57,11 +57,11 @@ function VerifyEmailContent() {
           }
 
           // If no alias exists yet, redirect to landing page to create one
-          // Pass email as query param so they can proceed
-          const emailParam = searchParams?.get('email') || '';
+          // Use email from API response first (URL param can be stripped by some email clients)
+          const emailForRedirect = data.email || searchParams?.get('email') || '';
           setTimeout(() => {
-            if (emailParam) {
-              router.push(`/landing?verified=true&email=${encodeURIComponent(emailParam)}`);
+            if (emailForRedirect) {
+              router.push(`/landing?verified=true&email=${encodeURIComponent(emailForRedirect)}`);
             } else {
               router.push('/landing?verified=true');
             }

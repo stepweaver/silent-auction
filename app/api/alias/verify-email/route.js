@@ -94,6 +94,7 @@ export async function POST(req) {
       return Response.json({
         verified: true,
         message: verificationMessage,
+        email: trimmedEmail,
         alias: existingAlias || null,
       });
     }
@@ -135,6 +136,7 @@ export async function POST(req) {
           message: existingAlias
             ? 'Email verified successfully. You can use your existing alias.'
             : 'Email verified successfully. You can now create your alias.',
+          email: trimmedEmail,
           alias: existingAlias || null,
         });
       }
@@ -157,6 +159,7 @@ export async function POST(req) {
       message: existingAlias
         ? 'Email verified successfully. You can use your existing alias.'
         : 'Email verified successfully. You can now create your alias.',
+      email: trimmedEmail,
       alias: existingAlias || null,
     });
   } catch (error) {
