@@ -4,6 +4,7 @@ import { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AliasSelector from '@/components/AliasSelector';
+import { fetchWithTimeout } from '@/lib/utils';
 
 const STORAGE_KEY = 'auction_bidder_info';
 const ENROLLMENT_KEY = 'auction_enrolled';
@@ -20,6 +21,7 @@ export default function LandingPage() {
   const [hasSentRecoveryNotification, setHasSentRecoveryNotification] =
     useState(false);
   const [honeypot, setHoneypot] = useState(''); // Honeypot field - should remain empty
+  const [recoveringFromStorage, setRecoveringFromStorage] = useState(false);
   const nameInputId = useId();
   const emailInputId = useId();
   const honeypotId = useId();
@@ -76,6 +78,83 @@ export default function LandingPage() {
     }
   }, [router]);
 
+  // Auto-recovery: if enrollment flag is missing but we have stored bidder info (e.g. after
+  // a failed write on slow Wi‑Fi), re-validate with the server and restore enrollment.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const enrolled = localStorage.getItem(ENROLLMENT_KEY);
+    if (enrolled === 'true') return;
+
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+
+    let info;
+    try {
+      info = JSON.parse(raw);
+    } catch {
+      return;
+    }
+
+    const storedEmail = info?.email;
+    if (!storedEmail || typeof storedEmail !== 'string' || !storedEmail.trim()) return;
+
+    let cancelled = false;
+
+    const run = async () => {
+      setRecoveringFromStorage(true);
+      try {
+        const response = await fetchWithTimeout(
+          '/api/alias/get',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: storedEmail.trim() }),
+          },
+          15000
+        );
+
+        if (cancelled) return;
+
+        const data = await response.json();
+
+        if (response.ok && data.alias) {
+          localStorage.setItem(ENROLLMENT_KEY, 'true');
+          const bidderName =
+            data.alias.name || info.bidder_name?.trim() || data.alias.alias;
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              email: storedEmail.trim(),
+              bidder_name: bidderName,
+              alias: data.alias,
+            })
+          );
+          const redirect = localStorage.getItem('auction_redirect');
+          if (redirect) {
+            localStorage.removeItem('auction_redirect');
+            router.push(redirect);
+          } else {
+            router.push('/');
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Auto-recovery (alias/get) failed:', err);
+        }
+      } finally {
+        if (!cancelled) {
+          setRecoveringFromStorage(false);
+        }
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
 
@@ -90,11 +169,15 @@ export default function LandingPage() {
 
     // Step 1: Validate email format and domain
     try {
-      const response = await fetch('/api/email/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      });
+      const response = await fetchWithTimeout(
+        '/api/email/validate',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
+        },
+        15000
+      );
 
       const data = await response.json();
 
@@ -109,8 +192,11 @@ export default function LandingPage() {
       }
     } catch (err) {
       console.error('Email validation error:', err);
+      const isConnection = (err?.message ?? '').includes('timed out') || err?.message === 'Failed to fetch';
       setError(
-        'Unable to verify email address. Please check for typos and try again.'
+        isConnection
+          ? 'Connection is slow or unavailable. Please check your Wi‑Fi or signal and try again.'
+          : 'Unable to verify email address. Please check for typos and try again.'
       );
       setSubmitting(false);
       return;
@@ -122,11 +208,15 @@ export default function LandingPage() {
       localStorage.getItem(ENROLLMENT_KEY) !== 'true';
 
     try {
-      const response = await fetch('/api/alias/get', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      });
+      const response = await fetchWithTimeout(
+        '/api/alias/get',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
+        },
+        15000
+      );
 
       const data = await response.json();
 
@@ -169,6 +259,12 @@ export default function LandingPage() {
       }
     } catch (err) {
       console.error('Error checking existing alias on submit:', err);
+      const isConnection = (err?.message ?? '').includes('timed out') || err?.message === 'Failed to fetch';
+      if (isConnection) {
+        setError('Connection is slow or unavailable. Please check your Wi‑Fi or signal and try again.');
+        setSubmitting(false);
+        return;
+      }
     }
 
     // Step 3: New user — name is required
@@ -180,15 +276,19 @@ export default function LandingPage() {
 
     // Step 4: Send verification email
     try {
-      const response = await fetch('/api/email/send-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.trim(),
-          name: name.trim(),
-          company_website: honeypot,
-        }),
-      });
+      const response = await fetchWithTimeout(
+        '/api/email/send-verification',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email.trim(),
+            name: name.trim(),
+            company_website: honeypot,
+          }),
+        },
+        20000
+      );
 
       const data = await response.json();
 
@@ -196,11 +296,15 @@ export default function LandingPage() {
         if (data.hasExistingAlias) {
           setError(data.error || 'This email already has an alias');
           try {
-            const aliasResponse = await fetch('/api/alias/get', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: email.trim() }),
-            });
+            const aliasResponse = await fetchWithTimeout(
+              '/api/alias/get',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.trim() }),
+              },
+              15000
+            );
             const aliasData = await aliasResponse.json();
             if (aliasData.alias && typeof window !== 'undefined') {
               localStorage.setItem(ENROLLMENT_KEY, 'true');
@@ -240,10 +344,14 @@ export default function LandingPage() {
       setStep('verify');
       setError('');
     } catch (err) {
-      console.error('Error sending verification email:', err);
-      setError('Failed to send verification email. Please try again.');
+      console.error('Send verification error:', err);
+      const isConnection = (err?.message ?? '').includes('timed out') || err?.message === 'Failed to fetch';
+      setError(
+        isConnection
+          ? 'Connection is slow or unavailable. Please check your Wi‑Fi or signal and try again.'
+          : 'Failed to send verification email. Please try again.'
+      );
     }
-
     setSubmitting(false);
   };
 
@@ -282,6 +390,23 @@ export default function LandingPage() {
       }
     }
   };
+
+  // While attempting auto-recovery from stored bidder info (e.g. after failed write on slow connection)
+  if (recoveringFromStorage) {
+    return (
+      <div className='w-full min-h-screen px-4 py-8 flex items-center justify-center'>
+        <div className='text-center'>
+          <div
+            className='w-10 h-10 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4'
+            style={{ borderTopColor: 'var(--primary-500)' }}
+          />
+          <p className='text-gray-600 text-sm sm:text-base'>
+            Checking your previous session…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Verification step - show message to check email
   if (step === 'verify') {

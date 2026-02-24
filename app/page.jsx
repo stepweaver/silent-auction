@@ -1,11 +1,12 @@
 'use client';
 
 import { supabaseBrowser } from '@/lib/supabaseClient';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ItemCard from '@/components/ItemCard';
 import GoalMeter from '@/components/GoalMeter';
 import Link from 'next/link';
+import { withTimeoutAndRetry } from '@/lib/utils';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 const ALL_CATEGORIES = '__all__';
@@ -15,6 +16,7 @@ export default function CatalogPage() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [activeFilter, setActiveFilter] = useState(ALL_CATEGORIES);
   const s = supabaseBrowser();
@@ -31,84 +33,95 @@ export default function CatalogPage() {
     }
   }, [router]);
 
-  async function load() {
+  const load = useCallback(async () => {
+    setLoadError(null);
+    setLoading(true);
     try {
-      // Get settings to check deadline
-      const { data: settings } = await s
-        .from('settings')
-        .select('auction_deadline')
-        .eq('id', 1)
-        .maybeSingle();
+      await withTimeoutAndRetry(
+        async () => {
+          // Get settings to check deadline
+          const { data: settings } = await s
+            .from('settings')
+            .select('auction_deadline')
+            .eq('id', 1)
+            .maybeSingle();
 
-      const deadline = settings?.auction_deadline
-        ? new Date(settings.auction_deadline)
-        : null;
-      const now = new Date();
-      const deadlinePassed = deadline && now >= deadline;
+          const deadline = settings?.auction_deadline
+            ? new Date(settings.auction_deadline)
+            : null;
+          const now = new Date();
+          const deadlinePassed = deadline && now >= deadline;
 
-      const { data, error } = await s
-        .from('item_leaders')
-        .select('*')
-        .order('title', { ascending: true });
-      if (error) throw error;
+          const { data, error } = await s
+            .from('item_leaders')
+            .select('*')
+            .order('title', { ascending: true });
+          if (error) throw error;
 
-      const itemList = data || [];
-      const itemIds = itemList.map((item) => item.id);
+          const itemList = data || [];
+          const itemIds = itemList.map((item) => item.id);
 
-      // Batch fetch top bids for all items (avoid N+1)
-      const topBidsMap = {};
-      const BATCH_SIZE = 80;
-      for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
-        const chunk = itemIds.slice(i, i + BATCH_SIZE);
-        const { data: bidsChunk, error: bidsErr } = await s
-          .from('bids')
-          .select('item_id, amount')
-          .in('item_id', chunk)
-          .order('amount', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(2000);
+          // Batch fetch top bids for all items (avoid N+1)
+          const topBidsMap = {};
+          const BATCH_SIZE = 80;
+          for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
+            const chunk = itemIds.slice(i, i + BATCH_SIZE);
+            const { data: bidsChunk, error: bidsErr } = await s
+              .from('bids')
+              .select('item_id, amount')
+              .in('item_id', chunk)
+              .order('amount', { ascending: false })
+              .order('created_at', { ascending: false })
+              .limit(2000);
 
-        if (bidsErr) throw bidsErr;
+            if (bidsErr) throw bidsErr;
 
-        // Per item_id keep only the top bid (first by amount)
-        const seen = new Set();
-        for (const row of bidsChunk || []) {
-          if (seen.has(row.item_id)) continue;
-          seen.add(row.item_id);
-          topBidsMap[row.item_id] = {
-            topBidAmount: row.amount,
-            hasBids: true,
-          };
-        }
-      }
-      // Ensure every item has an entry
-      for (const item of itemList) {
-        if (!topBidsMap[item.id]) {
-          topBidsMap[item.id] = { topBidAmount: null, hasBids: false };
-        }
-      }
+            // Per item_id keep only the top bid (first by amount)
+            const seen = new Set();
+            for (const row of bidsChunk || []) {
+              if (seen.has(row.item_id)) continue;
+              seen.add(row.item_id);
+              topBidsMap[row.item_id] = {
+                topBidAmount: row.amount,
+                hasBids: true,
+              };
+            }
+          }
+          // Ensure every item has an entry
+          for (const item of itemList) {
+            if (!topBidsMap[item.id]) {
+              topBidsMap[item.id] = { topBidAmount: null, hasBids: false };
+            }
+          }
 
-      // Mark items as closed if deadline passed and update current_high_bid from actual bids
-      const itemsWithDeadline = itemList.map((item) => {
-        const bidInfo = topBidsMap[item.id];
-        const actualCurrentBid = bidInfo?.topBidAmount ?? null;
-        return {
-          ...item,
-          is_closed: item.is_closed || deadlinePassed,
-          // Override current_high_bid with actual top bid from bids table
-          current_high_bid: actualCurrentBid !== null ? actualCurrentBid : item.current_high_bid,
-          // Track whether bids exist (separate from amount comparison)
-          _hasBids: bidInfo?.hasBids || false,
-        };
-      });
+          // Mark items as closed if deadline passed and update current_high_bid from actual bids
+          const itemsWithDeadline = itemList.map((item) => {
+            const bidInfo = topBidsMap[item.id];
+            const actualCurrentBid = bidInfo?.topBidAmount ?? null;
+            return {
+              ...item,
+              is_closed: item.is_closed || deadlinePassed,
+              current_high_bid: actualCurrentBid !== null ? actualCurrentBid : item.current_high_bid,
+              _hasBids: bidInfo?.hasBids || false,
+            };
+          });
 
-      setItems(itemsWithDeadline);
+          setItems(itemsWithDeadline);
+        },
+        { timeoutMs: 25000, maxAttempts: 2 }
+      );
     } catch (err) {
       console.error('Error loading items:', err);
+      const msg = err?.message ?? '';
+      setLoadError(
+        msg.includes('timed out')
+          ? 'The catalog is taking too long to load—often due to slow or spotty Wi‑Fi. Try again when your connection is better, or tap below to retry.'
+          : 'We couldn’t load the catalog. Check your connection and try again.'
+      );
     } finally {
       setLoading(false);
     }
-  }
+  }, [s]);
 
   useEffect(() => {
     if (checkingEnrollment) return;
@@ -129,7 +142,7 @@ export default function CatalogPage() {
     return () => {
       s.removeChannel(channel);
     };
-  }, [checkingEnrollment]);
+  }, [checkingEnrollment, load]);
 
   // Derive sorted category list and grouped items
   const categories = useMemo(() => {
@@ -174,7 +187,40 @@ export default function CatalogPage() {
     [items]
   );
 
-  if (checkingEnrollment || loading) {
+  if (checkingEnrollment) {
+    return (
+      <main className='w-full px-4 py-4 sm:py-6'>
+        <div className='flex items-center justify-center py-12'>
+          <div
+            className='w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin'
+            style={{ borderTopColor: 'var(--primary-500)' }}
+          ></div>
+        </div>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className='w-full px-4 py-4 sm:py-6'>
+        <div className='bg-white rounded-xl shadow-xl border border-gray-200 max-w-lg mx-auto'>
+          <div className='px-4 py-10 text-center'>
+            <p className='text-sm sm:text-base text-gray-700 mb-4'>{loadError}</p>
+            <button
+              type='button'
+              onClick={() => load()}
+              className='inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold text-white transition-opacity hover:opacity-90'
+              style={{ backgroundColor: 'var(--primary-500)' }}
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (loading) {
     return (
       <main className='w-full px-4 py-4 sm:py-6'>
         <div className='flex items-center justify-center py-12'>

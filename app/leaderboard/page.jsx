@@ -4,7 +4,7 @@ import { supabaseBrowser } from '@/lib/supabaseClient';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useReducedMotion } from 'framer-motion';
-import { withRetry } from '@/lib/utils';
+import { withTimeoutAndRetry } from '@/lib/utils';
 import GoalMeter from '@/components/GoalMeter';
 import LeaderboardItemRow from '@/components/LeaderboardSummaryPanel';
 
@@ -20,6 +20,7 @@ export default function LeaderboardPage() {
   const [bidCounts, setBidCounts] = useState({});
   const [recentBids, setRecentBids] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [deadlineIso, setDeadlineIso] = useState(null);
   const reducedMotion = useReducedMotion();
@@ -38,8 +39,10 @@ export default function LeaderboardPage() {
 
   const loadLeaderboard = useCallback(async () => {
     const s = supabaseBrowser();
+    setLoadError(null);
+    setLoading(true);
     try {
-      await withRetry(async () => {
+      await withTimeoutAndRetry(async () => {
         // Get settings to check deadline
         const { data: settings } = await s
           .from('settings')
@@ -241,9 +244,15 @@ export default function LeaderboardPage() {
         setSecondTopBids(newSecondTopBids);
         setRecentBids(newRecentBids);
         setBidCounts(newBidCounts);
-      }); // end withRetry
+      }, { timeoutMs: 25000, maxAttempts: 2 });
     } catch (err) {
       console.error('Error loading leaderboard:', err);
+      const msg = err?.message ?? '';
+      setLoadError(
+        msg.includes('timed out')
+          ? 'The leaderboard is taking too long to load—often due to slow or spotty Wi‑Fi. Try again when your connection is better.'
+          : 'We couldn’t load the leaderboard. Check your connection and try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -328,6 +337,26 @@ export default function LeaderboardPage() {
             className='w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin'
             style={{ borderTopColor: 'var(--primary-500)' }}
           ></div>
+        </div>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className='w-full min-h-screen px-4 py-4 sm:py-6 bg-gray-50'>
+        <div className='bg-white rounded-xl shadow-xl border border-gray-200 max-w-lg mx-auto'>
+          <div className='px-4 py-10 text-center'>
+            <p className='text-sm sm:text-base text-gray-700 mb-4'>{loadError}</p>
+            <button
+              type='button'
+              onClick={() => loadLeaderboard()}
+              className='inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold text-white transition-opacity hover:opacity-90'
+              style={{ backgroundColor: 'var(--primary-500)' }}
+            >
+              Try again
+            </button>
+          </div>
         </div>
       </main>
     );

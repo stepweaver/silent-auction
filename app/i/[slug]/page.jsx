@@ -7,6 +7,7 @@ import Link from 'next/link';
 import BidForm from '@/components/BidForm';
 import AliasAvatar from '@/components/AliasAvatar';
 import { formatDollar } from '@/lib/money';
+import { withTimeoutAndRetry } from '@/lib/utils';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 
@@ -19,12 +20,16 @@ export default function ItemPage({ params }) {
   const [bids, setBids] = useState([]);
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [bidsHash, setBidsHash] = useState(null); // Store hash of bids to detect changes
 
   async function loadAll() {
+    setLoadError(null);
     try {
-      const { data: itemData, error: itemError } = await s
+      await withTimeoutAndRetry(
+        async () => {
+          const { data: itemData, error: itemError } = await s
         .from('item_leaders')
         .select('*')
         .eq('slug', slug)
@@ -135,9 +140,20 @@ export default function ItemPage({ params }) {
 
       if (settingsError) throw settingsError;
       setSettings(settingsData);
+        },
+        { timeoutMs: 20000, maxAttempts: 2 }
+      );
     } catch (err) {
       console.error('Error loading data:', err);
       setMsg('Error loading item data');
+      if (!item) {
+        const message = err?.message ?? '';
+        setLoadError(
+          message.includes('timed out')
+            ? 'This page is taking too long to load—often due to slow or spotty Wi‑Fi. Try again when your connection is better.'
+            : 'We couldn’t load this item. Check your connection and try again.'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -219,16 +235,40 @@ export default function ItemPage({ params }) {
   if (!item) {
     return (
       <main className="w-full px-4 py-4 sm:py-6">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 max-w-lg mx-auto">
           <div className="px-4 sm:px-6 py-16 text-center">
-            <p className="text-sm sm:text-base text-gray-600 mb-4">Item not found.</p>
-            <Link 
-              href="/" 
-              className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white"
-              style={{ backgroundColor: 'var(--primary-500)' }}
-            >
-              ← Back to catalog
-            </Link>
+            {loadError ? (
+              <>
+                <p className="text-sm sm:text-base text-gray-700 mb-4">{loadError}</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => loadAll()}
+                    className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
+                    style={{ backgroundColor: 'var(--primary-500)' }}
+                  >
+                    Try again
+                  </button>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    ← Back to catalog
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm sm:text-base text-gray-600 mb-4">Item not found.</p>
+                <Link
+                  href="/"
+                  className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                  style={{ backgroundColor: 'var(--primary-500)' }}
+                >
+                  ← Back to catalog
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </main>
