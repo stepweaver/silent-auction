@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/serverSupabase';
 import { extractIPFromRequest } from '@/lib/ipUtils';
+import { getEnrollmentSetCookieHeader } from '@/lib/enrollmentCookie';
 
 export async function POST(req) {
   try {
@@ -64,7 +65,10 @@ export async function POST(req) {
         });
     }
 
-    return Response.json({ alias });
+    return Response.json(
+      { alias },
+      { headers: { 'Set-Cookie': getEnrollmentSetCookieHeader() } }
+    );
   } catch (error) {
     console.error('Get alias error:', error);
     return Response.json(

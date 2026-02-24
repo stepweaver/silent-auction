@@ -1,5 +1,8 @@
 import { supabaseServer } from '@/lib/serverSupabase';
 import { verifyVerificationToken } from '@/lib/emailVerification';
+import { getEnrollmentSetCookieHeader } from '@/lib/enrollmentCookie';
+
+const enrollmentHeaders = () => ({ 'Set-Cookie': getEnrollmentSetCookieHeader() });
 
 export async function POST(req) {
   try {
@@ -91,12 +94,15 @@ export async function POST(req) {
         verificationMessage = 'Email already verified. You can use your existing alias.';
       }
 
-      return Response.json({
-        verified: true,
-        message: verificationMessage,
-        email: trimmedEmail,
-        alias: existingAlias || null,
-      });
+      return Response.json(
+        {
+          verified: true,
+          message: verificationMessage,
+          email: trimmedEmail,
+          alias: existingAlias || null,
+        },
+        { headers: enrollmentHeaders() }
+      );
     }
 
     // Mark email as verified in verified_emails table (NOT user_aliases)
@@ -131,14 +137,17 @@ export async function POST(req) {
           .eq('email', trimmedEmail)
           .maybeSingle();
 
-        return Response.json({
-          verified: true,
-          message: existingAlias
-            ? 'Email verified successfully. You can use your existing alias.'
-            : 'Email verified successfully. You can now create your alias.',
-          email: trimmedEmail,
-          alias: existingAlias || null,
-        });
+        return Response.json(
+          {
+            verified: true,
+            message: existingAlias
+              ? 'Email verified successfully. You can use your existing alias.'
+              : 'Email verified successfully. You can now create your alias.',
+            email: trimmedEmail,
+            alias: existingAlias || null,
+          },
+          { headers: enrollmentHeaders() }
+        );
       }
 
       return Response.json(
@@ -154,14 +163,17 @@ export async function POST(req) {
       .eq('email', trimmedEmail)
       .maybeSingle();
 
-    return Response.json({
-      verified: true,
-      message: existingAlias
-        ? 'Email verified successfully. You can use your existing alias.'
-        : 'Email verified successfully. You can now create your alias.',
-      email: trimmedEmail,
-      alias: existingAlias || null,
-    });
+    return Response.json(
+      {
+        verified: true,
+        message: existingAlias
+          ? 'Email verified successfully. You can use your existing alias.'
+          : 'Email verified successfully. You can now create your alias.',
+        email: trimmedEmail,
+        alias: existingAlias || null,
+      },
+      { headers: enrollmentHeaders() }
+    );
   } catch (error) {
     console.error('Email verification error:', error);
     return Response.json(

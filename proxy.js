@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { hasEnrollmentCookie } from '@/lib/enrollmentCookie';
 
 const decodeBase64 = (value) => {
   try {
@@ -35,16 +36,30 @@ const isAuthorized = (request) => {
   );
 };
 
+const ENROLLMENT_PROTECTED_PATHS = [
+  '/',
+  '/leaderboard',
+  '/donate',
+  '/avatar',
+  '/payment-instructions',
+];
+
+function isEnrollmentProtectedPath(pathname) {
+  if (ENROLLMENT_PROTECTED_PATHS.includes(pathname)) return true;
+  if (pathname.startsWith('/i/') || pathname === '/i') return true;
+  return false;
+}
+
 export function proxy(request) {
   const pathname = request.nextUrl.pathname;
-  const requiresAuth =
-    pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
 
-  if (!requiresAuth) {
-    return NextResponse.next();
+  if (isEnrollmentProtectedPath(pathname) && !hasEnrollmentCookie(request)) {
+    return NextResponse.redirect(new URL('/landing', request.url));
   }
 
-  if (!isAuthorized(request)) {
+  const requiresAuth =
+    pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
+  if (requiresAuth && !isAuthorized(request)) {
     return new NextResponse('Unauthorized', {
       status: 401,
       headers: {

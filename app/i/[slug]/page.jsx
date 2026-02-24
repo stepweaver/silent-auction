@@ -161,7 +161,7 @@ export default function ItemPage({ params }) {
     if (!slug || checkingEnrollment) return;
     loadAll();
 
-    // Set up real-time subscription
+    // Real-time only: subscription handles bid updates; no polling to reduce Supabase egress
     const channel = s
       .channel('rt-bids-item')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bids' }, () => {
@@ -169,24 +169,8 @@ export default function ItemPage({ params }) {
       })
       .subscribe();
 
-    // Set up polling as backup (refresh every 10 seconds to reduce mobile data usage)
-    // Only poll when page is visible
-    let isPageVisible = true;
-    const handleVisibilityChange = () => {
-      isPageVisible = !document.hidden;
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    const pollInterval = setInterval(() => {
-      if (isPageVisible && !document.hidden) {
-        loadAll();
-      }
-    }, 15000); // 15s to reduce Supabase egress; realtime still updates on bid
-
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       s.removeChannel(channel);
-      clearInterval(pollInterval);
     };
   }, [slug, checkingEnrollment]);
 

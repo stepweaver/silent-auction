@@ -2,7 +2,103 @@
 
 import { useState, useEffect } from 'react';
 import { COLORS, ICONS, generateRandomAlias, formatAlias, getColorByValue, getIconByValue } from '@/lib/iconAlias';
-import * as LucideIcons from 'lucide-react';
+import {
+  Star,
+  Heart,
+  Diamond,
+  Moon,
+  Sun,
+  Flame,
+  Sparkles,
+  Zap,
+  Trophy,
+  Crown,
+  Shield,
+  Sword,
+  Gem,
+  Comet,
+  Rocket,
+  Leaf,
+  Flower,
+  TreePine,
+  Mountain,
+  Waves,
+  Droplets,
+  Snowflake,
+  Cloud,
+  Anchor,
+  Ship,
+  Fish,
+  Bird,
+  Butterfly,
+  Bug,
+  Cat,
+  Dog,
+  Rabbit,
+  Fox,
+  PawPrint,
+  Music,
+  Guitar,
+  Drum,
+  Mic,
+  Camera,
+  Film,
+  Gamepad2,
+  Puzzle,
+  Book,
+  PenTool,
+  Palette,
+  Paintbrush,
+} from 'lucide-react';
+
+const LUCIDE_ICON_MAP = {
+  Star,
+  Heart,
+  Diamond,
+  Moon,
+  Sun,
+  Flame,
+  Sparkles,
+  Zap,
+  Trophy,
+  Crown,
+  Shield,
+  Sword,
+  Gem,
+  Comet,
+  Rocket,
+  Leaf,
+  Flower,
+  TreePine,
+  Mountain,
+  Waves,
+  Droplets,
+  Snowflake,
+  Cloud,
+  Anchor,
+  Ship,
+  Fish,
+  Bird,
+  Butterfly,
+  Bug,
+  Cat,
+  Dog,
+  Rabbit,
+  Fox,
+  PawPrint,
+  Music,
+  Guitar,
+  Drum,
+  Mic,
+  Camera,
+  Film,
+  Gamepad2,
+  Puzzle,
+  Book,
+  PenTool,
+  Palette,
+  Paintbrush,
+};
 
 export default function IconAliasSelector({ email, onAliasSelected, initialAlias = null }) {
   const [selectedColor, setSelectedColor] = useState(initialAlias?.color || null);
@@ -131,8 +227,7 @@ export default function IconAliasSelector({ email, onAliasSelected, initialAlias
   const selectedColorObj = COLORS.find(c => c.value === selectedColor);
   const selectedIconObj = ICONS.find(i => i.value === selectedIcon);
 
-  // Get the icon component from lucide-react
-  const IconComponent = selectedIconObj ? (LucideIcons[selectedIconObj.icon] || LucideIcons.Star) : null;
+  const IconComponent = selectedIconObj ? (LUCIDE_ICON_MAP[selectedIconObj.icon] || Star) : null;
 
   return (
     <div className="bg-gradient-to-br from-base-100 to-base-200 rounded-2xl border-2 border-primary/20 shadow-2xl p-6 sm:p-8 animate-fade-in">
@@ -201,7 +296,7 @@ export default function IconAliasSelector({ email, onAliasSelected, initialAlias
         </label>
         <div className="grid grid-cols-5 sm:grid-cols-5 gap-3 max-h-64 overflow-y-auto">
           {ICONS.map((icon) => {
-            const Icon = LucideIcons[icon.icon] || LucideIcons.Star;
+            const Icon = LUCIDE_ICON_MAP[icon.icon] || Star;
             return (
               <button
                 key={icon.value}

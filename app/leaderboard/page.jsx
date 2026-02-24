@@ -255,7 +255,7 @@ export default function LeaderboardPage() {
     loadLeaderboard();
 
     const s = supabaseBrowser();
-    // Set up real-time subscription (debounced so rapid bids don't trigger many reloads)
+    // Real-time only: subscription handles bid updates; no polling to reduce Supabase egress
     let reloadTimer = null;
     const channel = s
       .channel('rt-leaderboard-bids')
@@ -272,16 +272,8 @@ export default function LeaderboardPage() {
       )
       .subscribe();
 
-    // Polling backup every 15 seconds to reduce Supabase egress; realtime still updates on bids
-    const pollInterval = setInterval(() => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        loadLeaderboard();
-      }
-    }, 15000);
-
     return () => {
       s.removeChannel(channel);
-      clearInterval(pollInterval);
       if (reloadTimer) clearTimeout(reloadTimer);
     };
   }, [checkingEnrollment, loadLeaderboard]);

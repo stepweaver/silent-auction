@@ -2,6 +2,7 @@ import { supabaseServer } from '@/lib/serverSupabase';
 import { isValidEmailFormat, getEmailDomain, suggestEmailCorrection } from '@/lib/validation';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { verifyCSRFToken } from '@/lib/csrf';
+import { getEnrollmentSetCookieHeader } from '@/lib/enrollmentCookie';
 import dns from 'dns';
 import { promisify } from 'util';
 
@@ -381,11 +382,14 @@ export async function POST(req) {
       );
     }
 
-    // Alias created successfully - email was verified, alias is now created
-    return Response.json({
-      alias: newAlias,
-      message: 'Alias created successfully!',
-    });
+    // Alias created successfully - set enrollment cookie for server-side access control
+    return Response.json(
+      {
+        alias: newAlias,
+        message: 'Alias created successfully!',
+      },
+      { headers: { 'Set-Cookie': getEnrollmentSetCookieHeader() } }
+    );
   } catch (error) {
     // Log error server-side only, don't expose details to client
     if (process.env.NODE_ENV === 'development') {

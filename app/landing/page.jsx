@@ -131,7 +131,7 @@ export default function LandingPage() {
       const data = await response.json();
 
       if (response.ok && data.alias) {
-        // Existing user — log them in and redirect
+        // Existing user — log them in (cookie set by api/alias/get) and redirect
         if (typeof window !== 'undefined') {
           localStorage.setItem(ENROLLMENT_KEY, 'true');
           const bidderName =
@@ -156,6 +156,7 @@ export default function LandingPage() {
             );
           }
 
+          setSubmitting(false);
           const redirect = localStorage.getItem('auction_redirect');
           if (redirect) {
             localStorage.removeItem('auction_redirect');
@@ -213,6 +214,7 @@ export default function LandingPage() {
                   alias: aliasData.alias,
                 })
               );
+              setSubmitting(false);
               router.push('/');
               return;
             }

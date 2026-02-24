@@ -52,31 +52,44 @@ export default function CatalogPage() {
         .order('title', { ascending: true });
       if (error) throw error;
 
-      // Fetch top bid for each item to get accurate current_high_bid and bid existence
-      const topBidsPromises = (data || []).map(async (item) => {
-        const { data: topBidData } = await s
-          .from('bids')
-          .select('amount')
-          .eq('item_id', item.id)
-          .order('amount', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        return {
-          itemId: item.id,
-          topBidAmount: topBidData?.amount || null,
-          hasBids: topBidData !== null && topBidData !== undefined
-        };
-      });
+      const itemList = data || [];
+      const itemIds = itemList.map((item) => item.id);
 
-      const topBidsResults = await Promise.all(topBidsPromises);
-      const topBidsMap = topBidsResults.reduce((acc, { itemId, topBidAmount, hasBids }) => {
-        acc[itemId] = { topBidAmount, hasBids };
-        return acc;
-      }, {});
+      // Batch fetch top bids for all items (avoid N+1)
+      const topBidsMap = {};
+      const BATCH_SIZE = 80;
+      for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
+        const chunk = itemIds.slice(i, i + BATCH_SIZE);
+        const { data: bidsChunk, error: bidsErr } = await s
+          .from('bids')
+          .select('item_id, amount')
+          .in('item_id', chunk)
+          .order('amount', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(2000);
+
+        if (bidsErr) throw bidsErr;
+
+        // Per item_id keep only the top bid (first by amount)
+        const seen = new Set();
+        for (const row of bidsChunk || []) {
+          if (seen.has(row.item_id)) continue;
+          seen.add(row.item_id);
+          topBidsMap[row.item_id] = {
+            topBidAmount: row.amount,
+            hasBids: true,
+          };
+        }
+      }
+      // Ensure every item has an entry
+      for (const item of itemList) {
+        if (!topBidsMap[item.id]) {
+          topBidsMap[item.id] = { topBidAmount: null, hasBids: false };
+        }
+      }
 
       // Mark items as closed if deadline passed and update current_high_bid from actual bids
-      const itemsWithDeadline = (data || []).map((item) => {
+      const itemsWithDeadline = itemList.map((item) => {
         const bidInfo = topBidsMap[item.id];
         const actualCurrentBid = bidInfo?.topBidAmount ?? null;
         return {
