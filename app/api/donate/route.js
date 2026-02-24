@@ -43,7 +43,7 @@ export async function POST(req) {
 
     const { data: settings, error: settingsError } = await s
       .from('settings')
-      .select('auction_closed, auction_deadline, auction_start')
+      .select('auction_closed, auction_deadline, auction_start, contact_email')
       .eq('id', 1)
       .maybeSingle();
 
@@ -99,7 +99,8 @@ export async function POST(req) {
         donorName: donor_name,
         amount: Number(amount),
         message: message || null,
-        contactEmail: settings?.contact_email || process.env.NEXT_PUBLIC_CONTACT_EMAIL || null,
+        contactEmail: settings?.contact_email || process.env.NEXT_PUBLIC_CONTACT_EMAIL || process.env.AUCTION_CONTACT_EMAIL || null,
+        donationPaymentUrl: process.env.CHEDDARUP_PAYMENT_URL_DONATIONS || null,
       });
     } catch (e) {
       logError('Donation confirmation email error', e);

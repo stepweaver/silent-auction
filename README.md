@@ -83,6 +83,13 @@ NEXT_PUBLIC_CONTACT_EMAIL=pto@example.org
 PAYMENT_INSTRUCTIONS="Pay at checkout table by 9pm. We accept cash and check only."
 PICKUP_INSTRUCTIONS="Pickup at gym stage tonight or Monday 3–5pm in the office with receipt."
 
+# Online payment links (optional, for CheddarUp or similar)
+# If set, these URLs will be used in winner and donation emails.
+# Winners: link for paying for won items
+CHEDDARUP_PAYMENT_URL_WINNERS=https://my.cheddarup.com/c/2026-mark-frank-elementary-silent-auction/items/item/8148196
+# Donors: link for paying general donations
+CHEDDARUP_PAYMENT_URL_DONATIONS=https://my.cheddarup.com/c/2026-mark-frank-elementary-silent-auction/items/item/8148117
+
 # Notification Settings
 # Site URL for links inside emails
 NEXT_PUBLIC_SITE_URL=https://your-auction-site.com
