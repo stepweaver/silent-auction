@@ -83,12 +83,11 @@ NEXT_PUBLIC_CONTACT_EMAIL=pto@example.org
 PAYMENT_INSTRUCTIONS="Pay online using the official payment link provided in your winner email. Complete payment by the stated deadline."
 PICKUP_INSTRUCTIONS="Pickup at gym stage tonight or Monday 3–5pm in the office with receipt."
 
-# Online payment links (optional, for CheddarUp or similar)
-# If set, these URLs will be used in winner and donation emails.
-# Winners: link for paying for won items
-CHEDDARUP_PAYMENT_URL_WINNERS=https://my.cheddarup.com/c/2026-mark-frank-elementary-silent-auction/items/item/8148196
-# Donors: link for paying general donations
-CHEDDARUP_PAYMENT_URL_DONATIONS=https://my.cheddarup.com/c/2026-mark-frank-elementary-silent-auction/items/item/8148117
+# Online payment link (optional, for CheddarUp or similar)
+# Set both to the same Cheddar Up share/landing page URL. Winner and donation emails
+# tell recipients which option to click (Silent Auction Item Payment vs Donation).
+CHEDDARUP_PAYMENT_URL_WINNERS=https://2026-mark-frank-elementary-silent-auction.cheddarup.com/
+CHEDDARUP_PAYMENT_URL_DONATIONS=https://2026-mark-frank-elementary-silent-auction.cheddarup.com/
 
 # Notification Settings
 # Site URL for links inside emails
