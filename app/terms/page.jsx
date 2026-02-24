@@ -61,12 +61,12 @@ export default function TermsPage() {
             <div>
               <h3 className='font-semibold text-gray-900 mb-2'>Payment &amp; Pickup Obligation</h3>
               <p>
-                Winning bidders are legally obligated to pay the full amount of their winning bid. Payment must be made promptly using the payment methods provided by the auction administrator
-                (for example, in-person checkout at the event or the official online payment link shared after the auction).
+                Winning bidders are legally obligated to pay the full amount of their winning bid. Payment must be made using the official payment methods and links provided by the auction administrator, and
+                completed within the stated payment window (typically within 24 hours of the auction closing).
               </p>
               <p className='mt-2'>
-                <strong>Pickup is typically in person at the designated checkout area unless other arrangements are communicated by the auction team.</strong> If payment is not received within the stated
-                timeframe, the item may be awarded to the next highest bidder and the original winning bid considered forfeited.
+                <strong>Pickup details will be communicated by the auction team (for example, designated pickup times and locations).</strong> Administrators may verify that payment has been received before
+                releasing any items. If payment is not received within the stated timeframe, the item may be awarded to the next highest bidder and the original winning bid considered forfeited.
               </p>
             </div>
             <div>

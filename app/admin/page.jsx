@@ -381,7 +381,7 @@ export default function AdminDashboard() {
         const data = await res.json();
         if (newStatus && data.closeResult) {
           const { emailsSent, adminEmailsSent, donationEmailsSent = 0, donationsCount = 0 } = data.closeResult;
-          const donationMsg = donationsCount > 0 ? ` ${donationEmailsSent} donation payment email(s) sent for ${donationsCount} pledge(s).` : '';
+          const donationMsg = donationsCount > 0 && donationEmailsSent > 0 ? ` ${donationEmailsSent} donation payment email(s) sent for ${donationsCount} pledge(s).` : '';
           setMsg(`Auction closed successfully. ${emailsSent} winner email(s) and ${adminEmailsSent} admin email(s) sent.${donationMsg}`);
         } else {
           setMsg(`Auction ${newStatus ? 'closed' : 'opened'} successfully`);

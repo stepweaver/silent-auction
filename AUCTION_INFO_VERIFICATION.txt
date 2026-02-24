@@ -14,10 +14,7 @@ Currently using: "Mary Frank PTO" and "Mary Frank Elementary"
 PAYMENT INFORMATION
 ================================================================================
 Current Terms page says:
-- "You do not have to be present during bidding, but you MUST be present to pay 
-   and pick up your items if you win."
-- "Payment must be made in person at the close of the auction at the designated 
-   checkout area."
+- "Winning bidders are legally obligated to pay the full amount of their winning bid. Payment must be made promptly using the official payment methods and links provided by the auction administrator."
 
 QUESTIONS:
 1. Where is the checkout area? (e.g., "main hallway table", "cafeteria exit")
@@ -31,8 +28,8 @@ QUESTIONS:
 PICKUP INFORMATION
 ================================================================================
 Current Terms state:
-"You MUST be present to pay and pick up your items if you win."
-"If payment is not received by the end of the event, the item may be awarded 
+"Winning bidders are required to complete payment using the official payment links provided and to pick up items according to the published pickup instructions and schedule."
+"If payment is not received within the stated timeframe, the item may be awarded 
 to the next highest bidder."
 
 No alternative arrangements offered - keeps things simple.
@@ -103,7 +100,7 @@ TERMS SUMMARY
 Key points:
 1. All bids are final and binding
 2. Winning bidders must pay full bid amount
-3. Must be present to pay and pickup (or make advance arrangements)
+3. Winning bidders must complete payment using the official payment methods/links and follow published pickup instructions and schedule
 4. Items sold "as is" without warranty
 5. All sales final - no refunds
 6. Auction administrator decisions are final

@@ -80,7 +80,7 @@ BASIC_AUTH_PASS=some-strong-pass
 
 # Auction Settings (optional - can also be set in admin)
 NEXT_PUBLIC_CONTACT_EMAIL=pto@example.org
-PAYMENT_INSTRUCTIONS="Pay at checkout table by 9pm. We accept cash and check only."
+PAYMENT_INSTRUCTIONS="Pay online using the official payment link provided in your winner email. Complete payment by the stated deadline."
 PICKUP_INSTRUCTIONS="Pickup at gym stage tonight or Monday 3–5pm in the office with receipt."
 
 # Online payment links (optional, for CheddarUp or similar)

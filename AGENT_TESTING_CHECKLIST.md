@@ -135,7 +135,7 @@ Use this checklist to systematically test all functionality. Test each item and 
 - [ ] Verify page loads with terms content
 - [ ] Verify "Bidding Agreement & Terms" section exists
 - [ ] Verify "Privacy Policy" section exists
-- [ ] Verify "You MUST be present to pay and pick up your items" text appears
+- [ ] Verify payment obligation language reflects online payment via official payment methods/links (no requirement to be physically present to pay)
 - [ ] Verify "Clear My Local Data" section exists at bottom
 - [ ] Click "Clear Local Data" button
 - [ ] Verify confirmation prompt appears

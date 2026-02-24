@@ -396,7 +396,7 @@ export default function ItemPage({ params }) {
                       <p className="text-xs sm:text-sm text-gray-700">No bids were placed.</p>
                     )}
                     <div className="mt-3 text-xs space-y-1 text-gray-700">
-                      <p><b>Payment:</b> {settings?.payment_instructions || 'Pay at checkout when auction closes.'}</p>
+                      <p><b>Payment:</b> {settings?.payment_instructions || 'Pay online using the official payment link provided in your winner email.'}</p>
                       <p><b>Pickup:</b> {settings?.pickup_instructions || 'See gym stage.'}</p>
                       {settings?.contact_email && (
                         <p className="mt-1">Questions: {settings?.contact_email}</p>
