@@ -4,7 +4,6 @@ import { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AliasSelector from '@/components/AliasSelector';
-import { fetchWithTimeout } from '@/lib/utils';
 
 const STORAGE_KEY = 'auction_bidder_info';
 const ENROLLMENT_KEY = 'auction_enrolled';
@@ -67,12 +66,12 @@ export default function LandingPage() {
       if (enrolled === 'true') {
         // Check if there's a redirect URL (from QR code scan)
         const redirect = localStorage.getItem('auction_redirect');
+        const target = redirect || '/';
         if (redirect) {
           localStorage.removeItem('auction_redirect');
-          router.push(redirect);
-        } else {
-          router.push('/');
         }
+        // Use full-page navigation to avoid any SPA routing quirks
+        window.location.href = target;
       }
     }
   }, [router]);
@@ -80,20 +79,42 @@ export default function LandingPage() {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic email format check (client-side only to avoid blocking on DNS/network issues)
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
+    // Validate email format first
+    if (!email || !email.trim()) {
       setError('Please enter your email address');
-      return;
-    }
-    const simpleEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!simpleEmailRegex.test(trimmedEmail)) {
-      setError('Please enter a valid email address');
       return;
     }
 
     setError('');
     setSubmitting(true);
+
+    // Step 1: Validate email format and domain
+    try {
+      const response = await fetch('/api/email/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!data.valid) {
+        let errorMsg = data.error || 'Please enter a valid email address';
+        if (data.suggestion) {
+          errorMsg += ` Did you mean ${data.suggestion}?`;
+        }
+        setError(errorMsg);
+        setSubmitting(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Email validation error:', err);
+      setError(
+        'Unable to verify email address. Please check for typos and try again.'
+      );
+      setSubmitting(false);
+      return;
+    }
 
     // Step 2: Check for existing alias - if found, log them in
     const isRecovery =
@@ -101,15 +122,11 @@ export default function LandingPage() {
       localStorage.getItem(ENROLLMENT_KEY) !== 'true';
 
     try {
-      const response = await fetchWithTimeout(
-        '/api/alias/get',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim() }),
-        },
-        15000
-      );
+      const response = await fetch('/api/alias/get', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
 
       const data = await response.json();
 
@@ -141,23 +158,17 @@ export default function LandingPage() {
 
           setSubmitting(false);
           const redirect = localStorage.getItem('auction_redirect');
+          const target = redirect || '/';
           if (redirect) {
             localStorage.removeItem('auction_redirect');
-            router.push(redirect);
-          } else {
-            router.push('/');
           }
+          // Use full-page navigation so login works reliably in production
+          window.location.href = target;
           return;
         }
       }
     } catch (err) {
       console.error('Error checking existing alias on submit:', err);
-      const isConnection = (err?.message ?? '').includes('timed out') || err?.message === 'Failed to fetch';
-      if (isConnection) {
-        setError('Connection is slow or unavailable. Please check your Wi‑Fi or signal and try again.');
-        setSubmitting(false);
-        return;
-      }
     }
 
     // Step 3: New user — name is required
@@ -169,19 +180,15 @@ export default function LandingPage() {
 
     // Step 4: Send verification email
     try {
-      const response = await fetchWithTimeout(
-        '/api/email/send-verification',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email.trim(),
-            name: name.trim(),
-            company_website: honeypot,
-          }),
-        },
-        20000
-      );
+      const response = await fetch('/api/email/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          name: name.trim(),
+          company_website: honeypot,
+        }),
+      });
 
       const data = await response.json();
 
@@ -189,15 +196,11 @@ export default function LandingPage() {
         if (data.hasExistingAlias) {
           setError(data.error || 'This email already has an alias');
           try {
-            const aliasResponse = await fetchWithTimeout(
-              '/api/alias/get',
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email.trim() }),
-              },
-              15000
-            );
+            const aliasResponse = await fetch('/api/alias/get', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email.trim() }),
+            });
             const aliasData = await aliasResponse.json();
             if (aliasData.alias && typeof window !== 'undefined') {
               localStorage.setItem(ENROLLMENT_KEY, 'true');
@@ -212,7 +215,8 @@ export default function LandingPage() {
                 })
               );
               setSubmitting(false);
-              router.push('/');
+              // Full-page navigation after logging in existing alias
+              window.location.href = '/';
               return;
             }
           } catch (err) {
@@ -237,14 +241,10 @@ export default function LandingPage() {
       setStep('verify');
       setError('');
     } catch (err) {
-      console.error('Send verification error:', err);
-      const isConnection = (err?.message ?? '').includes('timed out') || err?.message === 'Failed to fetch';
-      setError(
-        isConnection
-          ? 'Connection is slow or unavailable. Please check your Wi‑Fi or signal and try again.'
-          : 'Failed to send verification email. Please try again.'
-      );
+      console.error('Error sending verification email:', err);
+      setError('Failed to send verification email. Please try again.');
     }
+
     setSubmitting(false);
   };
 
@@ -276,10 +276,10 @@ export default function LandingPage() {
       const redirect = localStorage.getItem('auction_redirect');
       if (redirect) {
         localStorage.removeItem('auction_redirect');
-        router.push(redirect);
+        window.location.href = redirect;
       } else {
         // Redirect to Dashboard after creating avatar
-        router.push('/avatar');
+        window.location.href = '/avatar';
       }
     }
   };
