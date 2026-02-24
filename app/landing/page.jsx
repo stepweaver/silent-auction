@@ -21,7 +21,6 @@ export default function LandingPage() {
   const [hasSentRecoveryNotification, setHasSentRecoveryNotification] =
     useState(false);
   const [honeypot, setHoneypot] = useState(''); // Honeypot field - should remain empty
-  const [recoveringFromStorage, setRecoveringFromStorage] = useState(false);
   const nameInputId = useId();
   const emailInputId = useId();
   const honeypotId = useId();
@@ -78,129 +77,23 @@ export default function LandingPage() {
     }
   }, [router]);
 
-  // Auto-recovery: if enrollment flag is missing but we have stored bidder info (e.g. after
-  // a failed write on slow Wi‑Fi), re-validate with the server and restore enrollment.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const enrolled = localStorage.getItem(ENROLLMENT_KEY);
-    if (enrolled === 'true') return;
-
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-
-    let info;
-    try {
-      info = JSON.parse(raw);
-    } catch {
-      return;
-    }
-
-    const storedEmail = info?.email;
-    if (!storedEmail || typeof storedEmail !== 'string' || !storedEmail.trim()) return;
-
-    let cancelled = false;
-
-    const run = async () => {
-      setRecoveringFromStorage(true);
-      try {
-        const response = await fetchWithTimeout(
-          '/api/alias/get',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: storedEmail.trim() }),
-          },
-          15000
-        );
-
-        if (cancelled) return;
-
-        const data = await response.json();
-
-        if (response.ok && data.alias) {
-          localStorage.setItem(ENROLLMENT_KEY, 'true');
-          const bidderName =
-            data.alias.name || info.bidder_name?.trim() || data.alias.alias;
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({
-              email: storedEmail.trim(),
-              bidder_name: bidderName,
-              alias: data.alias,
-            })
-          );
-          const redirect = localStorage.getItem('auction_redirect');
-          if (redirect) {
-            localStorage.removeItem('auction_redirect');
-            router.push(redirect);
-          } else {
-            router.push('/');
-          }
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error('Auto-recovery (alias/get) failed:', err);
-        }
-      } finally {
-        if (!cancelled) {
-          setRecoveringFromStorage(false);
-        }
-      }
-    };
-
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [router]);
-
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate email format first
-    if (!email || !email.trim()) {
+    // Basic email format check (client-side only to avoid blocking on DNS/network issues)
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
       setError('Please enter your email address');
+      return;
+    }
+    const simpleEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!simpleEmailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email address');
       return;
     }
 
     setError('');
     setSubmitting(true);
-
-    // Step 1: Validate email format and domain
-    try {
-      const response = await fetchWithTimeout(
-        '/api/email/validate',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim() }),
-        },
-        15000
-      );
-
-      const data = await response.json();
-
-      if (!data.valid) {
-        let errorMsg = data.error || 'Please enter a valid email address';
-        if (data.suggestion) {
-          errorMsg += ` Did you mean ${data.suggestion}?`;
-        }
-        setError(errorMsg);
-        setSubmitting(false);
-        return;
-      }
-    } catch (err) {
-      console.error('Email validation error:', err);
-      const isConnection = (err?.message ?? '').includes('timed out') || err?.message === 'Failed to fetch';
-      setError(
-        isConnection
-          ? 'Connection is slow or unavailable. Please check your Wi‑Fi or signal and try again.'
-          : 'Unable to verify email address. Please check for typos and try again.'
-      );
-      setSubmitting(false);
-      return;
-    }
 
     // Step 2: Check for existing alias - if found, log them in
     const isRecovery =
@@ -390,23 +283,6 @@ export default function LandingPage() {
       }
     }
   };
-
-  // While attempting auto-recovery from stored bidder info (e.g. after failed write on slow connection)
-  if (recoveringFromStorage) {
-    return (
-      <div className='w-full min-h-screen px-4 py-8 flex items-center justify-center'>
-        <div className='text-center'>
-          <div
-            className='w-10 h-10 border-4 border-gray-200 border-t-primary rounded-full animate-spin mx-auto mb-4'
-            style={{ borderTopColor: 'var(--primary-500)' }}
-          />
-          <p className='text-gray-600 text-sm sm:text-base'>
-            Checking your previous session…
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   // Verification step - show message to check email
   if (step === 'verify') {
