@@ -181,7 +181,7 @@ export default function ItemPage({ params }) {
       if (isPageVisible && !document.hidden) {
         loadAll();
       }
-    }, 10000); // 10 seconds instead of 5 to reduce mobile data usage
+    }, 15000); // 15s to reduce Supabase egress; realtime still updates on bid
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -282,10 +282,10 @@ export default function ItemPage({ params }) {
         <div className="grid gap-4 xl:grid-cols-2">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
             <figure className="bg-gray-100">
-              {item.photo_url ? (
+              {(item.thumbnail_url || item.photo_url) ? (
                 <div className="relative aspect-[4/3] w-full">
                   <img
-                    src={item.photo_url}
+                    src={item.thumbnail_url || item.photo_url}
                     alt={item.title}
                     width={800}
                     height={600}
@@ -293,6 +293,16 @@ export default function ItemPage({ params }) {
                     loading="eager"
                     decoding="async"
                   />
+                  {item.photo_url && item.thumbnail_url && (
+                    <a
+                      href={item.photo_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute bottom-2 right-2 px-2 py-1.5 rounded text-xs font-medium bg-black/60 text-white hover:bg-black/80 transition-colors"
+                    >
+                      View full image
+                    </a>
+                  )}
                 </div>
               ) : (
                 <div className="relative aspect-[4/3] w-full bg-white flex items-center justify-center">

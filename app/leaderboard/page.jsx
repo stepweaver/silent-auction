@@ -272,12 +272,12 @@ export default function LeaderboardPage() {
       )
       .subscribe();
 
-    // Polling backup every 8 seconds (reduced from 2s to avoid hammering Supabase)
+    // Polling backup every 15 seconds to reduce Supabase egress; realtime still updates on bids
     const pollInterval = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         loadLeaderboard();
       }
-    }, 8000);
+    }, 15000);
 
     return () => {
       s.removeChannel(channel);
