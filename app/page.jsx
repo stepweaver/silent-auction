@@ -160,14 +160,14 @@ export default function CatalogPage() {
       if (!savedSlug) return false;
       const el = document.querySelector(`[data-item-slug="${savedSlug}"]`);
       if (el) {
-        el.scrollIntoView({ block: 'center' });
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
         return true;
       }
       return false;
     };
 
     const restoreByPos = () => {
-      if (pos > 0) window.scrollTo(0, pos);
+      if (pos > 0) window.scrollTo({ top: pos, behavior: 'smooth' });
     };
 
     const restore = () => {
