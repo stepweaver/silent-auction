@@ -167,6 +167,19 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Landing page: fixed viewport prevents Safari's scroll-into-view jump when keyboard opens */
+body.landing-viewport-lock {
+  overflow: hidden;
+  height: 100dvh;
+  height: 100vh; /* fallback */
+}
+body.landing-viewport-lock #main-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Better touch targets */
 @media (max-width: 1024px) {
   button, a, input[type="button"], input[type="submit"], [role="button"] {

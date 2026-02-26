@@ -1,3 +1,5 @@
+import LandingViewportLock from '@/components/LandingViewportLock';
+
 export const metadata = {
   title: 'Get Started - Join the Auction',
   description: 'Create your anonymous bidding alias and join the Mary Frank Elementary Silent Auction. Choose a fun color and emoji to represent you while bidding!',
@@ -13,5 +15,5 @@ export const metadata = {
 };
 
 export default function LandingLayout({ children }) {
-  return children;
+  return <LandingViewportLock>{children}</LandingViewportLock>;
 }

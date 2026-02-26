@@ -3,6 +3,7 @@
 import { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import AliasSelector from '@/components/AliasSelector';
 
 const STORAGE_KEY = 'auction_bidder_info';
@@ -60,20 +61,10 @@ export default function LandingPage() {
       }
     }
 
-    // Check if already enrolled
-    if (typeof window !== 'undefined') {
-      const enrolled = localStorage.getItem(ENROLLMENT_KEY);
-      if (enrolled === 'true') {
-        // Check if there's a redirect URL (from QR code scan)
-        const redirect = localStorage.getItem('auction_redirect');
-        const target = redirect || '/';
-        if (redirect) {
-          localStorage.removeItem('auction_redirect');
-        }
-        // Use full-page navigation to avoid any SPA routing quirks
-        window.location.href = target;
-      }
-    }
+    // Don't redirect based on localStorage here. The proxy checks the enrollment COOKIE.
+    // If user has localStorage but no cookie (Safari ITP, cleared cookies), redirecting to /
+    // would cause a loop: proxy redirects to /landing -> we redirect to / -> proxy redirects...
+    // Let the user stay on landing; they can submit to get the cookie set.
   }, [router]);
 
   const handleEmailSubmit = async (e) => {
@@ -384,7 +375,7 @@ export default function LandingPage() {
 
   if (step === 'intro') {
     return (
-      <div className='w-full px-4 py-4 pb-8 min-h-[100dvh]' style={{ overscrollBehavior: 'none' }}>
+      <div className='w-full px-4 py-4 pb-8'>
         <div className='w-full max-w-lg mx-auto'>
           {/* Hero Card */}
           <div className='bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden'>
@@ -566,16 +557,7 @@ export default function LandingPage() {
             purposes.
           </p>
           <p className='mt-2 text-center text-xs text-gray-500'>
-            Having trouble on Safari?{' '}
-            <a
-              href='https://apps.apple.com/app/brave-private-web-browser/id1052879175'
-              target='_blank'
-              rel='noopener noreferrer'
-              className='underline hover:text-gray-700'
-            >
-              Try Brave
-            </a>
-            {' '}— it works better for this form.
+            Already enrolled? <Link href='/' className='font-medium underline hover:text-gray-700'>Go to catalog</Link>
           </p>
         </div>
       </div>
