@@ -76,22 +76,43 @@ export default function PaymentInstructionsPage() {
             ) : (
               <div>
                 <h2 className="text-2xl font-bold text-primary mb-3">Payment</h2>
-                <div className="alert alert-info">
-                  <span>Please complete your payment online using the official payment link provided in your winner email. Payment is required within 24 hours of the auction closing and must be completed prior to item pickup.</span>
+                <div className="alert alert-info space-y-2">
+                  <p>
+                    Please complete your payment online using this link:{' '}
+                    {process.env.NEXT_PUBLIC_CHEDDARUP_PAYMENT_URL_WINNERS ? (
+                      <a href={process.env.NEXT_PUBLIC_CHEDDARUP_PAYMENT_URL_WINNERS} className="link link-primary font-medium" target="_blank" rel="noopener noreferrer">
+                        {process.env.NEXT_PUBLIC_CHEDDARUP_PAYMENT_URL_WINNERS}
+                      </a>
+                    ) : (
+                      'the official payment link provided in your winner email'
+                    )}.
+                  </p>
+                  <p>Payment is required within 24 hours of the auction closing and must be completed prior to item pickup.</p>
                 </div>
               </div>
             )}
 
-            {settings?.pickup_instructions && (
-              <div>
-                <h2 className="text-2xl font-bold text-primary mb-3">Pickup</h2>
-                <div className="bg-success/10 border border-success/30 rounded-xl p-4">
-                  <p className="text-base-content whitespace-pre-line">
-                    {settings.pickup_instructions}
+            <div>
+              <h2 className="text-2xl font-bold text-primary mb-3">Item Pickup</h2>
+              <div className="bg-success/10 border border-success/30 rounded-xl p-4 space-y-3">
+                <p className="text-base-content whitespace-pre-line">
+                  {settings?.pickup_instructions || 'Items may be picked up on Thursday immediately following the close of the auction at 7:30pm in the LGI room across from the gym.'}
+                </p>
+                <p className="text-base-content text-sm">
+                  Please note: administrators will confirm payment before releasing items. Unpaid items after the 24-hour window may be offered to the next highest bidder.
+                </p>
+                {(process.env.NEXT_PUBLIC_PICKUP_CONTACT || settings?.contact_email) ? (
+                  <p className="text-base-content text-sm">
+                    If you are not able to come and pick up your item(s) at the close of the auction please contact{' '}
+                    {process.env.NEXT_PUBLIC_PICKUP_CONTACT ? (
+                      process.env.NEXT_PUBLIC_PICKUP_CONTACT
+                    ) : (
+                      <a href={`mailto:${settings.contact_email}`} className="link link-primary">{settings.contact_email}</a>
+                    )}.
                   </p>
-                </div>
+                ) : null}
               </div>
-            )}
+            </div>
 
             {settings?.contact_email && (
               <div>

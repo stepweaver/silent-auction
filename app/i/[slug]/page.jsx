@@ -40,22 +40,22 @@ export default function ItemPage({ params }) {
 
       setItem(itemData);
 
+      // Select only non-PII columns — never expose email to client
       const { data: bidsData, error: bidsError } = await s
         .from('bids')
-        .select('*')
+        .select('id, item_id, amount, alias_id, bidder_name, created_at')
         .eq('item_id', itemData.id)
         .order('amount', { ascending: false });
 
       if (bidsError) throw bidsError;
 
-      // Fetch aliases for bids that have alias_id
+      // Fetch aliases for bids that have alias_id (id, alias, color, animal only — no email)
       const aliasIds = (bidsData || [])
         .map(bid => bid.alias_id)
         .filter(id => id !== null);
 
       let aliasesMap = {};
       if (aliasIds.length > 0) {
-        // Select alias fields
         const { data: aliasesData, error: aliasesError } = await s
           .from('user_aliases')
           .select('id, alias, color, animal')
@@ -64,62 +64,18 @@ export default function ItemPage({ params }) {
         if (aliasesError) {
           console.error('Error fetching aliases:', aliasesError);
         } else if (aliasesData) {
-          // Create a map of alias_id to alias data
           aliasesMap = aliasesData.reduce((acc, alias) => {
             acc[alias.id] = alias;
             return acc;
           }, {});
-          
-          // Log if any alias_ids weren't found (data integrity issue)
-          const foundIds = new Set(aliasesData.map(a => a.id));
-          const missingIds = aliasIds.filter(id => !foundIds.has(id));
-          if (missingIds.length > 0) {
-            console.warn(`[Item Page] Missing aliases for alias_ids: ${missingIds.join(', ')} on item ${itemData.id}`);
-          }
         }
       }
 
-      // For bids missing aliases, try email-based fallback lookup
-      const bidsMissingAliases = (bidsData || []).filter(
-        bid => bid.alias_id && !aliasesMap[bid.alias_id] && bid.email
-      );
-
-      // Batch lookup aliases by email for missing ones
-      let emailAliasesMap = {};
-      if (bidsMissingAliases.length > 0) {
-        const missingEmails = [...new Set(bidsMissingAliases.map(bid => bid.email))];
-        const { data: emailAliasesData } = await s
-          .from('user_aliases')
-          .select('id, alias, color, animal, email')
-          .in('email', missingEmails);
-
-        if (emailAliasesData) {
-          emailAliasesMap = emailAliasesData.reduce((acc, alias) => {
-            acc[alias.email] = alias;
-            return acc;
-          }, {});
-          
-          // Log recovery for monitoring
-          if (emailAliasesData.length > 0) {
-            console.warn(`[Item Page] Recovered ${emailAliasesData.length} aliases by email lookup for item ${itemData.id}`);
-          }
-        }
-      }
-
-      // Join aliases with bids
-      const bidsWithAliases = (bidsData || []).map(bid => {
-        let bidAlias = bid.alias_id ? aliasesMap[bid.alias_id] : null;
-        
-        // Fallback: If alias_id lookup failed, try email lookup
-        if (!bidAlias && bid.email && emailAliasesMap[bid.email]) {
-          bidAlias = emailAliasesMap[bid.email];
-        }
-        
-        return {
-          ...bid,
-          user_aliases: bidAlias,
-        };
-      });
+      // Join aliases with bids (no PII in client state)
+      const bidsWithAliases = (bidsData || []).map(bid => ({
+        ...bid,
+        user_aliases: bid.alias_id ? aliasesMap[bid.alias_id] || null : null,
+      }));
 
       // Create hash to detect changes (only update if data actually changed)
       const newHash = bidsWithAliases.map(b => 
@@ -451,8 +407,8 @@ export default function ItemPage({ params }) {
                       <p className="text-xs sm:text-sm text-gray-700">No bids were placed.</p>
                     )}
                     <div className="mt-3 text-xs space-y-1 text-gray-700">
-                      <p><b>Payment:</b> {settings?.payment_instructions || 'Pay online using the official payment link provided in your winner email.'}</p>
-                      <p><b>Pickup:</b> {settings?.pickup_instructions || 'See gym stage.'}</p>
+                      <p><b>Payment:</b> {settings?.payment_instructions || 'Please complete your payment online using the link in your winner email. Payment is required within 24 hours of the auction closing and must be completed prior to item pickup.'}</p>
+                      <p><b>Pickup:</b> {settings?.pickup_instructions || 'Items may be picked up on Thursday immediately following the close of the auction at 7:30pm in the LGI room across from the gym.'}</p>
                       {settings?.contact_email && (
                         <p className="mt-1">Questions: {settings?.contact_email}</p>
                       )}

@@ -163,7 +163,7 @@ If you did not place this bid, contact the auction administrators immediately at
     </p>
     {{/if}}
     <p style="margin: 12px 0 0 0; font-size: 13px; color: #4b5563;">
-      Please complete payment within <strong>24 hours</strong> of the auction closing and before picking up your item{{pluralSuffix}}. Administrators will confirm payment before releasing any items. After that window, the auction team may offer unpaid items to the next highest bidder.
+      Please note: administrators will confirm payment before releasing items. Unpaid items after the 24-hour window may be offered to the next highest bidder.
     </p>
   </div>
 
@@ -213,7 +213,7 @@ Pickup: {{pickupInstructions}}
 View Payment Instructions: {{paymentInstructionsUrl}}
 {{/if}}
 
-Please complete payment within 24 hours of the auction closing and before picking up your item{{pluralSuffix}}. Administrators will confirm payment before releasing any items. After that window, the auction team may offer unpaid items to the next highest bidder.
+Please note: administrators will confirm payment before releasing items. Unpaid items after the 24-hour window may be offered to the next highest bidder.
 
 {{#if contactEmail}}
 Questions? Contact {{contactEmail}}

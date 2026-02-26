@@ -84,17 +84,21 @@ BASIC_AUTH_PASS=some-strong-pass
 
 # Auction Settings (optional - can also be set in admin)
 NEXT_PUBLIC_CONTACT_EMAIL=pto@example.org
-PAYMENT_INSTRUCTIONS="Please complete your payment online using the link in your winner email. Payment is required within 24 hours of the auction closing and must be completed prior to item pickup."
+PAYMENT_INSTRUCTIONS="Please complete your payment online using this link: https://my.cheddarup.com/c/2026-mark-frank-elementary-silent-auction/items\n\nPayment is required within 24 hours of the auction closing and must be completed prior to item pickup."
 PICKUP_INSTRUCTIONS="Items may be picked up on Thursday immediately following the close of the auction at 7:30pm in the LGI room across from the gym."
 
-# Pickup contact (optional) - shown in winner email if winners can't pickup at close
+# Pickup contact (optional) - shown in winner email and payment page if winners can't pickup at close
 PICKUP_CONTACT="Stephanie (586) 322-5097 or Lauren (574) 876-2227"
+# For payment page (client-side): must match PICKUP_CONTACT
+NEXT_PUBLIC_PICKUP_CONTACT="Stephanie (586) 322-5097 or Lauren (574) 876-2227"
 
 # Online payment link (optional, for CheddarUp or similar)
 # Set both to the same Cheddar Up share/landing page URL. Winner and donation emails
 # tell recipients which option to click (Silent Auction Item Payment vs Donation).
 CHEDDARUP_PAYMENT_URL_WINNERS=https://my.cheddarup.com/c/2026-mark-frank-elementary-silent-auction/items
 CHEDDARUP_PAYMENT_URL_DONATIONS=https://my.cheddarup.com/c/2026-mark-frank-elementary-silent-auction/items
+# For payment page (client-side): must match CHEDDARUP_PAYMENT_URL_WINNERS
+NEXT_PUBLIC_CHEDDARUP_PAYMENT_URL_WINNERS=https://my.cheddarup.com/c/2026-mark-frank-elementary-silent-auction/items
 
 # Notification Settings
 # Site URL for links inside emails

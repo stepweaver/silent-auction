@@ -65,8 +65,7 @@ export default function TermsPage() {
                 completed within the stated payment window (typically within 24 hours of the auction closing).
               </p>
               <p className='mt-2'>
-                <strong>Pickup details will be communicated by the auction team (for example, designated pickup times and locations).</strong> Administrators may verify that payment has been received before
-                releasing any items. If payment is not received within the stated timeframe, the item may be awarded to the next highest bidder and the original winning bid considered forfeited.
+                <strong>Items may be picked up on Thursday immediately following the close of the auction at 7:30pm in the LGI room across from the gym.</strong> Administrators will confirm payment before releasing items. Unpaid items after the 24-hour window may be offered to the next highest bidder and the original winning bid considered forfeited.
               </p>
             </div>
             <div>

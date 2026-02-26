@@ -25,11 +25,16 @@ export async function POST(req) {
     const now = new Date();
     const deadlinePassed = deadline && now >= deadline;
 
-    // Get user's bids with item information
+    // Get user's bids with item information — exclude email from response
     const { data: bids, error: bidsError } = await s
       .from('bids')
       .select(`
-        *,
+        id,
+        item_id,
+        amount,
+        alias_id,
+        bidder_name,
+        created_at,
         items (
           id,
           slug,

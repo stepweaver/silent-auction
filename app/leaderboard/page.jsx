@@ -88,9 +88,10 @@ export default function LeaderboardPage() {
         let allBids = [];
         for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
           const chunk = itemIds.slice(i, i + BATCH_SIZE);
+          // Select only non-PII columns — never expose email to client
           const { data: bidsChunk, error: bidsError } = await s
             .from('bids')
-            .select('*')
+            .select('id, item_id, amount, alias_id, bidder_name, created_at')
             .in('item_id', chunk)
             .order('amount', { ascending: false })
             .order('created_at', { ascending: false })
@@ -111,7 +112,6 @@ export default function LeaderboardPage() {
         const recentBidsByItem = {};
         const bidCountByItem = {};
         const allAliasIds = new Set();
-        const emailsForFallback = new Set();
 
         for (const item of openItems) {
           const list = bidsByItem[item.id] || [];
@@ -130,7 +130,7 @@ export default function LeaderboardPage() {
           });
         }
 
-        // Batch 2: Fetch all aliases by id in one or few queries
+        // Batch 2: Fetch all aliases by id (id, alias, color, animal only — no email)
         const aliasIdsArr = [...allAliasIds];
         const aliasesMap = {};
         const ALIAS_BATCH = 100;
@@ -147,40 +147,6 @@ export default function LeaderboardPage() {
           }
         }
 
-        // Emails for fallback: top bid, second bid (challenger), and recent bids that don't have alias resolved
-        for (const item of openItems) {
-          const list = bidsByItem[item.id] || [];
-          const topBid = topBidByItem[item.id];
-          const secondBid = list[1] || null;
-          if (topBid?.email) {
-            const hasAlias = topBid.alias_id && aliasesMap[topBid.alias_id];
-            if (!hasAlias) emailsForFallback.add(topBid.email);
-          }
-          if (secondBid?.email) {
-            const hasAlias = secondBid.alias_id && aliasesMap[secondBid.alias_id];
-            if (!hasAlias) emailsForFallback.add(secondBid.email);
-          }
-          (recentBidsByItem[item.id] || []).forEach(bid => {
-            if (!bid.email) return;
-            const hasAlias = bid.alias_id && aliasesMap[bid.alias_id];
-            if (!hasAlias) emailsForFallback.add(bid.email);
-          });
-        }
-
-        // Batch 3: Fallback alias lookup by email (same as item page – resolves aliases we missed by id)
-        const emailAliasesMap = {};
-        if (emailsForFallback.size > 0) {
-          const emails = [...emailsForFallback];
-          const { data: emailAliasesData } = await s
-            .from('user_aliases')
-            .select('id, alias, color, animal, email')
-            .in('email', emails);
-
-          if (emailAliasesData) {
-            emailAliasesData.forEach(a => { emailAliasesMap[a.email] = a; });
-          }
-        }
-
         // Build topBids, secondTopBids (runner-up for war display), and recentBids with aliases attached
         const newTopBids = {};
         const newSecondTopBids = {};
@@ -192,25 +158,21 @@ export default function LeaderboardPage() {
           const topBid = topBidByItem[item.id];
           const secondBid = list[1] || null;
 
-          let topBidAlias = topBid?.alias_id ? aliasesMap[topBid.alias_id] : null;
-          if (!topBidAlias && topBid?.email) topBidAlias = emailAliasesMap[topBid.email] || null;
-
+          const topBidAlias = topBid?.alias_id ? aliasesMap[topBid.alias_id] || null : null;
           newTopBids[item.id] = topBid ? { ...topBid, user_aliases: topBidAlias } : null;
           if (!topBid) delete newTopBids[item.id];
 
-          let secondBidAlias = secondBid?.alias_id ? aliasesMap[secondBid.alias_id] : null;
-          if (!secondBidAlias && secondBid?.email) secondBidAlias = emailAliasesMap[secondBid.email] || null;
+          const secondBidAlias = secondBid?.alias_id ? aliasesMap[secondBid.alias_id] || null : null;
           const leaderKey = topBid?.alias_id ?? topBid?.bidder_name ?? '';
           const secondKey = secondBid?.alias_id ?? secondBid?.bidder_name ?? '';
           if (secondBid && leaderKey !== secondKey) {
             newSecondTopBids[item.id] = { ...secondBid, user_aliases: secondBidAlias };
           }
 
-          const recentList = (recentBidsByItem[item.id] || []).map(bid => {
-            let bidAlias = bid.alias_id ? aliasesMap[bid.alias_id] : null;
-            if (!bidAlias && bid.email) bidAlias = emailAliasesMap[bid.email] || null;
-            return { ...bid, user_aliases: bidAlias };
-          });
+          const recentList = (recentBidsByItem[item.id] || []).map(bid => ({
+            ...bid,
+            user_aliases: bid.alias_id ? aliasesMap[bid.alias_id] || null : null,
+          }));
           if (recentList.length > 0) newRecentBids[item.id] = recentList;
 
           newBidCounts[item.id] = bidCountByItem[item.id] ?? 0;
