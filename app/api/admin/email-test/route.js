@@ -1,5 +1,5 @@
 /**
- * Secret endpoint: send all email types to a single address for testing.
+ * Secret endpoint: send closing emails (winner digest + admin winners list) to a single address for testing.
  * Only the specified email receives anything. No auction actions are triggered.
  * Protected by admin Basic Auth.
  * Uses dynamic config from settings DB and env (pickup contact, payment/pickup instructions).
@@ -8,23 +8,12 @@
 import { headers } from 'next/headers';
 import { checkBasicAuth } from '@/lib/auth';
 import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
-import {
-  sendBidConfirmation,
-  sendOutbidEmail,
-  sendWinnerDigest,
-  sendDonationConfirmation,
-  sendAliasAccessNotification,
-  sendVendorAdminEnrollmentEmail,
-  sendEmailVerification,
-  sendAdminWinnersList,
-} from '@/lib/notifications';
+import { sendWinnerDigest, sendAdminWinnersList } from '@/lib/notifications';
 import { supabaseServer } from '@/lib/serverSupabase';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 const paymentUrl =
   process.env.CHEDDARUP_PAYMENT_URL_WINNERS || `${siteUrl}/payment-instructions`;
-const donationPaymentUrl =
-  process.env.CHEDDARUP_PAYMENT_URL_DONATIONS || paymentUrl;
 const pickupContact = process.env.PICKUP_CONTACT || null;
 const pickupInstructionsEnv =
   process.env.PICKUP_INSTRUCTIONS ||
@@ -90,28 +79,6 @@ export async function POST(req) {
     await delay(800);
   };
 
-  await run('Bid confirmation', () =>
-    sendBidConfirmation({
-      email,
-      bidderName: 'Test Bidder',
-      itemTitle: 'Lakeside Cabin Weekend Getaway',
-      bidAmount: 125,
-      itemUrl: `${siteUrl}/i/sample-item`,
-      contactEmail,
-    }),
-  );
-
-  await run('Outbid', () =>
-    sendOutbidEmail({
-      email,
-      bidderName: 'Test Bidder',
-      itemTitle: 'Lakeside Cabin Weekend Getaway',
-      newHighBid: 150,
-      itemUrl: `${siteUrl}/i/sample-item`,
-      contactEmail,
-    }),
-  );
-
   await run('Winner digest', () =>
     sendWinnerDigest({
       email,
@@ -129,44 +96,6 @@ export async function POST(req) {
     }),
   );
 
-  await run('Donation confirmation', () =>
-    sendDonationConfirmation({
-      email,
-      donorName: 'Test Donor',
-      amount: 50,
-      message: 'Happy to support the school!',
-      contactEmail,
-      donationPaymentUrl,
-    }),
-  );
-
-  await run('Security alert', () =>
-    sendAliasAccessNotification({
-      email,
-      alias: 'Purple Panda',
-      contactEmail,
-      siteUrl,
-    }),
-  );
-
-  await run('Vendor enrollment', () =>
-    sendVendorAdminEnrollmentEmail({
-      email,
-      name: 'Test Vendor',
-      enrollmentLink: `${siteUrl}/vendor-enroll?token=test-token`,
-      contactEmail,
-    }),
-  );
-
-  await run('Email verification', () =>
-    sendEmailVerification({
-      email,
-      name: 'Test User',
-      verificationLink: `${siteUrl}/verify-email?token=test&email=${encodeURIComponent(email)}`,
-      contactEmail,
-    }),
-  );
-
   await run('Admin winners list', () =>
     sendAdminWinnersList({
       adminEmails: [email],
@@ -175,9 +104,11 @@ export async function POST(req) {
         { itemTitle: 'VIP School Parking Spot (2025–2026)', bidderName: 'John Doe', email: 'john@example.com', winningBid: 300 },
         { itemTitle: 'Principal for a Day Experience', bidderName: 'Test Winner', email, winningBid: 210 },
       ],
+      donors: [
+        { donorName: 'Test Donor One', email: 'donor1@example.com', amount: 50, message: 'Happy to support!' },
+        { donorName: 'Test Donor Two', email: 'donor2@example.com', amount: 25, message: null },
+      ],
       contactEmail,
-      donationsCount: 2,
-      donationsTotal: 75,
       auctionClosedAt: new Date().toISOString(),
     }),
   );
