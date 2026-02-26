@@ -24,6 +24,8 @@ const contactEmail =
   'pto@example.org';
 const paymentUrl =
   process.env.CHEDDARUP_PAYMENT_URL_WINNERS || `${siteUrl}/payment-instructions`;
+const donationPaymentUrl =
+  process.env.CHEDDARUP_PAYMENT_URL_DONATIONS || paymentUrl;
 const pickupContact = process.env.PICKUP_CONTACT || null;
 
 export async function POST(req) {
@@ -47,14 +49,17 @@ export async function POST(req) {
   const sent = [];
   const failed = [];
 
+  const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
   const run = async (name, fn) => {
     try {
       const ok = await fn();
       if (ok) sent.push(name);
-      else failed.push(name);
+      else failed.push({ name, error: 'Send returned false' });
     } catch (err) {
-      failed.push(name);
+      failed.push({ name, error: err?.message || String(err) });
     }
+    await delay(800);
   };
 
   await run('Bid confirmation', () =>
@@ -103,7 +108,7 @@ export async function POST(req) {
       amount: 50,
       message: 'Happy to support the school!',
       contactEmail,
-      donationPaymentUrl: paymentUrl,
+      donationPaymentUrl,
     }),
   );
 
@@ -134,5 +139,5 @@ export async function POST(req) {
     }),
   );
 
-  return Response.json({ ok: true, sent, failed });
+  return Response.json({ ok: true, sent, failed: failed.map((f) => (typeof f === 'string' ? f : f.name)), failedDetails: failed });
 }

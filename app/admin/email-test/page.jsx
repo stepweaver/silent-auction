@@ -28,7 +28,7 @@ export default function EmailTestPage() {
         setStatus({ ok: false, error: data.error || 'Request failed' });
         return;
       }
-      setStatus({ ok: true, sent: data.sent, failed: data.failed });
+      setStatus({ ok: true, sent: data.sent, failed: data.failed, failedDetails: data.failedDetails });
     } catch (err) {
       setStatus({ ok: false, error: err.message || 'Network error' });
     } finally {
@@ -75,9 +75,20 @@ export default function EmailTestPage() {
             <>
               <p className="font-medium">Done.</p>
               <p className="mt-1">
-                Sent: {status.sent?.join(', ') || 'none'}.{' '}
-                {status.failed?.length ? `Failed: ${status.failed.join(', ')}` : ''}
+                Sent: {status.sent?.join(', ') || 'none'}.
               </p>
+              {status.failed?.length ? (
+                <div className="mt-2">
+                  <p className="font-medium">Failed: {status.failed.join(', ')}</p>
+                  {status.failedDetails?.length ? (
+                    <ul className="mt-1 list-disc list-inside text-xs opacity-90">
+                      {status.failedDetails.map((f, i) => (
+                        <li key={i}>{typeof f === 'string' ? f : `${f.name}: ${f.error}`}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : (
             <p>{status.error}</p>
