@@ -2,6 +2,7 @@
  * Secret endpoint: send all email types to a single address for testing.
  * Only the specified email receives anything. No auction actions are triggered.
  * Protected by admin Basic Auth.
+ * Uses dynamic config from settings DB and env (pickup contact, payment/pickup instructions).
  */
 
 import { headers } from 'next/headers';
@@ -16,17 +17,19 @@ import {
   sendVendorAdminEnrollmentEmail,
   sendEmailVerification,
 } from '@/lib/notifications';
+import { supabaseServer } from '@/lib/serverSupabase';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-const contactEmail =
-  process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
-  process.env.AUCTION_CONTACT_EMAIL ||
-  'pto@example.org';
 const paymentUrl =
   process.env.CHEDDARUP_PAYMENT_URL_WINNERS || `${siteUrl}/payment-instructions`;
 const donationPaymentUrl =
   process.env.CHEDDARUP_PAYMENT_URL_DONATIONS || paymentUrl;
 const pickupContact = process.env.PICKUP_CONTACT || null;
+const pickupInstructionsEnv =
+  process.env.PICKUP_INSTRUCTIONS ||
+  'Items may be picked up on Thursday immediately following the close of the auction at 7:30pm in the LGI room across from the gym.';
+const paymentInstructionsEnv =
+  process.env.PAYMENT_INSTRUCTIONS || null;
 
 export async function POST(req) {
   const headersList = await headers();
@@ -45,6 +48,30 @@ export async function POST(req) {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return jsonError('Valid email address required', 400);
   }
+
+  let settings = null;
+  try {
+    const supabase = supabaseServer();
+    const { data } = await supabase
+      .from('settings')
+      .select('payment_instructions, pickup_instructions, contact_email')
+      .eq('id', 1)
+      .maybeSingle();
+    settings = data;
+  } catch {
+    // ignore
+  }
+
+  const contactEmail =
+    settings?.contact_email ||
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL ||
+    process.env.AUCTION_CONTACT_EMAIL ||
+    process.env.RESEND_FROM_EMAIL ||
+    null;
+  const pickupInstructions =
+    settings?.pickup_instructions || pickupInstructionsEnv;
+  const paymentInstructions =
+    settings?.payment_instructions || paymentInstructionsEnv;
 
   const sent = [];
   const failed = [];
@@ -93,8 +120,8 @@ export async function POST(req) {
         { itemTitle: 'VIP School Parking Spot (2025–2026)', winningBid: 300, itemUrl: `${siteUrl}/i/sample-2` },
         { itemTitle: 'Principal for a Day Experience', winningBid: 210, itemUrl: `${siteUrl}/i/sample-3` },
       ],
-      paymentInstructions: null,
-      pickupInstructions: 'Items may be picked up on Thursday immediately following the close of the auction at 7:30pm in the LGI room across from the gym.',
+      paymentInstructions: paymentInstructions,
+      pickupInstructions,
       pickupContact,
       contactEmail,
       paymentInstructionsUrl: paymentUrl,
