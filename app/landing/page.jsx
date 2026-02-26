@@ -418,8 +418,8 @@ export default function LandingPage() {
 
             {/* Content Section */}
             <div className='px-4 sm:px-5 md:px-6 py-4 sm:py-5'>
-              {/* Form */}
-              <form onSubmit={handleEmailSubmit} className='space-y-3'>
+              {/* Form - touch-manipulation prevents double-tap zoom; 16px inputs prevent iOS zoom on focus */}
+              <form onSubmit={handleEmailSubmit} className='space-y-3 touch-manipulation'>
                 <div>
                   <label
                     htmlFor={nameInputId}
@@ -430,7 +430,9 @@ export default function LandingPage() {
                   <input
                     id={nameInputId}
                     type='text'
-                    className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
+                    autoComplete='name'
+                    className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all'
+                    style={{ fontSize: '16px', minHeight: '48px' }}
                     placeholder='Jane Doe'
                     value={name}
                     onChange={(e) => {
@@ -454,7 +456,10 @@ export default function LandingPage() {
                   <input
                     id={emailInputId}
                     type='email'
-                    className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base'
+                    inputMode='email'
+                    autoComplete='email'
+                    className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all'
+                    style={{ fontSize: '16px', minHeight: '48px' }}
                     placeholder='your@email.com'
                     value={email}
                     onChange={(e) => {

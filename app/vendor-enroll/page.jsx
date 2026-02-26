@@ -153,14 +153,17 @@ function VendorEnrollContent() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 touch-manipulation">
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-gray-900 mb-1">Email</label>
                 <input
                   type="email"
-                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg outline-none transition-all text-sm sm:text-base"
+                  inputMode="email"
+                  autoComplete="email"
+                  className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg outline-none transition-all text-base min-h-[48px]"
                   style={{
-                    borderColor: 'rgb(229 231 235)'
+                    borderColor: 'rgb(229 231 235)',
+                    fontSize: '16px'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = 'var(--primary-500)';

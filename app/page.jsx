@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { withTimeoutAndRetry } from '@/lib/utils';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
+const CATALOG_SCROLL_KEY = 'catalog_scroll';
 const ALL_CATEGORIES = '__all__';
 const UNCATEGORIZED = 'Other';
 
@@ -122,6 +123,32 @@ export default function CatalogPage() {
       setLoading(false);
     }
   }, [s]);
+
+  // Save scroll position when leaving catalog (e.g. navigating to item)
+  useEffect(() => {
+    return () => {
+      const el = typeof document !== 'undefined' ? document.getElementById('main-content') : null;
+      if (el) sessionStorage.setItem(CATALOG_SCROLL_KEY, String(el.scrollTop));
+    };
+  }, []);
+
+  // Restore scroll position when returning to catalog
+  useEffect(() => {
+    if (checkingEnrollment || loading || items.length === 0) return;
+    const saved = sessionStorage.getItem(CATALOG_SCROLL_KEY);
+    if (!saved) return;
+    sessionStorage.removeItem(CATALOG_SCROLL_KEY);
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    const pos = parseInt(saved, 10);
+    if (pos > 0) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.scrollTop = pos;
+        });
+      });
+    }
+  }, [checkingEnrollment, loading, items.length]);
 
   useEffect(() => {
     if (checkingEnrollment) return;
