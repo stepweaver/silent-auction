@@ -311,13 +311,13 @@ export default function DashboardPage() {
                           }}
                         />
                         <span className="text-xs text-gray-700">
-                          {updatingPreference ? 'Updating...' : 'Email me bid confirmations'}
+                          {updatingPreference ? 'Updating...' : 'Email me bid confirmations and outbid alerts'}
                         </span>
                       </label>
                       <p className="text-xs text-gray-500 mt-1.5">
                         {emailPreference 
-                          ? 'You will receive an email when you place your first bid on each item. All your bids are viewable here in the dashboard.'
-                          : 'Bid confirmations are disabled. You can view your bids in the dashboard.'}
+                          ? 'You will receive an email when you place your first bid on each item, and when you\'re outbid (at most once per item every 30 minutes). All your bids are viewable here in the dashboard.'
+                          : 'Bid confirmations and outbid alerts are disabled. You can view your bids in the dashboard.'}
                       </p>
                     </div>
                   </div>

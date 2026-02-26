@@ -63,7 +63,7 @@ export default function HowToBidPage() {
             <ul className='text-sm text-gray-700 space-y-1 list-disc list-inside'>
               <li>Bids must be at least the displayed minimum amount</li>
               <li>
-                Check your dashboard regularly to see if you've been outbid
+                Check your dashboard regularly—or opt in to email alerts to get notified when you&apos;re outbid
               </li>
               <li>
                 You can increase your bid at any time before the auction closes
@@ -72,10 +72,10 @@ export default function HowToBidPage() {
                 Winners will receive payment and pickup instructions via email (required)
               </li>
               <li>
-                Bid confirmation emails are optional—opt in through your dashboard if you want them
+                Bid confirmations and outbid alerts are optional—opt in through your dashboard if you want them
               </li>
               <li>
-                Bid confirmations are sent only for your first bid on each item, not every bid
+                Bid confirmations are sent only for your first bid on each item; outbid alerts are limited to once per item every 30 minutes
               </li>
             </ul>
           </div>

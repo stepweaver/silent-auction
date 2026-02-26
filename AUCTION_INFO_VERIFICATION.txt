@@ -50,6 +50,12 @@ The system sends the following emails:
    - Only sent for FIRST bid on each item (not every bid)
    - Contains: item name, bid amount, link to view item
 
+2b. OUTBID ALERT (Opt-in only)
+   - Same opt-in as bid confirmation (dashboard checkbox)
+   - Sent when user is outbid on an item
+   - Throttled: at most 1 per user per item every 30 minutes
+   - Contains: item name, current high bid, link to place higher bid
+
 3. WINNER NOTIFICATION (Required - cannot opt out)
    - Sent automatically when auction closes
    - Contains: all items won, total amount due, payment/pickup instructions

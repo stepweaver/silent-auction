@@ -147,15 +147,16 @@ export default function TermsPage() {
               </p>
               <div className='space-y-3'>
                 <div>
-                  <h4 className='font-semibold text-gray-900 mb-1'>Opt-In Email Notifications (Bid Confirmations)</h4>
+                  <h4 className='font-semibold text-gray-900 mb-1'>Opt-In Email Notifications (Bid Confirmations & Outbid Alerts)</h4>
                   <p className='mb-2'>
-                    <strong>Bid confirmation emails are optional and require your explicit opt-in.</strong> By default, 
-                    bid confirmation emails are disabled. You can enable or disable them at any time through your 
+                    <strong>Bid confirmation and outbid alert emails are optional and require your explicit opt-in.</strong> By default, 
+                    these emails are disabled. You can enable or disable them at any time through your 
                     dashboard (accessible via the avatar/profile icon).
                   </p>
                   <ul className='list-disc list-inside ml-4 space-y-1 text-sm'>
                     <li>Bid confirmations are sent only for your <strong>initial bid on each item</strong> (not for subsequent bids on the same item)</li>
-                    <li>Each email includes the item name, your bid amount, and a link to view the item</li>
+                    <li>Outbid alerts are sent when someone outbids you on an item, limited to <strong>at most one per item every 30 minutes</strong> to avoid spam during active bidding</li>
+                    <li>Each email includes the item name, current bid amount, and a link to view or bid on the item</li>
                     <li>You can opt-in or opt-out at any time through your dashboard</li>
                     <li>If you opt-out, you can still view all your bids in your dashboard</li>
                   </ul>
@@ -179,7 +180,7 @@ export default function TermsPage() {
                   </p>
                   <ul className='list-disc list-inside ml-4 space-y-1 text-sm'>
                     <li>Accessing your dashboard (click the avatar/profile icon)</li>
-                    <li>Using the "Email Preferences" section to enable or disable bid confirmation emails</li>
+                    <li>Using the "Email Preferences" section to enable or disable bid confirmations and outbid alerts</li>
                     <li>Your preference is saved immediately and applies to all future bids</li>
                   </ul>
                 </div>

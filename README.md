@@ -53,12 +53,16 @@ npm install
    - Run the contents of `supabase-auction-start-migration.sql` in the SQL Editor
    - This adds an `auction_start` column to the settings table
 
-8. **Add thumbnail support** (to avoid Vercel image optimization limits):
+8. **Outbid email throttling** (for opt-in outbid notifications):
+   - Run the contents of `supabase-outbid-email-migration.sql` in the SQL Editor
+   - This creates the `outbid_email_log` table used to limit outbid emails to 1 per user per item per 30 minutes
+
+9. **Add thumbnail support** (to avoid Vercel image optimization limits):
    - Run the contents of `supabase-thumbnail-migration.sql` in the SQL Editor
    - This adds a `thumbnail_url` column to the `items` table
    - See the [Image Optimization](#image-optimization) section below for details
 
-9. **Set up Supabase Keep-Alive (Prevent Free Tier Pausing):**
+10. **Set up Supabase Keep-Alive (Prevent Free Tier Pausing):**
    - Go to **SQL Editor** in your Supabase dashboard
    - Run the contents of `supabase-heartbeat-migration.sql` to create the heartbeat table
    - This creates a simple table that GitHub Actions can ping to keep your Supabase project active
@@ -244,6 +248,7 @@ The platform uses an opt-in email system powered by Resend to send notifications
 **What emails are sent:**
 
 - **Bid Confirmation** (Opt-in only): Sent only for a user's initial bid on each item (not subsequent bids on the same item). Users must explicitly opt-in through their dashboard to receive these emails. Includes bid amount and link to item.
+- **Outbid Alert** (Opt-in only): When opted in, users receive an email when they are outbid on an item. Throttled to at most one email per user per item every 30 minutes to avoid spam during active bidding.
 - **Winner Notification** (Required): Sent automatically when auction closes to the winning bidder. Includes payment/pickup instructions. Cannot be opted out of.
 - **Email Verification** (Required): Sent during registration to verify email addresses and prevent fraud. Cannot be opted out of.
 - **Security Alerts** (Required): Sent if a user's alias is accessed from a new device or location. Cannot be opted out of.

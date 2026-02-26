@@ -229,6 +229,22 @@ export async function POST(req) {
       }
     }
 
+    // Notify opted-in users who were outbid (throttled to 1 per 30 min per item)
+    try {
+      const itemUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/i/${item.slug}`;
+      const { notifyOutbidUsersByEmail } = await import('@/lib/notifications');
+      await notifyOutbidUsersByEmail({
+        itemId: item.id,
+        newHighBid: Number(amount),
+        itemTitle: item.title,
+        itemUrl,
+        excludeEmail: email,
+        contactEmail: settings?.contact_email || process.env.NEXT_PUBLIC_CONTACT_EMAIL || process.env.AUCTION_CONTACT_EMAIL || null,
+      });
+    } catch (e) {
+      logError('Outbid notification error', e);
+    }
+
     const nextMinAfterBid = Number(amount) + minIncrement;
     return Response.json({
       ok: true,
