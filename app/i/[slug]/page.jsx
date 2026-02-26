@@ -251,6 +251,7 @@ export default function ItemPage({ params }) {
                   </button>
                   <Link
                     href="/"
+                    scroll={false}
                     className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
                   >
                     ← Back to catalog
@@ -262,6 +263,7 @@ export default function ItemPage({ params }) {
                 <p className="text-sm sm:text-base text-gray-600 mb-4">Item not found.</p>
                 <Link
                   href="/"
+                  scroll={false}
                   className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white"
                   style={{ backgroundColor: 'var(--primary-500)' }}
                 >
@@ -295,6 +297,7 @@ export default function ItemPage({ params }) {
       <div className="max-w-5xl mx-auto">
         <Link 
           href="/" 
+          scroll={false}
           className="inline-flex items-center gap-2 text-sm text-gray-600 active:text-gray-900 font-medium mb-4 transition-colors touch-manipulation"
           style={{ minHeight: '44px' }}
         >

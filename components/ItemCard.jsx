@@ -3,6 +3,14 @@
 import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 
+const CATALOG_SCROLL_KEY = 'catalog_scroll';
+
+function saveCatalogScroll() {
+  if (typeof document === 'undefined') return;
+  const el = document.getElementById('main-content');
+  if (el) sessionStorage.setItem(CATALOG_SCROLL_KEY, String(el.scrollTop));
+}
+
 export default function ItemCard({ item, priority = false }) {
   const current = Number(item.current_high_bid ?? item.start_price);
   // Check if bids exist - use explicit flag if provided, otherwise check if current_high_bid exists and differs from start_price
@@ -23,6 +31,7 @@ export default function ItemCard({ item, priority = false }) {
   return (
     <Link
       href={url}
+      onClick={saveCatalogScroll}
       className={`group relative flex flex-col sm:flex-row bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md hover:border-gray-300 ${isClosed ? 'opacity-80' : ''}`}
     >
       {isClosed && (

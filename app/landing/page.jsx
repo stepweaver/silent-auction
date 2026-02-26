@@ -432,7 +432,7 @@ export default function LandingPage() {
                     type='text'
                     autoComplete='name'
                     className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all'
-                    style={{ fontSize: '16px', minHeight: '48px' }}
+                    style={{ fontSize: '16px', minHeight: '48px', scrollMarginTop: '20vh', scrollMarginBottom: '20vh' }}
                     placeholder='Jane Doe'
                     value={name}
                     onChange={(e) => {
@@ -459,7 +459,7 @@ export default function LandingPage() {
                     inputMode='email'
                     autoComplete='email'
                     className='w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all'
-                    style={{ fontSize: '16px', minHeight: '48px' }}
+                    style={{ fontSize: '16px', minHeight: '48px', scrollMarginTop: '20vh', scrollMarginBottom: '20vh' }}
                     placeholder='your@email.com'
                     value={email}
                     onChange={(e) => {

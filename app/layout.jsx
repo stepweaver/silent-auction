@@ -108,6 +108,8 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  // Prevents keyboard from resizing viewport and causing form "jumping" on mobile
+  interactiveWidget: 'resizes-content',
 };
 
 export default async function RootLayout({ children }) {

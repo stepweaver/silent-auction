@@ -34,9 +34,9 @@ export default function CatalogPage() {
     }
   }, [router]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isInitialLoad = true) => {
     setLoadError(null);
-    setLoading(true);
+    if (isInitialLoad) setLoading(true);
     try {
       await withTimeoutAndRetry(
         async () => {
@@ -109,7 +109,7 @@ export default function CatalogPage() {
 
           setItems(itemsWithDeadline);
         },
-        { timeoutMs: 25000, maxAttempts: 2 }
+        { timeoutMs: 30000, maxAttempts: 3 }
       );
     } catch (err) {
       console.error('Error loading items:', err);
@@ -120,11 +120,11 @@ export default function CatalogPage() {
           : 'We couldn’t load the catalog. Check your connection and try again.'
       );
     } finally {
-      setLoading(false);
+      if (isInitialLoad) setLoading(false);
     }
   }, [s]);
 
-  // Save scroll position when leaving catalog (e.g. navigating to item)
+  // Save scroll position when leaving catalog (backup - ItemCard also saves on click)
   useEffect(() => {
     return () => {
       const el = typeof document !== 'undefined' ? document.getElementById('main-content') : null;
@@ -132,22 +132,29 @@ export default function CatalogPage() {
     };
   }, []);
 
-  // Restore scroll position when returning to catalog
+  // Restore scroll position when returning to catalog (run at multiple timings to beat layout/Next.js)
   useEffect(() => {
     if (checkingEnrollment || loading || items.length === 0) return;
     const saved = sessionStorage.getItem(CATALOG_SCROLL_KEY);
     if (!saved) return;
-    sessionStorage.removeItem(CATALOG_SCROLL_KEY);
-    const el = document.getElementById('main-content');
-    if (!el) return;
     const pos = parseInt(saved, 10);
-    if (pos > 0) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          el.scrollTop = pos;
-        });
-      });
-    }
+    if (pos <= 0) return;
+    sessionStorage.removeItem(CATALOG_SCROLL_KEY);
+
+    const restore = () => {
+      const el = document.getElementById('main-content');
+      if (el) el.scrollTop = pos;
+    };
+    restore();
+    requestAnimationFrame(() => { restore(); });
+    const t1 = setTimeout(restore, 50);
+    const t2 = setTimeout(restore, 150);
+    const t3 = setTimeout(restore, 400);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [checkingEnrollment, loading, items.length]);
 
   useEffect(() => {
@@ -161,7 +168,7 @@ export default function CatalogPage() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bids' },
         () => {
-          load();
+          load(false);
         }
       )
       .subscribe();
