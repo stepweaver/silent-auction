@@ -6,9 +6,8 @@ import { formatDollar } from '@/lib/money';
 const CATALOG_SCROLL_KEY = 'catalog_scroll';
 
 function saveCatalogScroll() {
-  if (typeof document === 'undefined') return;
-  const el = document.getElementById('main-content');
-  if (el) sessionStorage.setItem(CATALOG_SCROLL_KEY, String(el.scrollTop));
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(CATALOG_SCROLL_KEY, String(window.scrollY));
 }
 
 export default function ItemCard({ item, priority = false }) {

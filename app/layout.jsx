@@ -108,8 +108,8 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  // Prevents keyboard from resizing viewport and causing form "jumping" on mobile
-  interactiveWidget: 'resizes-content',
+  // overlays-content: keyboard overlays page (less jumpy on iOS Safari). resizes-content works better on Chrome/Brave.
+  interactiveWidget: 'overlays-content',
 };
 
 export default async function RootLayout({ children }) {
@@ -120,15 +120,14 @@ export default async function RootLayout({ children }) {
       lang='en'
       data-theme='auction'
       data-scroll-behavior='smooth'
-      className='h-full'
     >
-      <body className='bg-gray-50 min-h-screen flex flex-col relative h-full'>
+      <body className='bg-gray-50 min-h-screen flex flex-col relative'>
         <a href='#main-content' className='skip-link'>Skip to main content</a>
         <BackgroundLogo />
         <SiteHeader />
         <div
           id='main-content'
-          className='flex-1 relative z-0 min-w-0 min-h-0 overflow-auto'
+          className='flex-1 relative z-0 min-w-0'
         >
           <SiteBanner deadlineISO={auctionDeadline} />
           {children}

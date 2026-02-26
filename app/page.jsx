@@ -127,12 +127,13 @@ export default function CatalogPage() {
   // Save scroll position when leaving catalog (backup - ItemCard also saves on click)
   useEffect(() => {
     return () => {
-      const el = typeof document !== 'undefined' ? document.getElementById('main-content') : null;
-      if (el) sessionStorage.setItem(CATALOG_SCROLL_KEY, String(el.scrollTop));
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(CATALOG_SCROLL_KEY, String(window.scrollY));
+      }
     };
   }, []);
 
-  // Restore scroll position when returning to catalog (run at multiple timings to beat layout/Next.js)
+  // Restore scroll position when returning to catalog (window scrolls now, so browser/Next.js may restore; this is backup)
   useEffect(() => {
     if (checkingEnrollment || loading || items.length === 0) return;
     const saved = sessionStorage.getItem(CATALOG_SCROLL_KEY);
@@ -141,12 +142,9 @@ export default function CatalogPage() {
     if (pos <= 0) return;
     sessionStorage.removeItem(CATALOG_SCROLL_KEY);
 
-    const restore = () => {
-      const el = document.getElementById('main-content');
-      if (el) el.scrollTop = pos;
-    };
+    const restore = () => window.scrollTo(0, pos);
     restore();
-    requestAnimationFrame(() => { restore(); });
+    requestAnimationFrame(() => restore());
     const t1 = setTimeout(restore, 50);
     const t2 = setTimeout(restore, 150);
     const t3 = setTimeout(restore, 400);
