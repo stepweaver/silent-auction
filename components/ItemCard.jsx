@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { formatDollar } from '@/lib/money';
 
 const CATALOG_SCROLL_KEY = 'catalog_scroll';
+const CATALOG_SCROLL_SLUG_KEY = 'catalog_scroll_slug';
 
-function saveCatalogScroll() {
+function saveCatalogScroll(slug) {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(CATALOG_SCROLL_KEY, String(window.scrollY));
+  if (slug) sessionStorage.setItem(CATALOG_SCROLL_SLUG_KEY, slug);
 }
 
 export default function ItemCard({ item, priority = false }) {
@@ -30,7 +32,8 @@ export default function ItemCard({ item, priority = false }) {
   return (
     <Link
       href={url}
-      onClick={saveCatalogScroll}
+      data-item-slug={item.slug}
+      onClick={() => saveCatalogScroll(item.slug)}
       className={`group relative flex flex-col sm:flex-row bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md hover:border-gray-300 ${isClosed ? 'opacity-80' : ''}`}
     >
       {isClosed && (

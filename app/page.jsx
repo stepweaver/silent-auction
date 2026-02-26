@@ -10,6 +10,7 @@ import { withTimeoutAndRetry } from '@/lib/utils';
 
 const ENROLLMENT_KEY = 'auction_enrolled';
 const CATALOG_SCROLL_KEY = 'catalog_scroll';
+const CATALOG_SCROLL_SLUG_KEY = 'catalog_scroll_slug';
 const ALL_CATEGORIES = '__all__';
 const UNCATEGORIZED = 'Other';
 
@@ -143,16 +144,36 @@ export default function CatalogPage() {
     };
   }, []);
 
-  // Restore scroll position when returning to catalog (Link scroll={false} + manual restore)
+  // Restore scroll when returning to catalog: prefer slug (scroll item into view), fallback to position
   useEffect(() => {
     if (checkingEnrollment || loading || items.length === 0) return;
-    const saved = sessionStorage.getItem(CATALOG_SCROLL_KEY);
-    if (!saved) return;
-    const pos = parseInt(saved, 10);
-    if (pos <= 0) return;
-    sessionStorage.removeItem(CATALOG_SCROLL_KEY);
+    const savedPos = sessionStorage.getItem(CATALOG_SCROLL_KEY);
+    const savedSlug = sessionStorage.getItem(CATALOG_SCROLL_SLUG_KEY);
+    if (!savedPos && !savedSlug) return;
 
-    const restore = () => window.scrollTo(0, pos);
+    sessionStorage.removeItem(CATALOG_SCROLL_KEY);
+    sessionStorage.removeItem(CATALOG_SCROLL_SLUG_KEY);
+
+    const pos = savedPos ? parseInt(savedPos, 10) : 0;
+
+    const restoreBySlug = () => {
+      if (!savedSlug) return false;
+      const el = document.querySelector(`[data-item-slug="${savedSlug}"]`);
+      if (el) {
+        el.scrollIntoView({ block: 'center' });
+        return true;
+      }
+      return false;
+    };
+
+    const restoreByPos = () => {
+      if (pos > 0) window.scrollTo(0, pos);
+    };
+
+    const restore = () => {
+      if (!restoreBySlug()) restoreByPos();
+    };
+
     restore();
     requestAnimationFrame(() => restore());
     const t1 = setTimeout(restore, 50);
