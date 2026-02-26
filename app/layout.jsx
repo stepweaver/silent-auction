@@ -2,7 +2,7 @@ import './globals.css';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import BackgroundLogo from '@/components/BackgroundLogo';
-import SiteBanner from '@/components/SiteBanner';
+import ConditionalBanner from '@/components/ConditionalBanner';
 import { supabaseServer } from '@/lib/serverSupabase';
 
 export const dynamic = 'force-dynamic';
@@ -108,8 +108,6 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  // overlays-content: keyboard overlays page (less jumpy on iOS Safari). resizes-content works better on Chrome/Brave.
-  interactiveWidget: 'overlays-content',
 };
 
 export default async function RootLayout({ children }) {
@@ -129,7 +127,7 @@ export default async function RootLayout({ children }) {
           id='main-content'
           className='flex-1 relative z-0 min-w-0'
         >
-          <SiteBanner deadlineISO={auctionDeadline} />
+          <ConditionalBanner deadlineISO={auctionDeadline} />
           {children}
           <SiteFooter />
         </div>

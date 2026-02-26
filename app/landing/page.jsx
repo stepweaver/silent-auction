@@ -384,7 +384,7 @@ export default function LandingPage() {
 
   if (step === 'intro') {
     return (
-      <div className='w-full px-4 py-4 pb-8'>
+      <div className='w-full px-4 py-4 pb-8 min-h-[100dvh]' style={{ overscrollBehavior: 'none' }}>
         <div className='w-full max-w-lg mx-auto'>
           {/* Hero Card */}
           <div className='bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden'>
@@ -564,6 +564,18 @@ export default function LandingPage() {
           <p className='mt-3 text-center text-xs text-gray-500'>
             Your information is secure and will only be used for bidding
             purposes.
+          </p>
+          <p className='mt-2 text-center text-xs text-gray-500'>
+            Having trouble on Safari?{' '}
+            <a
+              href='https://apps.apple.com/app/brave-private-web-browser/id1052879175'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='underline hover:text-gray-700'
+            >
+              Try Brave
+            </a>
+            {' '}— it works better for this form.
           </p>
         </div>
       </div>
