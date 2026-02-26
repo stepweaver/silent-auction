@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useId, useRef } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AliasSelector from '@/components/AliasSelector';
-import { useSafariInputStabilizer } from '@/components/SafariInputStabilizer';
 
 const STORAGE_KEY = 'auction_bidder_info';
 const ENROLLMENT_KEY = 'auction_enrolled';
@@ -24,8 +23,6 @@ export default function LandingPage() {
   const nameInputId = useId();
   const emailInputId = useId();
   const honeypotId = useId();
-  const formRef = useRef(null);
-  useSafariInputStabilizer(formRef, step === 'intro');
 
   useEffect(() => {
     // Check if email was just verified
@@ -422,7 +419,7 @@ export default function LandingPage() {
             {/* Content Section */}
             <div className='px-4 sm:px-5 md:px-6 py-4 sm:py-5'>
               {/* Form - touch-manipulation prevents double-tap zoom; 16px inputs prevent iOS zoom on focus */}
-              <form ref={formRef} onSubmit={handleEmailSubmit} className='space-y-3 touch-manipulation'>
+              <form onSubmit={handleEmailSubmit} className='space-y-3 touch-manipulation'>
                 <div>
                   <label
                     htmlFor={nameInputId}
