@@ -16,6 +16,7 @@ import {
   sendAliasAccessNotification,
   sendVendorAdminEnrollmentEmail,
   sendEmailVerification,
+  sendAdminWinnersList,
 } from '@/lib/notifications';
 import { supabaseServer } from '@/lib/serverSupabase';
 
@@ -163,6 +164,21 @@ export async function POST(req) {
       name: 'Test User',
       verificationLink: `${siteUrl}/verify-email?token=test&email=${encodeURIComponent(email)}`,
       contactEmail,
+    }),
+  );
+
+  await run('Admin winners list', () =>
+    sendAdminWinnersList({
+      adminEmails: [email],
+      winners: [
+        { itemTitle: 'Lakeside Cabin Weekend Getaway', bidderName: 'Jane Smith', email, winningBid: 125 },
+        { itemTitle: 'VIP School Parking Spot (2025–2026)', bidderName: 'John Doe', email: 'john@example.com', winningBid: 300 },
+        { itemTitle: 'Principal for a Day Experience', bidderName: 'Test Winner', email, winningBid: 210 },
+      ],
+      contactEmail,
+      donationsCount: 2,
+      donationsTotal: 75,
+      auctionClosedAt: new Date().toISOString(),
     }),
   );
 
