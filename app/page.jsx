@@ -133,7 +133,17 @@ export default function CatalogPage() {
     };
   }, []);
 
-  // Restore scroll position when returning to catalog (window scrolls now, so browser/Next.js may restore; this is backup)
+  // Take over scroll restoration so our sessionStorage restore wins over browser/Next.js
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const prev = history.scrollRestoration;
+    history.scrollRestoration = 'manual';
+    return () => {
+      history.scrollRestoration = prev;
+    };
+  }, []);
+
+  // Restore scroll position when returning to catalog (Link scroll={false} + manual restore)
   useEffect(() => {
     if (checkingEnrollment || loading || items.length === 0) return;
     const saved = sessionStorage.getItem(CATALOG_SCROLL_KEY);
@@ -148,10 +158,14 @@ export default function CatalogPage() {
     const t1 = setTimeout(restore, 50);
     const t2 = setTimeout(restore, 150);
     const t3 = setTimeout(restore, 400);
+    const t4 = setTimeout(restore, 800);
+    const t5 = setTimeout(restore, 1200);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
+      clearTimeout(t4);
+      clearTimeout(t5);
     };
   }, [checkingEnrollment, loading, items.length]);
 

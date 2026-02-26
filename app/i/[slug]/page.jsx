@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabaseBrowser } from '@/lib/supabaseClient';
 import BidForm from '@/components/BidForm';
 import AliasAvatar from '@/components/AliasAvatar';
@@ -306,15 +307,9 @@ export default function ItemPage({ params }) {
   return (
     <main className="w-full px-4 py-4 pb-8">
       <div className="max-w-5xl mx-auto">
-        <button
-          type="button"
-          onClick={() => {
-            if (typeof window !== 'undefined' && window.history.length > 1) {
-              router.back();
-            } else {
-              router.push('/');
-            }
-          }}
+        <Link
+          href="/"
+          scroll={false}
           className="inline-flex items-center gap-2 text-sm text-gray-600 active:text-gray-900 font-medium mb-4 transition-colors touch-manipulation"
           style={{ minHeight: '44px' }}
         >
@@ -322,7 +317,7 @@ export default function ItemPage({ params }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to catalog
-        </button>
+        </Link>
         <div className="grid gap-4 xl:grid-cols-2">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
             <figure className="bg-gray-100">
