@@ -3,7 +3,6 @@
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabaseClient';
-import Link from 'next/link';
 import BidForm from '@/components/BidForm';
 import AliasAvatar from '@/components/AliasAvatar';
 import { formatDollar } from '@/lib/money';
@@ -249,26 +248,38 @@ export default function ItemPage({ params }) {
                   >
                     Try again
                   </button>
-                  <Link
-                    href="/"
-                    scroll={false}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== 'undefined' && window.history.length > 1) {
+                        router.back();
+                      } else {
+                        router.push('/');
+                      }
+                    }}
                     className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
                   >
                     ← Back to catalog
-                  </Link>
+                  </button>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-sm sm:text-base text-gray-600 mb-4">Item not found.</p>
-                <Link
-                  href="/"
-                  scroll={false}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== 'undefined' && window.history.length > 1) {
+                      router.back();
+                    } else {
+                      router.push('/');
+                    }
+                  }}
                   className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white"
                   style={{ backgroundColor: 'var(--primary-500)' }}
                 >
                   ← Back to catalog
-                </Link>
+                </button>
               </>
             )}
           </div>
@@ -295,9 +306,15 @@ export default function ItemPage({ params }) {
   return (
     <main className="w-full px-4 py-4 pb-8">
       <div className="max-w-5xl mx-auto">
-        <Link 
-          href="/" 
-          scroll={false}
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push('/');
+            }
+          }}
           className="inline-flex items-center gap-2 text-sm text-gray-600 active:text-gray-900 font-medium mb-4 transition-colors touch-manipulation"
           style={{ minHeight: '44px' }}
         >
@@ -305,7 +322,7 @@ export default function ItemPage({ params }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to catalog
-        </Link>
+        </button>
         <div className="grid gap-4 xl:grid-cols-2">
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
             <figure className="bg-gray-100">
