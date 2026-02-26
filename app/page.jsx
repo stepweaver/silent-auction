@@ -156,38 +156,19 @@ export default function CatalogPage() {
 
     const pos = savedPos ? parseInt(savedPos, 10) : 0;
 
-    const restoreBySlug = () => {
-      if (!savedSlug) return false;
-      const el = document.querySelector(`[data-item-slug="${savedSlug}"]`);
-      if (el) {
-        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        return true;
-      }
-      return false;
-    };
-
-    const restoreByPos = () => {
-      if (pos > 0) window.scrollTo({ top: pos, behavior: 'smooth' });
-    };
-
     const restore = () => {
-      if (!restoreBySlug()) restoreByPos();
+      if (savedSlug) {
+        const el = document.querySelector(`[data-item-slug="${savedSlug}"]`);
+        if (el) {
+          el.scrollIntoView({ block: 'center' });
+          return;
+        }
+      }
+      if (pos > 0) window.scrollTo(0, pos);
     };
 
-    restore();
-    requestAnimationFrame(() => restore());
-    const t1 = setTimeout(restore, 50);
-    const t2 = setTimeout(restore, 150);
-    const t3 = setTimeout(restore, 400);
-    const t4 = setTimeout(restore, 800);
-    const t5 = setTimeout(restore, 1200);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      clearTimeout(t4);
-      clearTimeout(t5);
-    };
+    // Single restore after paint; multiple attempts were interrupting each other
+    requestAnimationFrame(() => requestAnimationFrame(restore));
   }, [checkingEnrollment, loading, items.length]);
 
   useEffect(() => {

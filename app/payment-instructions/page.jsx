@@ -57,7 +57,7 @@ export default function PaymentInstructionsPage() {
       <div className="mb-6">
         <h1 className="text-4xl font-bold text-primary mb-2">Payment Instructions</h1>
         <p className="text-base-content/70 text-lg">
-          Congratulations on your winning bids! Here's how to complete your payment.
+          Congratulations, you're a winner! Thank you for supporting Mary Frank PTO. Here's how to complete your payment.
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export default function PaymentInstructionsPage() {
               <div>
                 <h2 className="text-2xl font-bold text-primary mb-3">Payment</h2>
                 <div className="alert alert-info">
-                  <span>Payment instructions will be shared by the auction organizers, typically via an official online payment link and/or follow-up email.</span>
+                  <span>Please complete your payment online using the official payment link provided in your winner email. Payment is required within 24 hours of the auction closing and must be completed prior to item pickup.</span>
                 </div>
               </div>
             )}
