@@ -358,6 +358,35 @@ export default function AdminDashboard() {
     }
   }
 
+  const [sendingEmails, setSendingEmails] = useState(false);
+
+  async function sendClosingEmailsNow() {
+    if (!confirm('Send closing emails now? This will email all winners and admins with real end-of-auction info. Only use when items are already closed.')) return;
+
+    setMsg('');
+    setSendingEmails(true);
+    try {
+      const res = await fetch('/api/admin/send-closing-emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMsg(
+          `Closing emails sent. ${data.emailsSent} winner email(s), ${data.adminEmailsSent} admin email(s).`
+        );
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setMsg(err.error || 'Error sending closing emails');
+      }
+    } catch (err) {
+      setMsg('Error sending closing emails');
+    } finally {
+      setSendingEmails(false);
+    }
+  }
+
   async function toggleAuctionStatus() {
     const newStatus = !settings?.auction_closed;
     const action = newStatus ? 'close' : 'open';
@@ -504,7 +533,7 @@ export default function AdminDashboard() {
               currentDeadline={settings?.auction_deadline}
             />
           </div>
-          <div className='flex flex-col sm:flex-row gap-2'>
+          <div className='flex flex-col sm:flex-row gap-2 flex-wrap'>
             <button
               onClick={toggleAuctionStatus}
               className={`px-3 py-2 sm:py-1.5 rounded text-sm font-semibold ${
@@ -517,6 +546,15 @@ export default function AdminDashboard() {
                 ? 'Open Auction'
                 : 'Close Auction'}
             </button>
+            {allClosed && (
+              <button
+                onClick={sendClosingEmailsNow}
+                disabled={sendingEmails}
+                className='px-3 py-2 sm:py-1.5 bg-amber-600 text-white rounded hover:bg-amber-700 text-sm font-semibold disabled:opacity-50'
+              >
+                {sendingEmails ? 'Sending…' : 'Send closing emails now'}
+              </button>
+            )}
             {deadline && (
               <button
                 onClick={extendDeadline}

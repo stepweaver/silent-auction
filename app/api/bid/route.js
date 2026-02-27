@@ -44,6 +44,7 @@ export async function POST(req) {
     }
 
     const { slug, item_id, bidder_name, email, amount } = parsed.data;
+    const normalizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : email;
     const s = supabaseServer();
 
     // Load settings
@@ -150,7 +151,7 @@ export async function POST(req) {
     const { data: existingAlias, error: aliasError } = await s
       .from('user_aliases')
       .select('id, email, name, email_bid_confirmations')
-      .eq('email', email)
+      .eq('email', normalizedEmail)
       .maybeSingle();
 
     if (aliasError) {
@@ -166,7 +167,7 @@ export async function POST(req) {
     const { data: verifiedEmail } = await s
       .from('verified_emails')
       .select('email')
-      .eq('email', email)
+      .eq('email', normalizedEmail)
       .maybeSingle();
 
     if (!verifiedEmail) {
@@ -182,7 +183,7 @@ export async function POST(req) {
 
     // Validate that alias_id exists (defensive programming)
     if (!aliasId) {
-      logError('[BID] Alias ID missing for email', email);
+      logError('[BID] Alias ID missing for email', normalizedEmail);
       return jsonError('Error: Alias ID is missing. Please contact support.', 500);
     }
 
@@ -191,7 +192,7 @@ export async function POST(req) {
       .from('bids')
       .select('id')
       .eq('item_id', item.id)
-      .eq('email', email)
+      .eq('email', normalizedEmail)
       .limit(1);
 
     const isInitialBid = !previousBids || previousBids.length === 0;
@@ -200,7 +201,7 @@ export async function POST(req) {
     const { error: insertError } = await s.from('bids').insert({
       item_id: item.id,
       bidder_name,
-      email,
+      email: normalizedEmail,
       alias_id: aliasId,
       amount: Number(amount),
     });
@@ -238,7 +239,7 @@ export async function POST(req) {
         newHighBid: Number(amount),
         itemTitle: item.title,
         itemUrl,
-        excludeEmail: email,
+        excludeEmail: normalizedEmail,
         contactEmail: settings?.contact_email || process.env.NEXT_PUBLIC_CONTACT_EMAIL || process.env.AUCTION_CONTACT_EMAIL || null,
       });
     } catch (e) {
