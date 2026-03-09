@@ -7,10 +7,7 @@ import { logError } from '@/lib/logger';
 
 export async function POST(req) {
   const headersList = await headers();
-  const vendorAdminId = headersList.get('x-vendor-admin-id');
-  const isSuperAdmin = checkBasicAuth(headersList);
-
-  if (!isSuperAdmin && !vendorAdminId) {
+  if (!checkBasicAuth(headersList)) {
     return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
@@ -66,8 +63,6 @@ export async function POST(req) {
       }
     }
 
-    // Only super admin can create items without created_by (for backward compatibility)
-    // Vendor admins must provide their ID via header
     const insertData = {
       title: data.title,
       slug,
@@ -78,15 +73,9 @@ export async function POST(req) {
       min_increment: 5, // Fixed at $5 for all items
       is_closed: data.is_closed || false,
     };
-    
-    // Only include category if it's provided and not empty
+
     if (data.category && data.category.trim()) {
       insertData.category = data.category.trim();
-    }
-
-    // If vendor admin, set created_by
-    if (vendorAdminId && !isSuperAdmin) {
-      insertData.created_by = vendorAdminId;
     }
 
     const { data: item, error } = await s

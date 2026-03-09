@@ -1,11 +1,16 @@
-import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { ItemSchema } from '@/lib/validation';
 import { vendorAdminOwnsItem, getVendorAdminId } from '@/lib/vendorAuth';
+import { verifyCSRFToken } from '@/lib/csrf';
 import { jsonError } from '@/lib/apiResponses';
 import { logError } from '@/lib/logger';
 
 export async function PATCH(req, { params }) {
+  const csrfValid = await verifyCSRFToken(req);
+  if (!csrfValid) {
+    return jsonError('Invalid or missing CSRF token', 403);
+  }
+
   const vendorAdminId = await getVendorAdminId();
 
   if (!vendorAdminId) {
@@ -102,7 +107,12 @@ export async function PATCH(req, { params }) {
   }
 }
 
-export async function DELETE(_req, { params }) {
+export async function DELETE(req, { params }) {
+  const csrfValid = await verifyCSRFToken(req);
+  if (!csrfValid) {
+    return jsonError('Invalid or missing CSRF token', 403);
+  }
+
   const vendorAdminId = await getVendorAdminId();
 
   if (!vendorAdminId) {

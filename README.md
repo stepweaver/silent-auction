@@ -1,6 +1,6 @@
 # Silent Auction Platform
 
-A real-time silent auction platform built with Next.js 15, Supabase, and Tailwind CSS.
+A real-time silent auction platform built with Next.js 16, Supabase, and Tailwind CSS.
 
 ## Features
 
@@ -12,7 +12,7 @@ A real-time silent auction platform built with Next.js 15, Supabase, and Tailwin
 
 ## Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20.9+ and npm
 - A Supabase account and project
 
 ## Setup
@@ -202,9 +202,11 @@ See `supabase-schema.sql` for full schema and RLS policies.
 ### Rate Limiting
 
 - Bid placement: 20 requests per minute per IP
-- Email verification: 3 requests per 10 minutes per IP
+- Email verification: 5 requests per 10 minutes per IP
 - Alias creation: 5 requests per hour per IP
 - Vendor authentication: 5 requests per 15 minutes per IP
+
+Note: Rate limiting uses in-memory storage. For multi-instance deployments, consider Redis or Vercel KV (see `lib/security/rateLimit.js`).
 
 ### CSRF Protection
 

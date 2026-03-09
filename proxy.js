@@ -71,3 +71,9 @@ export function proxy(request) {
   return NextResponse.next();
 }
 
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|logo|manifest|.*\\.(?:ico|png|jpg|jpeg|gif|webp|svg|woff2?)$).*)',
+  ],
+};
+

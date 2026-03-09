@@ -1,12 +1,17 @@
-import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
+import { getVendorAdminId } from '@/lib/vendorAuth';
 import { ItemSchema } from '@/lib/validation';
+import { verifyCSRFToken } from '@/lib/csrf';
 import { jsonError } from '@/lib/apiResponses';
 import { logError } from '@/lib/logger';
 
 export async function POST(req) {
-  const headersList = await headers();
-  const vendorAdminId = headersList.get('x-vendor-admin-id');
+  const csrfValid = await verifyCSRFToken(req);
+  if (!csrfValid) {
+    return jsonError('Invalid or missing CSRF token', 403);
+  }
+
+  const vendorAdminId = await getVendorAdminId();
 
   if (!vendorAdminId) {
     return jsonError('Unauthorized', 401);

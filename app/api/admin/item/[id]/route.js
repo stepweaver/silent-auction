@@ -2,16 +2,12 @@ import { headers } from 'next/headers';
 import { supabaseServer } from '@/lib/serverSupabase';
 import { checkBasicAuth } from '@/lib/auth';
 import { ItemSchema } from '@/lib/validation';
-import { vendorAdminOwnsItem } from '@/lib/vendorAuth';
 import { jsonError, jsonUnauthorized } from '@/lib/apiResponses';
 import { logError } from '@/lib/logger';
 
 export async function PATCH(req, { params }) {
   const headersList = await headers();
-  const vendorAdminId = headersList.get('x-vendor-admin-id');
-  const isSuperAdmin = checkBasicAuth(headersList);
-
-  if (!isSuperAdmin && !vendorAdminId) {
+  if (!checkBasicAuth(headersList)) {
     return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
@@ -46,13 +42,6 @@ export async function PATCH(req, { params }) {
     }
 
     const s = supabaseServer();
-
-    if (vendorAdminId && !isSuperAdmin) {
-      const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
-      if (!ownsItem) {
-        return jsonError('Unauthorized: You can only edit your own items', 403);
-      }
-    }
 
     if (updateData.slug) {
       const { data: existing } = await s
@@ -109,23 +98,13 @@ export async function PATCH(req, { params }) {
 
 export async function DELETE(_req, { params }) {
   const headersList = await headers();
-  const vendorAdminId = headersList.get('x-vendor-admin-id');
-  const isSuperAdmin = checkBasicAuth(headersList);
-
-  if (!isSuperAdmin && !vendorAdminId) {
+  if (!checkBasicAuth(headersList)) {
     return jsonUnauthorized('Unauthorized', { basicRealm: 'Admin Area' });
   }
 
   try {
     const { id } = await params;
     const s = supabaseServer();
-
-    if (vendorAdminId && !isSuperAdmin) {
-      const ownsItem = await vendorAdminOwnsItem(vendorAdminId, id, s);
-      if (!ownsItem) {
-        return jsonError('Unauthorized: You can only delete your own items', 403);
-      }
-    }
 
     const { data: existingItem, error: fetchError } = await s
       .from('items')

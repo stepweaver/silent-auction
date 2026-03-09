@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Field from '@/components/Field';
+import { getJsonHeadersWithCsrf } from '@/lib/clientCsrf';
 
 const DEFAULT_CATEGORIES = [
   'Sports',
@@ -41,14 +42,20 @@ export default function VendorNewItemPage() {
   const [showCustomInput, setShowCustomInput] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const id = localStorage.getItem('vendor_admin_id');
-      if (!id) {
+    async function checkSession() {
+      const res = await fetch('/api/vendor-auth', { credentials: 'include' });
+      if (!res.ok) {
         router.push('/vendor-enroll');
         return;
       }
-      setVendorAdminId(id);
+      const data = await res.json();
+      if (data.vendor_admin?.id) {
+        setVendorAdminId(data.vendor_admin.id);
+      } else {
+        router.push('/vendor-enroll');
+      }
     }
+    checkSession();
   }, [router]);
 
   // Fetch custom categories on load
@@ -101,7 +108,7 @@ export default function VendorNewItemPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/admin/upload', {
+      const res = await fetch('/api/vendor/upload', {
         method: 'POST',
         headers: {
           'x-vendor-admin-id': vendorAdminId || '',
@@ -155,12 +162,11 @@ export default function VendorNewItemPage() {
         thumbnailUrl = uploadResult.thumbnailUrl || null;
       }
 
+      const headers = await getJsonHeadersWithCsrf();
       const res = await fetch('/api/vendor/item', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-vendor-admin-id': vendorAdminId || '',
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ ...form, photo_url: photoUrl, thumbnail_url: thumbnailUrl }),
       });
 

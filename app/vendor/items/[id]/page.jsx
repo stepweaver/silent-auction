@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Field from '@/components/Field';
 import { formatDollar } from '@/lib/money';
 import AliasAvatar from '@/components/AliasAvatar';
+import { getJsonHeadersWithCsrf } from '@/lib/clientCsrf';
 
 const DEFAULT_CATEGORIES = [
   'Sports',
@@ -186,11 +187,9 @@ export default function VendorEditItemPage({ params }) {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/admin/upload', {
+      const res = await fetch('/api/vendor/upload', {
         method: 'POST',
-        headers: {
-          'x-vendor-admin-id': vendorAdminId || '',
-        },
+        credentials: 'include',
         body: formData,
       });
 
@@ -240,12 +239,11 @@ export default function VendorEditItemPage({ params }) {
         thumbnailUrl = uploadResult.thumbnailUrl || null;
       }
 
+      const headers = await getJsonHeadersWithCsrf();
       const res = await fetch(`/api/vendor/item/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-vendor-admin-id': vendorAdminId || '',
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ ...form, photo_url: photoUrl, thumbnail_url: thumbnailUrl }),
       });
 
@@ -305,11 +303,11 @@ export default function VendorEditItemPage({ params }) {
     setIsDeleting(true);
 
     try {
+      const headers = await getJsonHeadersWithCsrf();
       const res = await fetch(`/api/vendor/item/${id}`, {
         method: 'DELETE',
-        headers: {
-          'x-vendor-admin-id': vendorAdminId || '',
-        },
+        headers,
+        credentials: 'include',
       });
 
       if (!res.ok) {

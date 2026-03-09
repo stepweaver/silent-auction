@@ -16,23 +16,24 @@ export default function VendorDashboard() {
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
-    // Check if vendor admin is logged in
-    if (typeof window !== 'undefined') {
-      const vendorAdminId = localStorage.getItem('vendor_admin_id');
-      const vendorAdminEmail = localStorage.getItem('vendor_admin_email');
-      const vendorAdminName = localStorage.getItem('vendor_admin_name');
-
-      if (!vendorAdminId || !vendorAdminEmail) {
+    async function checkSession() {
+      const res = await fetch('/api/vendor-auth', { credentials: 'include' });
+      if (!res.ok) {
         router.push('/vendor-enroll');
         return;
       }
-
-      setVendorAdmin({
-        id: vendorAdminId,
-        email: vendorAdminEmail,
-        name: vendorAdminName,
-      });
+      const data = await res.json();
+      if (data.vendor_admin) {
+        setVendorAdmin({
+          id: data.vendor_admin.id,
+          email: data.vendor_admin.email,
+          name: data.vendor_admin.name,
+        });
+      } else {
+        router.push('/vendor-enroll');
+      }
     }
+    checkSession();
   }, [router]);
 
   async function load() {
@@ -62,10 +63,8 @@ export default function VendorDashboard() {
     }
   }, [vendorAdmin]);
 
-  function handleLogout() {
-    localStorage.removeItem('vendor_admin_id');
-    localStorage.removeItem('vendor_admin_email');
-    localStorage.removeItem('vendor_admin_name');
+  async function handleLogout() {
+    await fetch('/api/vendor-auth?logout=1', { credentials: 'include' });
     router.push('/vendor-enroll');
   }
 

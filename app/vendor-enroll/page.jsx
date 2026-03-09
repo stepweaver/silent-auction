@@ -14,20 +14,18 @@ function VendorEnrollContent() {
   const [honeypot, setHoneypot] = useState(''); // Honeypot field - should remain empty
   const honeypotId = useId();
 
-  // Redirect if already logged in (unless there's a token in URL)
+  // Redirect if already logged in (session cookie)
   useEffect(() => {
     const token = searchParams?.get('token');
-    if (token) return; // Don't redirect if there's a token to process
-    
-    if (typeof window !== 'undefined') {
-      const vendorAdminId = localStorage.getItem('vendor_admin_id');
-      const vendorAdminEmail = localStorage.getItem('vendor_admin_email');
-      
-      if (vendorAdminId && vendorAdminEmail) {
-        // Already logged in, redirect to dashboard
+    if (token) return;
+
+    async function checkSession() {
+      const res = await fetch('/api/vendor-auth', { credentials: 'include' });
+      if (res.ok) {
         router.push('/vendor');
       }
     }
+    checkSession();
   }, [router, searchParams]);
 
   async function authenticateWithToken(token) {
@@ -39,6 +37,7 @@ function VendorEnrollContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -48,14 +47,7 @@ function VendorEnrollContent() {
         return;
       }
 
-      const data = await res.json();
-      
-      // Store vendor admin session
-      localStorage.setItem('vendor_admin_id', data.vendor_admin_id);
-      localStorage.setItem('vendor_admin_email', data.email);
-      localStorage.setItem('vendor_admin_name', data.name);
-
-      // Redirect directly to add items page
+      // Session cookie set by server; redirect to add items page
       router.push('/vendor/items/new');
     } catch (err) {
       setMsg('Error authenticating');
@@ -83,6 +75,7 @@ function VendorEnrollContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, company_website: honeypot }),
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -91,14 +84,7 @@ function VendorEnrollContent() {
         return;
       }
 
-      const data = await res.json();
-      
-      // Store vendor admin session
-      localStorage.setItem('vendor_admin_id', data.vendor_admin_id);
-      localStorage.setItem('vendor_admin_email', data.email);
-      localStorage.setItem('vendor_admin_name', data.name);
-
-      // Redirect to donor dashboard
+      // Session cookie set by server; redirect to donor dashboard
       router.push('/vendor');
     } catch (err) {
       setMsg('Error logging in');

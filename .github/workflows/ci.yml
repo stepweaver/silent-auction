@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['20']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+        env:
+          JWT_SECRET: placeholder-32-chars-minimum-required
+          CSRF_SECRET: placeholder-32-chars-minimum-required
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          SUPABASE_SERVICE_ROLE_KEY: placeholder
+          BASIC_AUTH_USER: admin
+          BASIC_AUTH_PASS: placeholder
+          JWT_SECRET: placeholder-32-chars-minimum-required
+          CSRF_SECRET: placeholder-32-chars-minimum-required
+          VERIFICATION_SECRET: placeholder-32-chars-minimum-required
+          ENROLLMENT_SECRET: placeholder-32-chars-minimum-required

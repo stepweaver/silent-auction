@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/serverSupabase';
 import { BidSchema } from '@/lib/validation';
+import { getMinimumBid, validateBidAmount, getNextMinAfterBid, checkBiddingAllowed } from '@/features/bidding/bidRules';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { verifyCSRFToken } from '@/lib/csrf';
 import { jsonError } from '@/lib/apiResponses';
@@ -86,33 +87,12 @@ export async function POST(req) {
       return jsonError('Either slug or item_id required', 400);
     }
 
-    // Deadline & closed checks
     const now = new Date();
-    const deadline = settings?.auction_deadline ? new Date(settings.auction_deadline) : null;
-
-    // Check if auction is manually closed
-    if (settings?.auction_closed) {
-      return jsonError('Bidding closed - auction is manually closed', 400);
+    const biddingCheck = checkBiddingAllowed(settings, item, now);
+    if (!biddingCheck.allowed) {
+      return jsonError(biddingCheck.error, 400);
     }
 
-    const auctionStart = settings?.auction_start ? new Date(settings.auction_start) : null;
-    if (auctionStart && now < auctionStart) {
-      const formatted = auctionStart.toLocaleString(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      });
-      return jsonError(`Bidding not yet open. Auction opens ${formatted}.`, 400);
-    }
-
-    if (deadline && now >= deadline) {
-      return jsonError('Bidding closed - deadline passed', 400);
-    }
-
-    if (item.is_closed) {
-      return jsonError('Bidding closed - item is closed', 400);
-    }
-
-    // Get current high bid
     const { data: topBid, error: bidError } = await s
       .from('bids')
       .select('amount')
@@ -125,26 +105,11 @@ export async function POST(req) {
       return jsonError('Error checking current bids', 500);
     }
 
-    const hasBids = topBid && typeof topBid.amount !== 'undefined';
-    const current = hasBids ? Number(topBid.amount) : Number(item.start_price);
-    // Enforce a fixed $5 bid increment across all items
-    const minIncrement = 5;
-    const needed = hasBids ? (Number(current) + minIncrement) : Number(item.start_price);
-    const bidAmount = Number(amount);
-
-    // Basic range check
-    if (bidAmount < needed) {
-      return jsonError(`Minimum allowed bid: ${needed.toFixed(2)}`, 400);
-    }
-
-    // Enforce whole-dollar bids in fixed $5 increments
-    const cents = Math.round(bidAmount * 100);
-    if (!Number.isFinite(bidAmount) || cents <= 0) {
-      return jsonError('Invalid bid amount', 400);
-    }
-
-    if (cents % 500 !== 0) {
-      return jsonError('Bids must be in $5 increments (e.g., $5, $10, $15).', 400);
+    const currentHigh = topBid?.amount;
+    const minimumBid = getMinimumBid(currentHigh, item.start_price);
+    const amountCheck = validateBidAmount(amount, minimumBid);
+    if (!amountCheck.valid) {
+      return jsonError(amountCheck.error, 400);
     }
 
     // Require existing user alias with email and name
@@ -246,7 +211,7 @@ export async function POST(req) {
       logError('Outbid notification error', e);
     }
 
-    const nextMinAfterBid = Number(amount) + minIncrement;
+    const nextMinAfterBid = getNextMinAfterBid(amount);
     return Response.json({
       ok: true,
       next_min: nextMinAfterBid,
