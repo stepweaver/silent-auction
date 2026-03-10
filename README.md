@@ -278,7 +278,9 @@ Demo mode lets you run the auction as a portfolio showcase with isolated data, n
 
 ### Enabling Demo Mode
 
-1. Run the demo schema migration in Supabase SQL Editor:
+1. **Expose the `demo` schema** in Supabase: Project Settings → API → Exposed schemas → add `demo` (PostgREST only exposes `public` by default).
+
+2. Run the demo schema migration in Supabase SQL Editor:
    - Execute the contents of `supabase-demo-schema-migration.sql`
    - This creates a `demo` schema with mirrored tables and seed data
 

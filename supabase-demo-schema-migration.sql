@@ -1,6 +1,10 @@
 -- Migration: Create demo schema for portfolio showcase mode
 -- Run this in Supabase SQL Editor when DEMO_MODE is needed
 -- Demo schema mirrors production tables; data is isolated from real users
+--
+-- REQUIRED: Before running, expose the demo schema in Supabase:
+--   Project Settings → API → Exposed schemas → add "demo"
+-- (PostgREST only exposes "public" by default; PGRST106 occurs otherwise.)
 
 CREATE SCHEMA IF NOT EXISTS demo;
 
