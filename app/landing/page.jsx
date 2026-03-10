@@ -232,7 +232,6 @@ export default function LandingPage() {
       setVerificationSent(true);
       setVerifiedEmail(email.trim());
       setVerificationLink(data.verificationLink || '');
-      setShowContinueButton(Boolean(data.verificationLink));
       setIsDemoMode(data.demoMode || false);
       setStep('verify');
       setError('');
