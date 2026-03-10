@@ -152,6 +152,10 @@ export async function POST(req) {
       return jsonError('Error: Alias ID is missing. Please contact support.', 500);
     }
 
+    // Use canonical name from DB, not client. Client may have stale localStorage
+    // (alias instead of real name) when browser was cleared or user switched devices.
+    const canonicalBidderName = existingAlias.name?.trim() || bidder_name;
+
     // Check if this is user's first bid on this item (before inserting)
     const { data: previousBids } = await s
       .from('bids')
@@ -165,7 +169,7 @@ export async function POST(req) {
     // Insert bid
     const { error: insertError } = await s.from('bids').insert({
       item_id: item.id,
-      bidder_name,
+      bidder_name: canonicalBidderName,
       email: normalizedEmail,
       alias_id: aliasId,
       amount: Number(amount),
@@ -183,7 +187,7 @@ export async function POST(req) {
       try {
         await sendBidConfirmation({
           email,
-          bidderName: bidder_name,
+          bidderName: canonicalBidderName,
           itemTitle: item.title,
           bidAmount: Number(amount),
           itemUrl,

@@ -3,6 +3,7 @@ import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import BackgroundLogo from '@/components/BackgroundLogo';
 import ConditionalBanner from '@/components/ConditionalBanner';
+import DemoBanner from '@/components/DemoBanner';
 import { supabaseServer } from '@/lib/serverSupabase';
 
 export const dynamic = 'force-dynamic';
@@ -123,6 +124,7 @@ export default async function RootLayout({ children }) {
       <body className='bg-gray-50 min-h-screen flex flex-col relative'>
         <a href='#main-content' className='skip-link'>Skip to main content</a>
         <BackgroundLogo />
+        <DemoBanner />
         <SiteHeader />
         <div
           id='main-content'

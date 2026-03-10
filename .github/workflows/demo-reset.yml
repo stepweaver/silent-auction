@@ -1,0 +1,36 @@
+name: Demo Reset
+
+on:
+  schedule:
+    # Every 24 hours at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping demo reset endpoint
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.AUCTION_CRON_SECRET }}
+        run: |
+          set -e
+          if [ -z "$SITE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "SITE_URL or AUCTION_CRON_SECRET not configured; skipping demo reset."
+            exit 0
+          fi
+
+          URL="${SITE_URL}/api/demo/reset?secret=${CRON_SECRET}"
+          echo "Calling: ${SITE_URL}/api/demo/reset"
+          HTTP_CODE=$(curl -s -o /tmp/resp.json -w "%{http_code}" "$URL")
+
+          echo "HTTP: $HTTP_CODE"
+          cat /tmp/resp.json
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Demo reset OK"
+          else
+            echo "Demo reset returned $HTTP_CODE (may be expected if DEMO_MODE=false)"
+            exit 0
+          fi

@@ -117,6 +117,10 @@ VERIFICATION_SECRET=your-strong-random-secret-for-email-verification
 ENROLLMENT_SECRET=your-strong-random-secret-for-vendor-enrollment
 JWT_SECRET=your-strong-random-secret-for-jwt-sessions
 CSRF_SECRET=your-strong-random-secret-for-csrf-protection
+
+# Demo mode (portfolio showcase). Set both to "true" for demo, "false" for real auction.
+DEMO_MODE=false
+NEXT_PUBLIC_DEMO_MODE=false
 ```
 
 **Where to find Supabase keys:**
@@ -267,6 +271,48 @@ The platform uses an opt-in email system powered by Resend to send notifications
 - Only initial bids on each item trigger confirmation emails (not every bid)
 - Winner notifications and other essential emails are sent automatically and cannot be opted out of
 - The system monitors opt-in rates and can alert administrators if rates exceed 50%
+
+## Demo Mode
+
+Demo mode lets you run the auction as a portfolio showcase with isolated data, no emails, and a 24-hour auto-reset.
+
+### Enabling Demo Mode
+
+1. Run the demo schema migration in Supabase SQL Editor:
+   - Execute the contents of `supabase-demo-schema-migration.sql`
+   - This creates a `demo` schema with mirrored tables and seed data
+
+2. Set environment variables (Vercel or `.env.local`):
+   ```
+   DEMO_MODE=true
+   NEXT_PUBLIC_DEMO_MODE=true
+   ```
+
+3. Redeploy. The app will use the `demo` schema instead of `public`, and all emails will be suppressed.
+
+### Demo Mode Behavior
+
+- **Data**: Uses `demo` schema; production data in `public` is untouched
+- **Emails**: All emails disabled (bid confirmations, outbid, winner, etc.)
+- **Reset**: Call `GET /api/demo/reset?secret=YOUR_CRON_SECRET` to clear bids/donations, reopen items, and set a new 24h deadline
+- **Banner**: A "Portfolio Demo" banner appears when `NEXT_PUBLIC_DEMO_MODE=true`
+
+### Switching Back to Real Mode
+
+When the client uses the app again:
+
+1. Set `DEMO_MODE=false` and `NEXT_PUBLIC_DEMO_MODE=false`
+2. Redeploy
+
+The app immediately uses the `public` schema and real data. No code changes required.
+
+### Demo Reset Cron
+
+To auto-reset the demo every 24 hours:
+
+1. Add GitHub secrets: `SITE_URL` (your deployed app URL) and `AUCTION_CRON_SECRET`
+2. The workflow in `.github/workflows/demo-reset.yml` runs daily
+3. When `DEMO_MODE=false`, the reset endpoint no-ops (safe to run regardless of mode)
 
 ## Keep-Alive Setup
 
