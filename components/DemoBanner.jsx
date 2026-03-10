@@ -14,7 +14,7 @@ export default function DemoBanner() {
       className="bg-amber-100 border-b border-amber-300 text-amber-900 text-center py-2 px-4 text-sm"
       role="status"
     >
-      <strong>Portfolio Demo</strong> — Resets every 24h. No real items or payments.
+      <strong>Portfolio Demo</strong> - No real items or payments.
     </div>
   );
 }
