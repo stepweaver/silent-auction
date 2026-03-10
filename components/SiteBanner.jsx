@@ -39,13 +39,15 @@ export default function SiteBanner({ deadlineISO = null }) {
     // Subscribe to real-time updates on settings table
     // Note: Real-time must be enabled for the 'settings' table in Supabase
     // (Database → Tables → settings → Enable Realtime toggle)
+    const settingsSchema =
+      process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'demo' : 'public';
     const channel = s
       .channel('rt-settings')
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
-          schema: 'public',
+          schema: settingsSchema,
           table: 'settings',
           filter: 'id=eq.1',
         },

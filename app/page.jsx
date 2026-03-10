@@ -176,11 +176,13 @@ export default function CatalogPage() {
 
     load();
 
+    const schema =
+      process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'demo' : 'public';
     const channel = s
       .channel('rt-bids')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'bids' },
+        { event: '*', schema, table: 'bids' },
         () => {
           load(false);
         }

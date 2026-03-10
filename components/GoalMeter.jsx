@@ -99,11 +99,13 @@ export default function GoalMeter() {
   useEffect(() => {
     fetchTotals();
 
+    const schema =
+      process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'demo' : 'public';
     const bidsChannel = s
       .channel('goal-bids')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'bids' },
+        { event: '*', schema, table: 'bids' },
         () => fetchTotals()
       )
       .subscribe();
@@ -112,7 +114,7 @@ export default function GoalMeter() {
       .channel('goal-donations')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'donations' },
+        { event: '*', schema, table: 'donations' },
         () => fetchTotals()
       )
       .subscribe();

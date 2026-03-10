@@ -18,7 +18,8 @@ export default function LandingPage() {
   const [step, setStep] = useState('intro'); // 'intro', 'verify', 'enroll'
   const [verificationSent, setVerificationSent] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState('');
-  const [demoVerificationLink, setDemoVerificationLink] = useState('');
+  const [verificationLink, setVerificationLink] = useState('');
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [hasSentRecoveryNotification, setHasSentRecoveryNotification] =
     useState(false);
   const [honeypot, setHoneypot] = useState(''); // Honeypot field - should remain empty
@@ -230,7 +231,9 @@ export default function LandingPage() {
 
       setVerificationSent(true);
       setVerifiedEmail(email.trim());
-      setDemoVerificationLink(data.verificationLink || '');
+      setVerificationLink(data.verificationLink || '');
+      setShowContinueButton(Boolean(data.verificationLink));
+      setIsDemoMode(data.demoMode || false);
       setStep('verify');
       setError('');
     } catch (err) {
@@ -328,10 +331,10 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <h2 className='text-xl font-bold text-gray-900 mb-2'>
-                  {demoVerificationLink ? 'Demo Mode' : 'Verification Email Sent'}
+                  {isDemoMode ? 'Demo Mode' : 'Verification Email Sent'}
                 </h2>
                 <p className='text-gray-700 mb-4'>
-                  {demoVerificationLink
+                  {isDemoMode
                     ? 'Emails are disabled in demo mode. Click below to continue.'
                     : "We've sent a verification email to:"}
                 </p>
@@ -341,7 +344,7 @@ export default function LandingPage() {
                 >
                   {verifiedEmail}
                 </p>
-                {!demoVerificationLink && (
+                {!isDemoMode && (
                   <p className='text-gray-600 mb-4'>
                     Please check your inbox and click the verification link to
                     continue creating your alias.
@@ -356,9 +359,9 @@ export default function LandingPage() {
                   </div>
                 )}
                 <div className='mt-6 space-y-2'>
-                  {demoVerificationLink ? (
+                  {isDemoMode && verificationLink ? (
                     <a
-                      href={demoVerificationLink}
+                      href={verificationLink}
                       className='block w-full px-4 py-3 text-center font-semibold rounded-lg text-white transition-colors'
                       style={{ backgroundColor: 'var(--primary-500)' }}
                     >
@@ -370,13 +373,14 @@ export default function LandingPage() {
                       setStep('intro');
                       setError('');
                       setVerificationSent(false);
-                      setDemoVerificationLink('');
+                      setVerificationLink('');
+                      setIsDemoMode(false);
                     }}
                     className='w-full px-4 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors'
                   >
                     Change Email
                   </button>
-                  {!demoVerificationLink && (
+                  {!isDemoMode && (
                     <p className='text-xs text-gray-500'>
                       Didn't receive the email? Check your spam folder or try
                       again.

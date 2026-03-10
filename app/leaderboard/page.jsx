@@ -226,13 +226,15 @@ export default function LeaderboardPage() {
     loadLeaderboard();
 
     const s = supabaseBrowser();
+    const schema =
+      process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'demo' : 'public';
     // Real-time only: subscription handles bid updates; no polling to reduce Supabase egress
     let reloadTimer = null;
     const channel = s
       .channel('rt-leaderboard-bids')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'bids' },
+        { event: '*', schema, table: 'bids' },
         () => {
           if (reloadTimer) clearTimeout(reloadTimer);
           reloadTimer = setTimeout(() => {

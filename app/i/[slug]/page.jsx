@@ -134,9 +134,11 @@ export default function ItemPage({ params }) {
     loadAll();
 
     // Real-time only: subscription handles bid updates; no polling to reduce Supabase egress
+    const schema =
+      process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'demo' : 'public';
     const channel = s
       .channel('rt-bids-item')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bids' }, () => {
+      .on('postgres_changes', { event: '*', schema, table: 'bids' }, () => {
         loadAll();
       })
       .subscribe();
