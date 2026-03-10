@@ -179,6 +179,17 @@ export async function POST(req) {
     
     const verificationLink = `${siteUrl}/verify-email?token=${encodeURIComponent(verificationToken)}&email=${encodeURIComponent(trimmedEmail)}`;
 
+    // Demo mode: no emails sent; return the verification link so user can click it directly
+    if (process.env.DEMO_MODE === 'true') {
+      return Response.json({
+        success: true,
+        message: 'Demo mode: Click the button below to continue.',
+        email: trimmedEmail,
+        verificationLink,
+        demoMode: true,
+      });
+    }
+
     // Get contact email from settings
     const { data: settings } = await s
       .from('settings')

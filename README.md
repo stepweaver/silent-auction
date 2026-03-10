@@ -296,6 +296,7 @@ Demo mode lets you run the auction as a portfolio showcase with isolated data, n
 
 - **Data**: Uses `demo` schema; production data in `public` is untouched
 - **Emails**: All emails disabled (bid confirmations, outbid, winner, etc.)
+- **Registration**: Verification emails are not sent; after entering email and name, a "Continue to Registration" button appears so you can complete the flow without email
 - **Reset**: Call `GET /api/demo/reset?secret=YOUR_CRON_SECRET` to clear bids/donations, reopen items, and set a new 24h deadline
 - **Banner**: A "Portfolio Demo" banner appears when `NEXT_PUBLIC_DEMO_MODE=true`
 
