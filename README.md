@@ -1,14 +1,20 @@
 # Silent Auction Platform
 
-A real-time silent auction platform built with Next.js 16, Supabase, and Tailwind CSS.
+A real-time silent auction platform built with Next.js 16 (React 19), Supabase, Tailwind CSS 4, and Resend.
 
 ## Features
 
-- **Real-time bidding**: Live updates when bids are placed
-- **QR code access**: Per-item QR codes for easy in-room access
-- **Admin dashboard**: Create/edit items, manage settings, extend deadlines
-- **Manual closing**: Close all items from the admin dashboard and trigger winner notifications
-- **Winner display**: Shows winning bids and pickup/payment instructions after close
+- Guided bidder onboarding with email verification and alias/avatar creation
+- Mobile-friendly auction catalog with category filtering and per-item detail pages
+- Real-time bidding with live bid updates
+- QR-code friendly item access for in-room event use
+- Bidder dashboard for tracking bids and managing email notification preferences
+- Live leaderboard for hot items, bidding wars, popular items, and top earners
+- Donation pledges alongside item bidding
+- Donor portal for registered donors to log in and manage donated items
+- Admin dashboard for item management, auction start/deadline controls, QR access, donation review, and closeout operations
+- Automated winner/admin closeout email workflows
+- Demo mode support for portfolio-safe public deployment
 
 ## Prerequisites
 
@@ -118,9 +124,15 @@ ENROLLMENT_SECRET=your-strong-random-secret-for-vendor-enrollment
 JWT_SECRET=your-strong-random-secret-for-jwt-sessions
 CSRF_SECRET=your-strong-random-secret-for-csrf-protection
 
+# Cron (optional - for close-check endpoint and demo reset automation)
+AUCTION_CRON_SECRET=your-cron-secret
+
 # Demo mode (portfolio showcase). Set both to "true" for demo, "false" for real auction.
 DEMO_MODE=false
 NEXT_PUBLIC_DEMO_MODE=false
+
+# Optional: separate secret for demo reset cron (falls back to AUCTION_CRON_SECRET)
+# DEMO_RESET_SECRET=your-demo-reset-secret
 ```
 
 **Where to find Supabase keys:**
@@ -142,9 +154,21 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ### Public Routes
 
-- `/` - Catalog of all items with current bids and QR codes
-- `/i/[slug]` - Individual item page with bid form
-- `/health` - Health check endpoint
+- `/landing` – bidder check-in and email verification flow
+- `/verify-email` – verification callback/continue step for onboarding
+- `/` – auction catalog
+- `/i/[slug]` – item detail page and bidding
+- `/avatar` – bidder dashboard
+- `/how-to-bid` – bidder instructions and auction terms summary
+- `/leaderboard` – live leaderboard
+- `/donate` – donation pledge flow
+- `/vendor-enroll` – donor login
+- `/vendor` – donor dashboard
+- `/vendor/items/new` – donor item submission
+- `/vendor/items/[id]` – donor item editing
+- `/payment-instructions` – winner payment/pickup instructions after close
+- `/terms` – terms page
+- `/health` – health check endpoint
 
 ### Admin Routes (Basic Auth Protected)
 
@@ -153,6 +177,15 @@ Access with the username/password from your `.env.local`:
 - `/admin` - Dashboard with deadline management and item list
 - `/admin/items/new` - Create a new item
 - `/admin/items/[id]` - Edit an existing item
+- `/admin/qr-codes` - Download and view item QR codes
+- `/admin/vendor-admins` - Manage donor (vendor) admins
+- `/admin/email-test` - Test email delivery (development/admin utility)
+
+### Notes
+
+- The public portfolio deployment can run in demo mode.
+- The app supports both bidding and direct donation pledges.
+- The donor portal is separate from the bidder dashboard.
 
 ### Admin Features
 
